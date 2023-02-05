@@ -33,6 +33,7 @@ public class Vec2f {
     public Vec2f add(float a){return new Vec2f(x + a, y + a); }
     public Vec2f sub(Vec2f a){return new Vec2f(x - a.x, y - a.y); }
     public Vec2f sub(float a){return new Vec2f(x - a, y - a); }
+    public Vec2f neg(){return new Vec2f(-x, -y);}
     
     public float get(int axis, Vec2f v) {
         if (axis == 0) 

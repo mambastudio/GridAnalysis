@@ -27,6 +27,21 @@ public class Tri {
         this.v0 = v0;
     }
     
+    public Vec2f p0()
+    {
+        return v0;
+    }
+    
+    public Vec2f p1()
+    {
+        return v0.sub(e1);
+    }
+    
+    public Vec2f p2()
+    {
+        return v0.add(e2);
+    }
+    
     public Vec2f normal()
     {
         return new Vec2f();
