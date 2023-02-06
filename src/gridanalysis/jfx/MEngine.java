@@ -5,10 +5,14 @@
  */
 package gridanalysis.jfx;
 
+import gridanalysis.algorithm.Build;
 import gridanalysis.coordinates.Vec2f;
+import gridanalysis.gridclasses.Grid;
 import gridanalysis.gridclasses.Tri;
 import gridanalysis.jfx.math.MTransform;
 import gridanalysis.jfx.shape.MTriangle;
+import gridanalysis.utilities.Utility;
+import java.util.ArrayList;
 import javafx.scene.canvas.GraphicsContext;
 
 /**
@@ -17,39 +21,34 @@ import javafx.scene.canvas.GraphicsContext;
  */
 public class MEngine {
     MTransform transform = MTransform.translate(200, 200);
-    GraphicsContext ctx;
-    Tri tri;// = new Tri(new Vec2f(0, 0), new Vec2f(0, 60), new Vec2f(60, 60));
+    GraphicsContext ctx;   
+    ArrayList<MTriangle> mtriangles;
+    ArrayList<Tri> triangles;
     
-    public MEngine()
-    {
-        float x_min = 0, y_min = 0, x_max = 100, y_max = 100;
-        
-        float x1 = randomFloat(x_min, x_max);
-        float y1 = randomFloat(y_min, y_max);
-        float x2 = randomFloat(x_min, x_max);
-        float y2 = randomFloat(y_min, y_max);
-        float x3 = randomFloat(x_min, x_max);
-        float y3 = randomFloat(y_min, y_max);
-        
-        tri = new Tri(new Vec2f(x1, y1), new Vec2f(x2, y2), new Vec2f(x3, y3));
-    }
+    Grid grid = new Grid();
+    float top_density = 0.12f;
+    float snd_density = 2.4f;
     
     public void draw()
     {
         ctx.save();
         transform.transformGraphicsContext(ctx);
-        MTriangle mtri = new MTriangle(ctx, tri);
-        mtri.draw();
+        mtriangles.forEach(mtri -> {
+            mtri.draw();
+        });
         ctx.restore();
     }
     
     public void setGraphicsContext(GraphicsContext context)
     {
         this.ctx = context;
-    }
-    
-    private float randomFloat(float min, float max)
-    {
-        return (float) (min + Math.random() * (max - min));
-    }
+        this.triangles = new ArrayList();
+        mtriangles = Utility.generateTriangles(ctx, triangles, 1, new Vec2f(0, 0), new Vec2f(200, 200));
+        
+        Tri[] tris = new Tri[triangles.size()];
+        triangles.toArray(tris);
+        
+        Build build = new Build();
+        build.build_grid((Tri[]) tris, triangles.size(), grid, top_density, snd_density);
+    }    
 }
