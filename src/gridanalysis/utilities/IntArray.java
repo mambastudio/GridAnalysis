@@ -112,6 +112,13 @@ public class IntArray {
         return array;
     }
     
+    public void copyTo(IntArray destinationArray)
+    {
+        if(size() != destinationArray.size)
+            throw new UnsupportedOperationException("mismatch of array size");
+        System.arraycopy(array(), offset, destinationArray.array(), destinationArray.offset, size());        
+    }
+    
     public void fill(int value, int n)
     {
         if(n > size())
@@ -182,7 +189,7 @@ public class IntArray {
         StringBuilder builder = new StringBuilder();
         int[] arr = getCopyRangeArray();
         for(int i : arr)
-            builder.append(String.format("%6s",i));
+            builder.append(String.format("%3s",i));
         return builder.toString();
     }
     

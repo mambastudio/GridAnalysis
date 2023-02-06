@@ -77,4 +77,9 @@ public class BBox {
                (min.x > bb.min.x || max.x < bb.max.x ||
                 min.y > bb.min.y || max.y < bb.max.y);
     }
+    
+     @Override
+    public final String toString() {
+        return String.format("(%.2f, %.2f) to (%.2f, %.2f)", min.x, min.y, max.x, max.y);
+    }
 }

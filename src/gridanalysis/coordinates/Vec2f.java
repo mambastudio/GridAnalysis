@@ -16,7 +16,9 @@ public class Vec2f {
     public float x, y;
     
     public Vec2f(){}
+    public Vec2f(float xy){this.x = xy; this.y = xy;}
     public Vec2f(float x, float y){this.x = x; this.y = y;}
+    public Vec2f(Vec2i xy){this.x = xy.x; this.y = xy.y;}
     
     public static Vec2f min( Vec2f a,  Vec2f b){ return new Vec2f(Math.min(a.x, b.x), Math.min(a.y, b.y));}
     public static Vec2f max( Vec2f a,  Vec2f b) { return new Vec2f(Math.max(a.x, b.x), Math.max(a.y, b.y)); }
@@ -44,5 +46,10 @@ public class Vec2f {
     
     public static Vec2f cross( Vec2f a,  Vec2f b) {
         return new Vec2f(0, 0);
+    }
+    
+    @Override
+    public final String toString() {
+        return String.format("(%.2f, %.2f)", x, y);
     }
 }
