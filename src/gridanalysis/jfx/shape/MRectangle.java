@@ -7,6 +7,7 @@ package gridanalysis.jfx.shape;
 
 import gridanalysis.gridclasses.BBox;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
 
 /**
  *
@@ -32,7 +33,7 @@ public class MRectangle {
     public void draw()
     {
         ctx.save();
-        
+        ctx.setStroke(Color.DARKGREEN);
         ctx.strokeRect(x, y, w, h);
         
         ctx.restore();

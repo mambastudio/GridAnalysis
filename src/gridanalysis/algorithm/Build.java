@@ -12,6 +12,8 @@ import gridanalysis.gridclasses.Grid;
 import gridanalysis.gridclasses.Level;
 import gridanalysis.gridclasses.Range;
 import gridanalysis.gridclasses.Tri;
+import gridanalysis.jfx.MEngine;
+import gridanalysis.jfx.shape.MCellInfo;
 import gridanalysis.utilities.IntArray;
 import static java.lang.Math.cbrt;
 import static java.lang.Math.max;
@@ -24,11 +26,17 @@ import java.util.Arrays;
  * @author user
  */
 public class Build extends GridAbstracts{
+    MEngine engine;
     
     Vec2i grid_dims;
     BBox  grid_bbox;
     Vec2f cell_size;
     int   grid_shift;
+    
+    public Build(MEngine engine)
+    {
+        this.engine = engine;
+    }
     
     /// Computes the range of cells that intersect the given box
     public Range compute_range(Vec2i dims, BBox grid_bb, BBox obj_bb) {
@@ -94,6 +102,28 @@ public class Build extends GridAbstracts{
             }
         }
     }
+    
+    /// Compute the logarithm of the sub-level resolution for top-level cells
+    public void compute_log_dims(
+            IntArray refs_per_cell,
+            IntArray log_dims,
+            float snd_density,
+            int num_cells) {
+        
+        for(int id = 0; id<num_cells; id++)
+        {         
+            if (id >= num_cells) return;
+
+            Vec2f extents = grid_bbox.extents().div(new Vec2f(grid_dims));
+            BBox bbox = new BBox(new Vec2f(), extents);
+            
+            Vec2i dims = compute_grid_dims(bbox, refs_per_cell.get(id), snd_density);
+            int max_dim = max(dims.x, dims.y);
+            int log_dim = 31 - Integer.numberOfLeadingZeros(max_dim);
+            log_dim = (1 << log_dim) < max_dim ? log_dim + 1 : log_dim;
+            log_dims.set(id, log_dim);
+        }
+    }
        
     public void emit_new_refs(
             BBox[] bboxes,
@@ -105,16 +135,12 @@ public class Build extends GridAbstracts{
         {
             int start = start_emit.get(id + 0);
             int end   = start_emit.get(id + 1);
-            Range range = null;
-
+            
             if (start < end) 
             {
                 BBox ref_bb = bboxes[id];
-                range  = compute_range(grid_dims, grid_bbox, ref_bb);
-            }
-
-            if (start < end) 
-            {
+                Range range  = compute_range(grid_dims, grid_bbox, ref_bb);
+            
                 int x = range.lx;
                 int y = range.ly;               
                 int cur = start;
@@ -153,11 +179,18 @@ public class Build extends GridAbstracts{
                 
         // Compute the number of references per cell
         count_refs_per_cell(new_cell_ids, refs_per_cell, num_new_refs);
-                
-        System.out.println(num_top_cells);
-        System.out.println(num_new_refs);
         
-        System.out.println(new_cell_ids);        
+        // Compute an independent resolution in each of the top-level cells
+        compute_log_dims(refs_per_cell, log_dims, snd_density, num_top_cells);
+        
+        // Find the maximum sub-level resolution
+        grid_shift[0] = Arrays.stream(log_dims.array(), 0, num_top_cells).reduce(0, (a, b) -> Math.max(a, b));
+                
+        engine.setMCellInfo(MCellInfo.getCells(engine, new_cell_ids, grid_bb, dims));
+                
+        System.out.println(grid_shift[0]);
+        
+        System.out.println(log_dims);        
         System.out.println(refs_per_cell);
     }
     public void build_grid(Tri[] prims, int num_prims, Grid grid, float top_density, float snd_density)

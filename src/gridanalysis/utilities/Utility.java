@@ -7,6 +7,7 @@ package gridanalysis.utilities;
 
 import gridanalysis.coordinates.Vec2f;
 import gridanalysis.coordinates.Vec2i;
+import gridanalysis.gridclasses.BBox;
 import gridanalysis.gridclasses.Tri;
 import gridanalysis.jfx.shape.MTriangle;
 import java.util.ArrayList;
@@ -70,5 +71,10 @@ public class Utility {
     public static int getGridIndex(int x, int y, Vec2i grid)
     {
         return x + grid.x * y;
+    }
+    
+    public static Vec2f getBox(Vec2i dims, BBox bound)
+    {
+        return bound.extents().div(new Vec2f(dims));
     }
 }
