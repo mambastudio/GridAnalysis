@@ -6,6 +6,7 @@
 package gridanalysis.utilities;
 
 import gridanalysis.coordinates.Vec2f;
+import gridanalysis.coordinates.Vec2i;
 import gridanalysis.gridclasses.Tri;
 import gridanalysis.jfx.shape.MTriangle;
 import java.util.ArrayList;
@@ -53,10 +54,21 @@ public class Utility {
         return new Tri(new Vec2f(x1, y1), new Vec2f(x2, y2), new Vec2f(x3, y3));
     }
     
-   
-    
     private static float randomFloat(float min, float max)
     {
         return (float) (min + Math.random() * (max - min));
+    }
+    
+    public static Vec2i getGridCoord(int i, Vec2i grid)
+    {
+        int x = i % grid.x;
+        int y = (i / grid.x) % grid.y;
+        
+        return new Vec2i(x, y);
+    }
+    
+    public static int getGridIndex(int x, int y, Vec2i grid)
+    {
+        return x + grid.x * y;
     }
 }
