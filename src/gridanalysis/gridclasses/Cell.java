@@ -10,6 +10,9 @@ import gridanalysis.coordinates.Vec2i;
 /**
  *
  * @author user
+ * 
+ * cells factor in the grid_shift (not sure if the same as log_dim)
+ * 
  */
 public class Cell {
     public Vec2i min;     ///< Minimum bounding box coordinate

@@ -70,6 +70,21 @@ public class IntArray {
         System.arraycopy(valueOutput, 0, value_out.array, value_out.offset, valueOutput.length);
     }
     
+    public static int partition(IntArray input, IntArray output, int n, IntArray flags)
+    {
+        int selected_index = 0;
+        int remaining_index = n - 1;
+        for (int i = 0; i < n; i++) {
+            if (flags.get(i) == 1) {
+                output.set(selected_index++, input.get(i));
+            } else {
+                output.set(remaining_index--, input.get(i));
+            }
+        }
+
+        return selected_index;
+    }   
+    
     public static IntArray createFromArray(int... array)
     {
         return new IntArray(array);

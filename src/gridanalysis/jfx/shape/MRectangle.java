@@ -33,7 +33,7 @@ public class MRectangle {
     public void draw()
     {
         ctx.save();
-        ctx.setStroke(Color.DARKGREEN);
+        ctx.setStroke(Color.RED);
         ctx.strokeRect(x, y, w, h);
         
         ctx.restore();

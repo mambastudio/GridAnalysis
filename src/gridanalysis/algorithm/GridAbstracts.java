@@ -10,5 +10,17 @@ package gridanalysis.algorithm;
  * @author user
  */
 public abstract class GridAbstracts {
+    public int __ffs(int value)
+    {
+        int pos = 1;
+        while ((value & 1) == 0 && value != 0) {
+            value >>= 1;
+            pos++;
+        }
+        return (value == 0) ? 0 : pos;
+    }
     
+    public int __popc(int mask) {
+        return Integer.bitCount(mask);
+    }
 }

@@ -29,7 +29,7 @@ public class MCellInfo {
     private final double w;
     private final double h;
     
-    private String string;
+    private Object object;
     
     public MCellInfo(GraphicsContext context, BBox bbox)
     {
@@ -45,8 +45,8 @@ public class MCellInfo {
         ctx.save();
         
         ctx.strokeRect(x, y, w, h);
-        if(string != null)
-            drawText(string);
+        if(object != null)
+            drawText(object.toString());
         
         ctx.restore();
     }
@@ -56,6 +56,9 @@ public class MCellInfo {
         ArrayList<MCellInfo> cells = new ArrayList();
         for(int i = 0; i<cell_ids.size(); i++)
         {
+            if(cell_ids.get(i) < 0)
+                continue;
+            
             Vec2f cellExtents = Utility.getCellSize(dims, grid_bound);
             Vec2i cellCoords = Utility.getGridCoord(cell_ids.get(i), dims);
             
@@ -70,12 +73,17 @@ public class MCellInfo {
     }
     
     public static ArrayList<MCellInfo> getCells(MEngine engine, IntArray cell_ids, IntArray array_ids, BBox grid_bound,  Vec2i dims)
-    {
+    {        
         ArrayList<MCellInfo> cells = new ArrayList();
         for(int i = 0; i<cell_ids.size(); i++)
         {
+            int cell_id = cell_ids.get(i);
+            
+            if(cell_id < 0)
+                continue;
+            
             Vec2f cellExtents = Utility.getCellSize(dims, grid_bound);
-            Vec2i cellCoords = Utility.getGridCoord(cell_ids.get(i), dims);
+            Vec2i cellCoords = Utility.getGridCoord(cell_id, dims);
             
             Vec2f cellMin = new Vec2f(cellCoords).mul(cellExtents).add(grid_bound.min);
             Vec2f cellMax = new Vec2f(cellMin.x + cellExtents.x, cellMin.y + cellExtents.y);
@@ -83,26 +91,17 @@ public class MCellInfo {
             BBox cellBound = new BBox(cellMin, cellMax);
             
             MCellInfo info = new MCellInfo(engine.getGraphicsContext(), cellBound);
-            info.string = "-1";
+            info.object = array_ids.get(i);
             cells.add(info);            
-        }
-        
-        for(int i = 0; i<cell_ids.size(); i++)
-        {
-            int cell_id = cell_ids.get(i);            
-            if(cell_id < 0) continue;
-            
-            MCellInfo info = cells.get(cell_id);
-            info.string = "1";
         }
         return cells;
     }
-    
-    public static ArrayList<MCellInfo> getCells(MEngine engine, Cell[] cellArray, BBox grid_bound,  Vec2i dims)
+        
+    public static ArrayList<MCellInfo> getCells(MEngine engine, Cell[] cellArray, BBox grid_bound,  Vec2i dims, int shift)
     {
         ArrayList<MCellInfo> cells = new ArrayList();
         for (Cell cell : cellArray) {
-            Vec2f cellExtents = Utility.getCellSize(dims, grid_bound);
+            Vec2f cellExtents = Utility.getCellSize(dims.leftShift(shift), grid_bound);
             
             Vec2f cellMin = new Vec2f(cell.min).mul(cellExtents).add(grid_bound.min);
             Vec2f cellMax = new Vec2f(cell.max).mul(cellExtents).add(grid_bound.min);
@@ -114,32 +113,44 @@ public class MCellInfo {
         return cells;
     }
     
-    public static ArrayList<MCellInfo> getCells(MEngine engine, Cell[] cellArray, IntArray cell_ids, IntArray array, BBox grid_bound,  Vec2i dims)
+    public static ArrayList<MCellInfo> getCells(MEngine engine, Cell[] cellArray, IntArray array_ids, BBox grid_bound,  Vec2i dims, int shift)
     {
         ArrayList<MCellInfo> cells = new ArrayList();
+        int i = 0;
         for (Cell cell : cellArray) {
-            Vec2f cellExtents = Utility.getCellSize(dims, grid_bound);
+            Vec2f cellExtents = Utility.getCellSize(dims.leftShift(shift), grid_bound);
+            
             Vec2f cellMin = new Vec2f(cell.min).mul(cellExtents).add(grid_bound.min);
-            Vec2f cellMax = new Vec2f(cell.max).mul(cellExtents).add(grid_bound.min);            
+            Vec2f cellMax = new Vec2f(cell.max).mul(cellExtents).add(grid_bound.min);
+            
             BBox cellBound = new BBox(cellMin, cellMax);
             
             MCellInfo info = new MCellInfo(engine.getGraphicsContext(), cellBound);
-            info.string = "-1"; 
+            info.object = array_ids.get(i);
+            
             cells.add(info);
-        }
-        
-        for (int i = 0; i<cellArray.length; i++) {            
-            int cell_id = cell_ids.get(i);            
-            if(cell_id < 0) continue;
+            i++;
+        }        
+        return cells;
+    }
+       
+    public static ArrayList<MCellInfo> getCells(MEngine engine, Cell[] cellArray, Object[] array_ids, BBox grid_bound,  Vec2i dims, int shift)
+    {
+        ArrayList<MCellInfo> cells = new ArrayList();
+        int i = 0;
+        for (Cell cell : cellArray) {
+            Vec2f cellExtents = Utility.getCellSize(dims.leftShift(shift), grid_bound);
             
-            MCellInfo info = cells.get(cell_id);
-            info.string = "1";
-                        
-            //Cell cell = cellArray[cell_ids.get(i)];
+            Vec2f cellMin = new Vec2f(cell.min).mul(cellExtents).add(grid_bound.min);
+            Vec2f cellMax = new Vec2f(cell.max).mul(cellExtents).add(grid_bound.min);
             
+            BBox cellBound = new BBox(cellMin, cellMax);
             
+            MCellInfo info = new MCellInfo(engine.getGraphicsContext(), cellBound);
+            info.object = array_ids[i];
             
-            //cells.add(new MCellInfo(engine.getGraphicsContext(), cellBound));
+            cells.add(info);
+            i++;
         }        
         return cells;
     }
