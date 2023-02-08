@@ -73,7 +73,7 @@ public class Utility {
         return x + grid.x * y;
     }
     
-    public static Vec2f getBox(Vec2i dims, BBox bound)
+    public static Vec2f getCellSize(Vec2i dims, BBox bound)
     {
         return bound.extents().div(new Vec2f(dims));
     }

@@ -8,6 +8,8 @@ package gridanalysis.algorithm;
 import gridanalysis.coordinates.Vec2f;
 import gridanalysis.coordinates.Vec2i;
 import gridanalysis.gridclasses.BBox;
+import gridanalysis.gridclasses.Cell;
+import gridanalysis.gridclasses.Entry;
 import gridanalysis.gridclasses.Grid;
 import gridanalysis.gridclasses.Level;
 import gridanalysis.gridclasses.Range;
@@ -15,6 +17,7 @@ import gridanalysis.gridclasses.Tri;
 import gridanalysis.jfx.MEngine;
 import gridanalysis.jfx.shape.MCellInfo;
 import gridanalysis.utilities.IntArray;
+import gridanalysis.utilities.Utility;
 import static java.lang.Math.cbrt;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -157,6 +160,58 @@ public class Build extends GridAbstracts{
         }
     }
     
+    /// Generate cells for the top level
+    public void emit_top_cells(Cell[] new_cells, int num_cells) {
+        for(int id = 0; id<num_cells; id++)
+        {            
+            if (id >= num_cells) return;
+
+            int x = id % grid_dims.x;
+            int y = (id / grid_dims.x) % grid_dims.y;
+            int inc = 1 << grid_shift;
+
+            x <<= grid_shift;
+            y <<= grid_shift;           
+
+            Cell cell = new Cell();
+            cell.min = new Vec2i(x, y);
+            cell.max = new Vec2i(x + inc, y + inc);
+            cell.begin = 0;
+            cell.end   = 0;
+            new_cells[id] = cell;
+        }
+    }
+    
+    /// Filter out references that do not intersect the cell they are in
+    public void filter_refs(
+            IntArray cell_ids,
+            IntArray ref_ids,
+            Tri[] prims,
+            Cell[] cells,
+            int num_refs) 
+    {        
+        
+        for(int id = 0; id<num_refs; id++)
+        {            
+            if (id >= num_refs) return;
+
+            
+            Cell cell = cells[cell_ids.get(id)];
+            Tri prim = prims[ref_ids.get(id)];
+            
+            BBox bbox = new BBox(
+                    grid_bbox.min.add(new Vec2f(cell.min).mul(cell_size)),
+                    grid_bbox.min.add(new Vec2f(cell.max).mul(cell_size)));     
+            
+            boolean intersect = Tri.intersect_prim_cell(prim, bbox);
+            if (!intersect) {
+                cell_ids.set(id, -1);
+                ref_ids.set(id, -1);                
+            }    
+            
+        }
+    }
+    
     public void first_build_iter(
             float snd_density,
             Tri[] prims, int num_prims,
@@ -185,13 +240,28 @@ public class Build extends GridAbstracts{
         
         // Find the maximum sub-level resolution
         grid_shift[0] = Arrays.stream(log_dims.array(), 0, num_top_cells).reduce(0, (a, b) -> Math.max(a, b));
-                
-        engine.setMCellInfo(MCellInfo.getCells(engine, new_cell_ids, grid_bb, dims));
-                
-        System.out.println(grid_shift[0]);
         
+        this.cell_size = grid_bb.extents().div(new Vec2f(dims.leftShift(grid_shift[0])));
+        this.grid_shift = grid_shift[0];
+        
+        //Emission of the new cells
+        Cell[] new_cells   = new Cell[num_top_cells + 0];
+        Entry[] new_entries = new Entry[num_top_cells + 1];
+        
+        emit_top_cells(new_cells, num_top_cells);
+        for(int i = 0; i<num_top_cells + 1; i++)
+            new_entries[i] = new Entry();
+        
+        // Filter out the references that do not intersect the cell they are in
+        filter_refs(new_cell_ids, new_ref_ids, prims, new_cells, num_new_refs);
+        
+        engine.setMCellInfo(MCellInfo.getCells(engine, new_cell_ids, new_cell_ids, grid_bb, dims));
+                
+        System.out.println(cell_size);
+        System.out.println(Utility.getCellSize(dims, grid_bb));
         System.out.println(log_dims);        
         System.out.println(refs_per_cell);
+        System.out.println(new_ref_ids);
     }
     public void build_grid(Tri[] prims, int num_prims, Grid grid, float top_density, float snd_density)
     {

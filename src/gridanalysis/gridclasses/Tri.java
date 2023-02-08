@@ -53,7 +53,7 @@ public class Tri {
         return new BBox(Vec2f.min(v0, Vec2f.min(v1, v2)), Vec2f.max(v0, Vec2f.max(v1, v2)));    
     }
     
-    public boolean plane_overlap_box(Vec2f n, float d, Vec2f min, Vec2f max)
+    public static boolean plane_overlap_box(Vec2f n, float d, Vec2f min, Vec2f max)
     {
         Vec2f first = new Vec2f(
                         n.x > 0 ? min.x : max.x,
@@ -69,7 +69,7 @@ public class Tri {
         return d1 * d0 <= 0.0f;
     }
     
-    public boolean axis_test_z( Vec2f half_size,
+    public static boolean axis_test_z( Vec2f half_size,
                                 Vec2f e, Vec2f f,
                                 Vec2f v0, Vec2f v1) {
         float p0 = e.x * v0.y - e.y * v0.x;
@@ -78,7 +78,7 @@ public class Tri {
         return Math.min(p0, p1) > rad | Math.max(p0, p1) < -rad;
     }
     
-    public boolean intersect_tri_box(boolean bounds_check, boolean cross_axes, Vec2f v0, Vec2f e1,  Vec2f e2, Vec2f n, Vec2f min,  Vec2f max) {
+    public static boolean intersect_tri_box(boolean bounds_check, boolean cross_axes, Vec2f v0, Vec2f e1,  Vec2f e2, Vec2f n, Vec2f min,  Vec2f max) {
         if (!plane_overlap_box(n, Vec2f.dot(v0, n), min, max))
             return false;
         
@@ -119,7 +119,7 @@ public class Tri {
         return true;
     }
     
-    public boolean intersect_prim_cell(Tri tri, BBox bbox) {
+    public static boolean intersect_prim_cell(Tri tri, BBox bbox) {
         return intersect_tri_box(false, true, tri.v0, tri.e1, tri.e2, tri.normal(), bbox.min, bbox.max);
     }
 

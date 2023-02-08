@@ -20,6 +20,9 @@ public class Vec2i {
     public static Vec2i min( Vec2i a,  Vec2i b){ return new Vec2i(Math.min(a.x, b.x), Math.min(a.y, b.y));}
     public static Vec2i max( Vec2i a,  Vec2i b) { return new Vec2i(Math.max(a.x, b.x), Math.max(a.y, b.y)); }
     
+    public Vec2i rightShift(int shift){return new Vec2i(x >> shift, y >> shift);}
+    public Vec2i leftShift(int shift){return new Vec2i(x << shift, y << shift);}
+    
     @Override
     public final String toString() {
         return String.format("(%1s, %1s)", x, y);
