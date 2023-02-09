@@ -52,7 +52,7 @@ public class MEngine {
     {
         this.ctx = context;
         this.triangles = new ArrayList();
-        mtriangles = Utility.generateTriangles(ctx, triangles, 2, new Vec2f(0, 0), new Vec2f(500, 500));
+        mtriangles = Utility.generateTriangles(ctx, triangles, 1, new Vec2f(0, 0), new Vec2f(500, 500));
         
         Tri[] tris = new Tri[triangles.size()];
         triangles.toArray(tris);

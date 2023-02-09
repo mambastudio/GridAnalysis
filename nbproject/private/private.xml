@@ -3,8 +3,12 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/jmburu/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/Build.java</file>
-            <file>file:/C:/Users/jmburu/Documents/GitHub/GridAnalysis/test/test/Test2.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/gridclasses/Cell.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/utilities/IntArray.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/Build.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/jfx/MEngine.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/jfx/shape/MCellInfo.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/jfx/shape/MRectangle.java</file>
         </group>
     </open-files>
 </project-private>

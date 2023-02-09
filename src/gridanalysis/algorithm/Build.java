@@ -122,7 +122,7 @@ public class Build extends GridAbstracts{
 
             int cell_id = cell_ids.get(id);  
             
-            int value = ((cell_id >= 0) && (entries[cell_id].log_dim == 0)) ? 1 : 0;            
+            int value = ((cell_id >= 0) && (entries[cell_id].log_dim == 0)) ? 1 : 0;              
             kept_flags.set(id, value);
         }             
     }
@@ -256,9 +256,9 @@ public class Build extends GridAbstracts{
             int min_y = cell.min.y;
             int inc = (cell.max.x - cell.min.x) >> 1;
 
-            for (int i = 0; i < 8; i++) {
-                int x = min_x + (i & 1) * inc;
-                int y = min_y + ((i >> 1) & 1) * inc;
+            for (int i = 0; i < 4; i++) {
+                int x = min_x + (i % 2) * inc;
+                int y = min_y + ((i >> 1)) * inc;
 
                 cell.min = new Vec2i(x, y);
                 cell.max = new Vec2i(x + inc, y + inc);
@@ -296,7 +296,8 @@ public class Build extends GridAbstracts{
                                     Tri[] prims,
                                     Cell[] cells,
                                     IntArray split_masks,
-                                    int num_split) {       
+                                    int num_split) { 
+        
         for(int id = 0; id<num_split; id++)
         {            
             if (id >= num_split) return;
@@ -315,7 +316,7 @@ public class Build extends GridAbstracts{
             Vec2f cell_max = grid_bbox.min.add(cell_size.mul(new Vec2f(cell.max)));
             Vec2f middle = (cell_min.add(cell_max)).mul(0.5f);
 
-            int mask = 0xFF;
+            int mask = 0xF;
 
             // Optimization: Test against half spaces first
             BBox ref_bb = prim.bbox();
@@ -450,7 +451,7 @@ public class Build extends GridAbstracts{
         for(int i = 0; i<num_top_cells + 1; i++)
             new_entries[i] = new Entry();
         
-        engine.setMCellInfo(MCellInfo.getCells(engine, new_cells, log_dims, grid_bb, dims, grid_shift[0]));
+        
         
         // Filter out the references that do not intersect the cell they are in
         filter_refs(new_cell_ids, new_ref_ids, prims, new_cells, num_new_refs);
@@ -490,13 +491,11 @@ public class Build extends GridAbstracts{
         compute_dims(cell_ids, cells, log_dims, entries, num_refs);         
         update_log_dims(log_dims, num_top_cells);        
         mark_kept_refs(cell_ids, entries, kept_flags, num_refs);
-        
-        
-               
+                        
         // Store the sub-cells starting index in the entries
         IntArray start_cell = new IntArray(new int[num_cells + 1]);
         for(int i = 0; i<num_cells; i++)
-            start_cell.set(i, entries[i].log_dim == 0 ? 0 : 8);        
+            start_cell.set(i, entries[i].log_dim == 0 ? 0 : 4);        
         int num_new_cells = IntArray.exclusiveScan(start_cell, num_cells + 1, start_cell);
 
         update_entries(start_cell, entries, num_cells);   
@@ -508,14 +507,14 @@ public class Build extends GridAbstracts{
         IntArray tmp_cell_ids = tmp_ref_ids.getSubArray(num_refs, tmp_ref_ids.size());
         int num_sel_refs  = IntArray.partition(ref_ids,  tmp_ref_ids,  num_refs, kept_flags);
         int num_sel_cells = IntArray.partition(cell_ids, tmp_cell_ids, num_refs, kept_flags);
-        
+                
         if(num_sel_refs != num_sel_cells)
             throw new UnsupportedOperationException("num_sel_refs is not equal to num_sel_cells");
         
         //Swap
         tmp_ref_ids.swap(ref_ids);
         tmp_cell_ids.swap(cell_ids);
-        
+                
         int num_kept = num_sel_refs;
         levels.get(levels.size()-1).ref_ids  = ref_ids;
         levels.get(levels.size()-1).cell_ids = cell_ids;
@@ -537,14 +536,17 @@ public class Build extends GridAbstracts{
                 prims, cells, 
                 split_masks, 
                 num_split);
-        
+                
         // Store the sub-cells starting index in the entries        
         for(int i = 0; i<split_masks.size(); i++)
             start_split.set(i, __popc(split_masks.get(i)));
         int num_new_refs = IntArray.exclusiveScan(start_split, num_split+ + 1, start_split);
                 
-        if(!(num_new_refs <= 8 * num_split))
-            throw new UnsupportedOperationException();
+        if(!(num_new_refs <= 4 * num_split))
+        {
+            
+            throw new UnsupportedOperationException("num_new_refs: " +num_new_refs+ " should be <= " +4*num_split);
+        }
         
         IntArray new_ref_ids = new IntArray(new int[num_new_refs * 2]);
         IntArray new_cell_ids = new_ref_ids.splitSubArrayFrom(num_new_refs);
@@ -558,7 +560,7 @@ public class Build extends GridAbstracts{
                 new_cell_ids, 
                 new_ref_ids, 
                 num_split);
-        
+        //engine.setMCellInfo(MCellInfo.getCells(engine, cells, entries, this.grid_bbox, this.grid_dims, this.grid_shift));
         // Emission of the new cells
         Cell[] new_cells   = new Cell[num_new_cells + 0];
         Entry[] new_entries = new Entry[num_new_cells + 1];
@@ -567,6 +569,8 @@ public class Build extends GridAbstracts{
         for(int i = 0; i<num_new_cells + 1; i++)
             new_entries[i] = new Entry();
         
+        System.out.println(num_new_cells);
+        engine.setMCellInfo(MCellInfo.getCells(engine, new_cells, this.grid_bbox, this.grid_dims, this.grid_shift));
         Level level = new Level();
         level.ref_ids   = new_ref_ids;         
         level.cell_ids  = new_cell_ids;        
