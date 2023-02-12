@@ -37,11 +37,13 @@ public class Vec2f {
     public Vec2f sub(float a){return new Vec2f(x - a, y - a); }
     public Vec2f neg(){return new Vec2f(-x, -y);}
     
-    public float get(int axis, Vec2f v) {
+    public Vec2f copy(){return new Vec2f(x, y);}
+    
+    public float get(int axis) {
         if (axis == 0) 
-            return v.x;       
+            return x;       
         else 
-            return v.y;
+            return y;
     }
     
     public static Vec2f cross( Vec2f a,  Vec2f b) {

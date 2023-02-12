@@ -94,13 +94,7 @@ public class Build extends GridAbstracts{
     public int top_level_cell(Vec2i pos) {
         return (pos.x >> grid_shift) + grid_dims.x * ((pos.y >> grid_shift));
     }
-    
-    /// Returns a voxel map entry with the given dimension and starting index
-    public Entry make_entry(int log_dim, int begin) {
-        Entry e = new Entry(log_dim, begin);
-        return e;
-    }
-    
+        
     /// Update the logarithm of the sub-level resolution for top-level cells (after a new subdivision level)
     public void update_log_dims(IntArray log_dims, int num_top_cells) {
         for(int id = 0; id<num_top_cells; id++)
@@ -161,7 +155,7 @@ public class Build extends GridAbstracts{
             int max_dim = max(dims.x, dims.y);
             int log_dim = 31 - Integer.numberOfLeadingZeros(max_dim);
             log_dim = (1 << log_dim) < max_dim ? log_dim + 1 : log_dim;
-            log_dims.set(id, log_dim);
+            log_dims.set(id, log_dim);            
         }
     }
     
@@ -180,6 +174,106 @@ public class Build extends GridAbstracts{
             // If the cell is subdivided, write the first sub-cell index into the current entry
             entry.begin = entry.log_dim != 0 ? start : id;
             entries[id] = entry;
+        }
+    }
+    
+    /// Copy the references with an offset, different for each level
+    public void copy_refs(
+                            IntArray cell_ids,
+                            IntArray new_cell_ids,
+                            int cell_off,
+                            int num_kept) {
+        for(int id = 0; id<num_kept; id++)
+        {        
+            if (id >= num_kept) return;
+            new_cell_ids.set(id, cell_ids.get(id) + cell_off);
+        }
+    }
+    
+    /// Mark the cells that are used as 'kept'
+    public void mark_kept_cells(
+                                Entry[] entries,
+                                IntArray kept_cells,
+                                int num_cells) {        
+        for(int id = 0; id<num_cells; id++)
+        {
+            if (id >= num_cells) return;
+            kept_cells.set(id, (entries[id].log_dim == 0) ? 1 : 0);
+        }
+    }
+    
+    /// Copy only the cells that are kept to another array of cells
+    public void copy_cells(
+                            Cell[] cells,
+                            IntArray start_cell,
+                            Cell[] new_cells,
+                            int cell_off,
+                            int num_cells) {
+        for(int id = 0; id<num_cells; id++)
+        {
+            if (id >= num_cells) return;
+
+            Cell cell = cells[id];
+            int start = start_cell.get(cell_off + id + 0);
+            int end   = start_cell.get(cell_off + id + 1);
+            if (start < end) 
+                new_cells[start] = cell;                
+        }
+    }
+    
+    /// Copy the voxel map entries and remap kept cells to their correct indices
+    public void copy_entries(Entry[] entries,
+                             IntArray start_cell,
+                             Entry[] new_entries,
+                             int cell_off,
+                             int next_level_off,
+                             int num_cells) {
+        for(int id = 0; id<num_cells; id++)
+        {
+            if (id >= num_cells) return;
+
+            Entry entry = entries[id];
+            if (entry.log_dim == 0) {
+                // Points to a cell
+                entry.begin = start_cell.get(cell_off + entry.begin);
+            } else {
+                // Points to another entry in the next level
+                entry.begin += next_level_off;
+            }
+            new_entries[id + cell_off] = entry;
+        }
+    }
+    
+    /// Remap references so that they map to the correct cells
+    public void remap_refs(
+                        IntArray cell_ids,
+                        IntArray start_cell,
+                        int num_refs) {
+        for(int id = 0; id<num_refs; id++)
+        {
+            if (id >= num_refs) return;
+
+            cell_ids.set(id, start_cell.get(cell_ids.get(id)));
+        }
+    }
+    
+    /// Sets the cell ranges once the references are sorted by cell
+    public void compute_cell_ranges(IntArray cell_ids, Cell[] cells, int num_refs) {
+        for(int id = 0; id<num_refs; id++)
+        {
+            if (id >= num_refs) return;
+
+            int cell_id = cell_ids.get(id + 0);
+            if (id >= num_refs - 1) {
+                cells[cell_id].end = id + 1;
+                return;
+            }
+            int next_id = cell_ids.get(id + 1);
+
+            if (cell_id != next_id) {
+                cells[cell_id].end   = id + 1;
+                cells[next_id].begin = id + 1;
+            }
         }
     }
        
@@ -224,7 +318,7 @@ public class Build extends GridAbstracts{
             int x = id % grid_dims.x;
             int y = (id / grid_dims.x) % grid_dims.y;
             int inc = 1 << grid_shift;
-
+            
             x <<= grid_shift;
             y <<= grid_shift;           
 
@@ -234,6 +328,7 @@ public class Build extends GridAbstracts{
             cell.begin = 0;
             cell.end   = 0;
             new_cells[id] = cell;
+            
         }
     }
     
@@ -242,6 +337,7 @@ public class Build extends GridAbstracts{
                                Cell[] cells,
                                Cell[] new_cells,
                                int num_cells) {
+        
         for(int id = 0; id<num_cells; id++)
         {
             if (id >= num_cells) return;
@@ -251,20 +347,21 @@ public class Build extends GridAbstracts{
             if (log_dim == 0) continue;
 
             int start = entry.begin;
-            Cell cell = cells[id];
+            Cell cell = cells[id].copy();
             int min_x = cell.min.x;
             int min_y = cell.min.y;
             int inc = (cell.max.x - cell.min.x) >> 1;
-
+            
             for (int i = 0; i < 4; i++) {
-                int x = min_x + (i % 2) * inc;
-                int y = min_y + ((i >> 1)) * inc;
-
-                cell.min = new Vec2i(x, y);
-                cell.max = new Vec2i(x + inc, y + inc);
-                cell.begin = 0;
-                cell.end   = 0;
-                new_cells[start + i] = cell; 
+                int x = min_x + (i & 1) * inc;
+                int y = min_y + (i >> 1) * inc;
+                
+                Cell cell1 = new Cell();
+                cell1.min = new Vec2i(x, y);
+                cell1.max = new Vec2i(x + inc, y + inc);
+                cell1.begin = 0;
+                cell1.end   = 0;
+                new_cells[start + i] = cell1;                
             }
         }
     }
@@ -440,6 +537,7 @@ public class Build extends GridAbstracts{
         // Find the max sub-level resolution
         grid_shift[0] = Arrays.stream(log_dims.array(), 0, num_top_cells).reduce(0, (a, b) -> Math.max(a, b));
         
+        
         this.cell_size = grid_bb.extents().div(new Vec2f(dims.leftShift(grid_shift[0])));
         this.grid_shift = grid_shift[0];
         
@@ -466,7 +564,6 @@ public class Build extends GridAbstracts{
         level.num_cells = num_top_cells;  
                         
         levels.add(level);       
-        
     }
     
     public boolean build_iter(
@@ -499,9 +596,7 @@ public class Build extends GridAbstracts{
         int num_new_cells = IntArray.exclusiveScan(start_cell, num_cells + 1, start_cell);
 
         update_entries(start_cell, entries, num_cells);   
-        
-        //engine.setMCellInfo(MCellInfo.getCells(engine, cell_ids, kept_flags, this.grid_bbox, dims));
-        
+                
         // Partition the set of cells into the sets of those which will be split and those which won't
         IntArray tmp_ref_ids  = new IntArray(new int[num_refs * 2]);
         IntArray tmp_cell_ids = tmp_ref_ids.getSubArray(num_refs, tmp_ref_ids.size());
@@ -536,18 +631,15 @@ public class Build extends GridAbstracts{
                 prims, cells, 
                 split_masks, 
                 num_split);
-                
+                        
         // Store the sub-cells starting index in the entries        
         for(int i = 0; i<split_masks.size(); i++)
             start_split.set(i, __popc(split_masks.get(i)));
         int num_new_refs = IntArray.exclusiveScan(start_split, num_split+ + 1, start_split);
                 
-        if(!(num_new_refs <= 4 * num_split))
-        {
-            
+        if(!(num_new_refs <= 4 * num_split))        
             throw new UnsupportedOperationException("num_new_refs: " +num_new_refs+ " should be <= " +4*num_split);
-        }
-        
+                
         IntArray new_ref_ids = new IntArray(new int[num_new_refs * 2]);
         IntArray new_cell_ids = new_ref_ids.splitSubArrayFrom(num_new_refs);
                
@@ -560,7 +652,7 @@ public class Build extends GridAbstracts{
                 new_cell_ids, 
                 new_ref_ids, 
                 num_split);
-        //engine.setMCellInfo(MCellInfo.getCells(engine, cells, entries, this.grid_bbox, this.grid_dims, this.grid_shift));
+        
         // Emission of the new cells
         Cell[] new_cells   = new Cell[num_new_cells + 0];
         Entry[] new_entries = new Entry[num_new_cells + 1];
@@ -569,8 +661,6 @@ public class Build extends GridAbstracts{
         for(int i = 0; i<num_new_cells + 1; i++)
             new_entries[i] = new Entry();
         
-        System.out.println(num_new_cells);
-        engine.setMCellInfo(MCellInfo.getCells(engine, new_cells, this.grid_bbox, this.grid_dims, this.grid_shift));
         Level level = new Level();
         level.ref_ids   = new_ref_ids;         
         level.cell_ids  = new_cell_ids;        
@@ -582,7 +672,104 @@ public class Build extends GridAbstracts{
         
         levels.add(level);
                 
-        return false;
+        return true;
+    }
+    
+    public void concat_levels(ArrayList<Level> levels, Grid grid) {
+        int num_levels = levels.size();
+        
+        // Start with references
+        int total_refs = 0;
+        int total_cells = 0;
+        for (Level level : levels) {
+            total_refs  += level.num_kept;
+            total_cells += level.num_cells;
+        }
+        
+        // Copy primitive references as-is
+        IntArray ref_ids  = new IntArray(new int[total_refs]);
+        IntArray cell_ids = new IntArray(new int[total_refs]);
+        for (int i = 0, off = 0; i < num_levels; off += levels.get(i).num_kept, i++) {            
+            System.arraycopy(levels.get(i).ref_ids.array(), 0, ref_ids.array(), off, levels.get(i).num_kept);
+        }
+        
+        // Copy the cell indices with an offset       
+        for (int i = 0, off = 0, cell_off = 0; i < num_levels; off += levels.get(i).num_kept, cell_off += levels.get(i).num_cells, i++) {
+            int num_kept = levels.get(i).num_kept;
+            if (num_kept != 0) {
+                copy_refs(levels.get(i).cell_ids, cell_ids.splitSubArrayFrom(off), cell_off, num_kept);
+                //DEBUG_SYNC();
+            }
+            levels.get(i).ref_ids = null;
+        }
+        
+        // Mark the cells at the leaves of the structure as kept
+        IntArray kept_cells = new IntArray(new int[total_cells + 1]);
+        
+        for (int i = 0, cell_off = 0; i < num_levels; cell_off += levels.get(i).num_cells, i++) {
+            int num_cells = levels.get(i).num_cells;
+            mark_kept_cells(levels.get(i).entries, kept_cells.splitSubArrayFrom(cell_off), num_cells);
+            //DEBUG_SYNC();
+        }
+        
+        // Compute the insertion position of each cell
+        IntArray start_cell = new IntArray(new int[total_cells + 1]);  
+        int new_total_cells = IntArray.exclusiveScan(kept_cells, total_cells+1, start_cell); 
+        
+        // Allocate new cells, and copy only the cells that are kept
+        Cell[] cells = new Cell[new_total_cells];
+        for (int i = 0, cell_off = 0; i < num_levels; cell_off += levels.get(i).num_cells, i++) {
+            int num_cells = levels.get(i).num_cells;
+            copy_cells(levels.get(i).cells, start_cell, cells, cell_off, num_cells);
+            //DEBUG_SYNC();
+            //mem.free(levels[i].cells);
+            levels.get(i).cells = null;
+        }
+        
+        Entry[] entries = new Entry[total_cells];
+        for (int i = 0, off = 0; i < num_levels; off += levels.get(i).num_cells, i++) {
+            int num_cells = levels.get(i).num_cells;
+            int next_level_off = off + num_cells;
+            //copy_entries(levels.get(i).entries, start_cell, entries + off, off, next_level_off, num_cells);
+            copy_entries(levels.get(i).entries, start_cell, entries, off, next_level_off, num_cells);
+            //DEBUG_SYNC();
+            //mem.free(levels[i].entries);
+            levels.get(i).entries = null;
+        }
+        
+        // Remap the cell indices in the references (which currently map to incorrect cells)
+        remap_refs(cell_ids, start_cell, total_refs);
+        //DEBUG_SYNC();
+        
+        // Sort the references by cell (re-use old slots whenever possible)
+        IntArray tmp_ref_ids  = new IntArray(new int[total_refs]);
+        IntArray tmp_cell_ids = new IntArray(new int[total_refs]);
+        IntArray new_ref_ids = new IntArray(tmp_ref_ids.array());
+        IntArray new_cell_ids = new IntArray(tmp_cell_ids.array());        
+        IntArray.sort_pairs(cell_ids, ref_ids, new_cell_ids, new_ref_ids);
+        if (!ref_ids.equals(new_ref_ids)) 
+            ref_ids.swap(tmp_ref_ids);           
+        if (!cell_ids.equals(new_cell_ids)) 
+            cell_ids.swap(tmp_cell_ids);    
+        
+        // Compute the ranges of references for each cell
+        compute_cell_ranges(cell_ids, cells, total_refs);
+        //DEBUG_SYNC();
+        
+        grid.entries = entries;
+        grid.ref_ids = ref_ids;
+        grid.cells   = cells;
+        grid.shift   = levels.size() - 1;
+        grid.num_cells   = new_total_cells;
+        grid.num_entries = total_cells;
+        grid.num_refs    = total_refs;
+        
+        
+        grid.offsets = new IntArray(new int[levels.size()]);
+        for (int i = 0, off = 0; i < levels.size(); i++) {
+            off += levels.get(i).num_cells;
+            grid.offsets.set(i, off);
+        }        
     }
     
     public void build_grid(Tri[] prims, int num_prims, Grid grid, float top_density, float snd_density)
@@ -599,7 +786,7 @@ public class Build extends GridAbstracts{
         // Round to the next multiple of 2 on each dimension (in order to align the memory)
         dims.x = (dims.x % 2) != 0 ? dims.x + 1 : dims.x;
         dims.y = (dims.y % 2) != 0 ? dims.y + 1 : dims.y;
-        
+                
         // Slightly enlarge the bounding box of the grid
         Vec2f extents = grid_bb.extents();
         grid_bb.min = grid_bb.min.sub(extents.mul(0.001f));
@@ -619,21 +806,11 @@ public class Build extends GridAbstracts{
         while(this.build_iter(prims, num_prims, dims, log_dims, levels))
             iter++;
         
-        ArrayList<Cell> cellList = new ArrayList();
-        for(Level level : levels)
-        {
-            cellList.addAll(Arrays.asList(level.cells));
-        }
+        concat_levels(levels, grid);
         
-        Cell[] cells = new Cell[cellList.size()];
-        cellList.toArray(cells);
         
-        //System.out.println("cell count " +cells.length);
-        
-        //engine.setMCellInfo(MCellInfo.getCells(engine, cells, this.grid_bbox, dims, this.grid_shift));
-        
-        //System.out.println(levels.size());
-                
+       // engine.setMCellInfo(MCellInfo.getCells(engine, cells, this.grid_bbox, dims, this.grid_shift));
+                        
         grid.bbox = grid_bb;
         grid.dims = dims;
     }

@@ -6,6 +6,7 @@
 package gridanalysis.jfx;
 
 import gridanalysis.algorithm.Build;
+import gridanalysis.algorithm.Merge;
 import gridanalysis.coordinates.Vec2f;
 import gridanalysis.gridclasses.Grid;
 import gridanalysis.gridclasses.Tri;
@@ -33,6 +34,7 @@ public class MEngine {
     Grid grid = new Grid();
     float top_density = 0.12f;
     float snd_density = 2.4f;
+    float alpha = 0.995f;
     
     public void draw()
     {
@@ -52,13 +54,20 @@ public class MEngine {
     {
         this.ctx = context;
         this.triangles = new ArrayList();
-        mtriangles = Utility.generateTriangles(ctx, triangles, 1, new Vec2f(0, 0), new Vec2f(500, 500));
+        mtriangles = Utility.generateTriangles(ctx, triangles, 2, new Vec2f(0, 0), new Vec2f(500, 500));
         
         Tri[] tris = new Tri[triangles.size()];
         triangles.toArray(tris);
         
         Build build = new Build(this);
         build.build_grid((Tri[]) tris, triangles.size(), grid, top_density, snd_density);
+        
+        Merge merge = new Merge(this);
+        merge.merge_grid(grid, alpha);
+        
+        System.out.println("kubafu");
+        
+        setMCellInfo(MCellInfo.getCells(this, grid.cells, grid.bbox, grid.dims, grid.shift));
     }    
     
     public void drawMCellInfo()
@@ -71,10 +80,11 @@ public class MEngine {
     {
         return ctx;
     }
-    
-    public void setMCellInfo(ArrayList<MCellInfo> cellInfo)
+        
+    public void setMCellInfo(ArrayList<MCellInfo>... cellInfoArray)
     {
         this.cellInfo.clear();
-        this.cellInfo.addAll(cellInfo);
+        for(ArrayList<MCellInfo> cellInfoList : cellInfoArray)
+            this.cellInfo.addAll(cellInfoList);
     }
 }

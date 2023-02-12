@@ -101,23 +101,30 @@ public class MCellInfo {
     {
         ArrayList<MCellInfo> cells = new ArrayList();
         for (Cell cell : cellArray) {
-            Vec2f cellExtents = Utility.getCellSize(dims.leftShift(shift), grid_bound);
             
-            Vec2f cellMin = new Vec2f(cell.min).mul(cellExtents).add(grid_bound.min);
-            Vec2f cellMax = new Vec2f(cell.max).mul(cellExtents).add(grid_bound.min);
+            Vec2f cell_size = Utility.getCellSize(dims.leftShift(shift), grid_bound);
+                       
+            Vec2f cellMin = new Vec2f(cell.min).mul(cell_size).add(grid_bound.min);
+            Vec2f cellMax = new Vec2f(cell.max).mul(cell_size).add(grid_bound.min);
             
             BBox cellBound = new BBox(cellMin, cellMax);
+            
+            //System.out.println("extents    "+cellBound.extents());
+            //System.out.println("grid bound "+grid_bound.extents());
+            //System.out.println("cell_min "+cellMin);
             
             cells.add(new MCellInfo(engine.getGraphicsContext(), cellBound));
         }        
         return cells;
     }
     
+    
     public static ArrayList<MCellInfo> getCells(MEngine engine, Cell[] cellArray, IntArray array_ids, BBox grid_bound,  Vec2i dims, int shift)
     {
         ArrayList<MCellInfo> cells = new ArrayList();
         int i = 0;
         for (Cell cell : cellArray) {
+           
             Vec2f cellExtents = Utility.getCellSize(dims.leftShift(shift), grid_bound);
             
             Vec2f cellMin = new Vec2f(cell.min).mul(cellExtents).add(grid_bound.min);

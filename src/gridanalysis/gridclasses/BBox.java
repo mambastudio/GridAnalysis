@@ -78,6 +78,8 @@ public class BBox {
                 min.y > bb.min.y || max.y < bb.max.y);
     }
     
+    public BBox copy(){return new BBox(min.copy(), max.copy());}
+    
      @Override
     public final String toString() {
         return String.format("(%.2f, %.2f) to (%.2f, %.2f)", min.x, min.y, max.x, max.y);

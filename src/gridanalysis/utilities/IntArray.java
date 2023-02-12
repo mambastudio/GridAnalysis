@@ -201,11 +201,21 @@ public class IntArray {
     @Override
     public String toString()
     {
-        StringBuilder builder = new StringBuilder();
-        int[] arr = getCopyRangeArray();
-        for(int i : arr)
-            builder.append(String.format("%3s",i));
-        return builder.toString();
+        if (array == null)
+            return "null";
+        int iMax = size() - 1;
+        if (iMax == -1)
+            return "[]";
+
+        StringBuilder b = new StringBuilder();
+        b.append('[');
+        for (int i = offset; i<(offset + size()); i++) {
+            b.append(array[i]);
+            if (i == iMax)
+                return b.append(']').toString();
+            b.append(", ");
+        }
+        throw new UnsupportedOperationException("IntArray has an issue");
     }
     
     @Override

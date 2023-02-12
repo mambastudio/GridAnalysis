@@ -12,15 +12,8 @@ package test;
 public class Test2 {
     public static void main(String... args)
     {
-        int v = Integer.MAX_VALUE;
-       
-        System.out.println(log2(v));
-        
+        for(int i = 0; i<8; i++)
+            System.out.println(Integer.toBinaryString(i));
     }
     
-    public static int log2(int n)
-    {
-        if(n <= 0) throw new IllegalArgumentException();
-        return 31 - Integer.numberOfLeadingZeros(n);
-    }
 }

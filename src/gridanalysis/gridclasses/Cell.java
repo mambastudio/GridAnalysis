@@ -28,4 +28,14 @@ public class Cell {
         this.max = max;
         this.end = end;
     }
+    
+    @Override
+    public final String toString() {
+        return String.format("(min %1s, max %1s, begin %1s, end %1s)", min, max, begin, end);
+    }
+    
+    public Cell copy()
+    {
+        return new Cell(min.copy(), begin, max.copy(), end);
+    }
 }

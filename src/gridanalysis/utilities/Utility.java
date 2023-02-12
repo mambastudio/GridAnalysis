@@ -30,6 +30,16 @@ public class Utility {
         return triangles;
     }
     
+    public static ArrayList<Tri> generateSingleTriangle(int nTriangles, Vec2f min, Vec2f max)
+    {
+        ArrayList<Tri> triangles = new ArrayList();
+        
+        Tri tri = new Tri(new Vec2f(0, 200), new Vec2f(200, 200), new Vec2f(200, 0));
+        triangles.add(tri);
+        
+        return triangles;
+    }
+    
     public static ArrayList<MTriangle> generateTriangles(GraphicsContext context, ArrayList<Tri> tris, int nTriangles, Vec2f min, Vec2f max)
     {
         ArrayList<Tri> triangles = generateTriangles(nTriangles, min, max);
@@ -42,6 +52,8 @@ public class Utility {
         });
         return mtriangles;
     }
+    
+    
     
     public static Tri generate_random_triangle(Vec2f triangle_min, Vec2f triangle_max)
     {
