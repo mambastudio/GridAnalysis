@@ -13,6 +13,7 @@ import gridanalysis.gridclasses.Grid;
 import gridanalysis.gridclasses.MergeBuffers;
 import gridanalysis.jfx.MEngine;
 import gridanalysis.utilities.IntArray;
+import gridanalysis.utilities.ObjArray;
 import static java.lang.Math.max;
 
 /**
@@ -119,7 +120,7 @@ public class Merge extends GridAbstracts{
             int count = -(cell1.end - cell1.begin + 1);
             int next_id = -1;            
             if (merge_allowed(empty_mask, cell1.min.get(axis)) && next_pos.get(axis) < grid_dims.get(axis)) {
-                System.out.println(grid_shift);
+               
                 next_id = lookup_entry(entries, grid_shift, grid_dims.rightShift(grid_shift), next_pos);
                 Cell cell2 = cells[next_id];
 
@@ -225,6 +226,7 @@ public class Merge extends GridAbstracts{
                       Cell[] new_cells,
                       IntArray new_refs,
                       int num_cells) {
+        
         for(int id = 0; id<num_cells; id++)
         {  
             boolean valid = id < num_cells;
@@ -273,7 +275,9 @@ public class Merge extends GridAbstracts{
                 if (next_begin >= next_end) {
                     for (int i = cell_begin, j = new_refs_begin; i < cell_end; i++, j++)
                         new_refs.set(j, refs.get(i));
+                    
                 } else {
+                    
                     merge_refs(refs.splitSubArrayFrom(cell_begin), cell_end - cell_begin,
                                refs.splitSubArrayFrom(next_begin), next_end - next_begin,
                                new_refs.splitSubArrayFrom(new_refs_begin));
@@ -282,38 +286,39 @@ public class Merge extends GridAbstracts{
         }
     }
     
-    public void merge_iteration(int axis, Grid grid, Cell[] new_cells, IntArray new_refs, int empty_mask, MergeBuffers bufs)
+    public void merge_iteration(int axis, Grid grid, ObjArray<Cell> new_cells, IntArray new_refs, int empty_mask, MergeBuffers bufs)
     {
-        int num_cells       = grid.num_cells;
-        int num_entries     = grid.num_entries;
-        Cell[] cells        = grid.cells;
-        IntArray refs       = grid.ref_ids;
-        Entry[] entries     = grid.entries;
+        int num_cells           = grid.num_cells;
+        int num_entries         = grid.num_entries;
+        ObjArray<Cell> cells    = new ObjArray(grid.cells);
+        IntArray refs           = grid.ref_ids;
+        Entry[] entries         = grid.entries;
         
         bufs.prevs.fillOne(num_cells);
-        compute_merge_counts(axis, entries, cells, refs, bufs.merge_counts, bufs.nexts, bufs.prevs, empty_mask, num_cells);
+        compute_merge_counts(axis, entries, cells.array(), refs, bufs.merge_counts, bufs.nexts, bufs.prevs, empty_mask, num_cells);
         compute_cell_flags(bufs.nexts, bufs.prevs, bufs.cell_flags, num_cells);
         compute_ref_counts(bufs.merge_counts, bufs.cell_flags, bufs.ref_counts, num_cells);
+        
+        
         
         int num_new_refs  = IntArray.exclusiveScan(bufs.ref_counts, num_cells + 1, bufs.ref_scan);
         int num_new_cells = IntArray.exclusiveScan(bufs.cell_flags, num_cells + 1, bufs.cell_scan);
         
-        merge( axis,entries, cells, refs,
+        merge(  axis,entries, cells.array(), refs,
                 bufs.cell_scan, bufs.ref_scan,
                 bufs.merge_counts, bufs.new_cell_ids,
-                new_cells, new_refs,
+                new_cells.array(), new_refs,
                 num_cells);
         
         remap_entries(entries, bufs.new_cell_ids, num_entries);
         
-        
-        //std::swap(new_cells, cells);
-        //std::swap(new_refs,  refs);
+        new_cells.swap(cells);
+        new_refs.swap(refs);
 
-        //grid.cells     = cells;
-        //grid.ref_ids   = refs;
-        //grid.num_cells = num_new_cells;
-        //grid.num_refs  = num_new_refs;
+        grid.cells     = cells.array();
+        grid.ref_ids   = refs;
+        grid.num_cells = num_new_cells;
+        grid.num_refs  = num_new_refs;
     }
     
     /// Performs the neighbor merging optimization (merging cells according to the SAH).
@@ -343,5 +348,18 @@ public class Merge extends GridAbstracts{
         this.grid_dims = dims;
         this.cell_size = cell_size0;
         this.grid_shift = grid.shift;
+        
+        if (alpha > 0) {
+            int prev_num_cells = 0, iter = 0;
+            ObjArray<Cell> nnew_cells = new ObjArray(new_cells);
+            do {
+                prev_num_cells = grid.num_cells;
+                int mask = iter > 3 ? 0 : (1 << (iter + 1)) - 1;
+                merge_iteration(0, grid, nnew_cells, new_refs, mask, bufs);
+                merge_iteration(1, grid, nnew_cells, new_refs, mask, bufs); 
+                System.out.println("kubafu");
+                iter++;
+            } while (grid.num_cells < alpha * prev_num_cells);
+        }
     }
 }

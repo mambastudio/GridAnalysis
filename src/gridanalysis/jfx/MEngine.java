@@ -65,7 +65,6 @@ public class MEngine {
         Merge merge = new Merge(this);
         merge.merge_grid(grid, alpha);
         
-        System.out.println("kubafu");
         
         setMCellInfo(MCellInfo.getCells(this, grid.cells, grid.bbox, grid.dims, grid.shift));
     }    

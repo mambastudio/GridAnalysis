@@ -40,9 +40,19 @@ public class Utility {
         return triangles;
     }
     
+    public static ArrayList<Tri> generateTwoTriangle(int nTriangles, Vec2f min, Vec2f max)
+    {
+        ArrayList<Tri> triangles = new ArrayList();
+        
+        triangles.add(new Tri(new Vec2f(0, 200), new Vec2f(200, 200), new Vec2f(200, 0)));
+        triangles.add(new Tri(new Vec2f(400, 0), new Vec2f(600, 500), new Vec2f(600, 0)));
+        
+        return triangles;
+    }
+    
     public static ArrayList<MTriangle> generateTriangles(GraphicsContext context, ArrayList<Tri> tris, int nTriangles, Vec2f min, Vec2f max)
     {
-        ArrayList<Tri> triangles = generateTriangles(nTriangles, min, max);
+        ArrayList<Tri> triangles = generateTwoTriangle(nTriangles, min, max);
         tris.addAll(triangles);
         
         ArrayList<MTriangle> mtriangles = new ArrayList();
