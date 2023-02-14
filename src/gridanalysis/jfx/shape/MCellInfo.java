@@ -103,7 +103,7 @@ public class MCellInfo {
         for (Cell cell : cellArray) {
             
             Vec2f cell_size = Utility.getCellSize(dims.leftShift(shift), grid_bound);
-                       
+                                   
             Vec2f cellMin = new Vec2f(cell.min).mul(cell_size).add(grid_bound.min);
             Vec2f cellMax = new Vec2f(cell.max).mul(cell_size).add(grid_bound.min);
             

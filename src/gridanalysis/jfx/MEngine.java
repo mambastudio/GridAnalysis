@@ -33,7 +33,7 @@ public class MEngine {
     
     Grid grid = new Grid();
     float top_density = 0.12f;
-    float snd_density = 2.4f;
+    float snd_density = 0.0f;
     float alpha = 0.995f;
     
     public void draw()
@@ -64,7 +64,6 @@ public class MEngine {
         
         Merge merge = new Merge(this);
         merge.merge_grid(grid, alpha);
-        
         
         setMCellInfo(MCellInfo.getCells(this, grid.cells, grid.bbox, grid.dims, grid.shift));
     }    
