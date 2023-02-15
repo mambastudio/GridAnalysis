@@ -15,9 +15,8 @@ import gridanalysis.gridclasses.Level;
 import gridanalysis.gridclasses.Range;
 import gridanalysis.gridclasses.Tri;
 import gridanalysis.jfx.MEngine;
-import gridanalysis.jfx.shape.MCellInfo;
 import gridanalysis.utilities.IntArray;
-import gridanalysis.utilities.Utility;
+import gridanalysis.utilities.ObjHolder;
 import static java.lang.Math.cbrt;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -758,7 +757,7 @@ public class Build extends GridAbstracts{
         
         grid.entries = entries;
         grid.ref_ids = ref_ids;
-        grid.cells   = cells;
+        grid.cells   = new ObjHolder(cells);
         grid.shift   = levels.size() - 1;
         grid.num_cells   = new_total_cells;
         grid.num_entries = total_cells;

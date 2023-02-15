@@ -12,8 +12,9 @@ import gridanalysis.gridclasses.Entry;
 import gridanalysis.gridclasses.Grid;
 import gridanalysis.gridclasses.MergeBuffers;
 import gridanalysis.jfx.MEngine;
+import gridanalysis.jfx.shape.MCellInfo;
 import gridanalysis.utilities.IntArray;
-import gridanalysis.utilities.ObjArray;
+import gridanalysis.utilities.ObjHolder;
 import static java.lang.Math.max;
 import java.util.Arrays;
 
@@ -157,8 +158,6 @@ public class Merge extends GridAbstracts{
                 prevs.set(next_id, id);
             }
         }
-        
-        System.out.println(nexts);
     }
     
     public void compute_cell_flags(IntArray nexts,
@@ -217,6 +216,7 @@ public class Merge extends GridAbstracts{
         {            
             if (id < num_entries) {
                 Entry entry = entries[id];
+                
                 if (entry.log_dim == 0) entries[id] = make_entry(0, new_cell_ids.get(entry.begin));
             }
         }
@@ -235,97 +235,88 @@ public class Merge extends GridAbstracts{
                       IntArray new_refs,
                       int num_cells) {
         
-        for(int id = 0; id<num_cells; id++)
-        {  
-            boolean valid = id < num_cells;
-            int new_id = valid ? cell_scan.get(id) : 0;
-            valid &= cell_scan.get(id + 1) > new_id;
+        for (int id = 0; id < num_cells; id++) {
+            int new_id = cell_scan.get(id);
+            if (cell_scan.get(id + 1) <= new_id)
+                continue;
 
             int cell_begin = 0, cell_end = 0;
             int next_begin = 0, next_end = 0;
             int new_refs_begin;
-             if (valid) {
-                 System.out.println("k");
-                Cell cell = cells[id];
-                int merge_count = merge_counts.get(id);
 
-                new_refs_begin = ref_scan.get(id);
-                new_cell_ids.set(id, new_id);
-                cell_begin = cell.begin;
-                cell_end   = cell.end;
+            Cell cell = cells[id];
+            int merge_count = merge_counts.get(id);
 
-                Vec2i new_min;
-                Vec2i new_max;
-                int new_refs_end;
-                if (merge_count >= 0) 
-                {
-                    // Do the merge and store the references into the new array
-                    int next_id = lookup_entry(entries, grid_shift, grid_dims.rightShift(grid_shift), next_cell(axis, cell.min, cell.max));
-                    Cell next_cell = cells[next_id];
-                    next_begin = next_cell.begin;
-                    next_end   = next_cell.end;
+            new_refs_begin = ref_scan.get(id);
+            new_cell_ids.set(id, new_id);
+            cell_begin = cell.begin;
+            cell_end = cell.end;
 
-                    // Make the next cell point to the merged one
-                    new_cell_ids.set(next_id, new_id);
+            Vec2i new_min;
+            Vec2i new_max;
+            int new_refs_end;
+            if (merge_count >= 0) {
+                // Do the merge and store the references into the new array
+                int next_id = lookup_entry(entries, grid_shift, grid_dims.rightShift(grid_shift), next_cell(axis, cell.min, cell.max));
+                Cell next_cell = cells[next_id];
+                next_begin = next_cell.begin;
+                next_end = next_cell.end;
 
-                    new_min = Vec2i.min(next_cell.min, cell.min);
-                    new_max = Vec2i.max(next_cell.max, cell.max);
-                    new_refs_end = new_refs_begin + merge_count;
-                } else {
-                   new_min = cell.min;
-                   new_max = cell.max;
-                   new_refs_end = new_refs_begin + (cell_end - cell_begin);
-                }
+                // Make the next cell point to the merged one
+                new_cell_ids.set(next_id, new_id);
 
-                new_cells[id] = new Cell(new_min, new_refs_begin,
-                                         new_max, new_refs_end);
-                
-                if (next_begin >= next_end) {
-                    for (int i = cell_begin, j = new_refs_begin; i < cell_end; i++, j++)
-                        new_refs.set(j, refs.get(i));
-                    
-                } else {
-                    
-                    merge_refs(refs.splitSubArrayFrom(cell_begin), cell_end - cell_begin,
-                               refs.splitSubArrayFrom(next_begin), next_end - next_begin,
-                               new_refs.splitSubArrayFrom(new_refs_begin));
-                }
-            }            
+                new_min = Vec2i.min(next_cell.min, cell.min);
+                new_max = Vec2i.max(next_cell.max, cell.max);
+                new_refs_end = new_refs_begin + merge_count;
+            } else {
+                new_min = cell.min;
+                new_max = cell.max;
+                new_refs_end = new_refs_begin + (cell_end - cell_begin);
+            }
+
+            new_cells[new_id] = new Cell(new_min, new_refs_begin, new_max, new_refs_end);
+
+            if (next_begin >= next_end) {
+                for (int i = cell_begin, j = new_refs_begin; i < cell_end; i++, j++)
+                    new_refs.set(j, refs.get(i));
+                continue;
+            }
+
+            merge_refs(refs.splitSubArrayFrom(cell_begin), cell_end - cell_begin,
+                refs.splitSubArrayFrom(next_begin), next_end - next_begin,
+                new_refs.splitSubArrayFrom(new_refs_begin));
         }
     }
     
-    public void merge_iteration(int axis, Grid grid, ObjArray<Cell> new_cells, IntArray new_refs, int empty_mask, MergeBuffers bufs)
+    public void merge_iteration(int axis, Grid grid, ObjHolder<Cell[]> new_cells, IntArray new_refs, int empty_mask, MergeBuffers bufs)
     {
         
         int num_cells           = grid.num_cells;
         int num_entries         = grid.num_entries;
-        ObjArray<Cell> cells    = new ObjArray(grid.cells);
+        ObjHolder<Cell[]> cells = new ObjHolder(grid.cells);
         IntArray refs           = grid.ref_ids;
         Entry[] entries         = grid.entries;
         
         bufs.prevs.fillOne(num_cells);
-        compute_merge_counts(axis, entries, cells.array(), refs, bufs.merge_counts, bufs.nexts, bufs.prevs, empty_mask, num_cells);
-        compute_cell_flags(bufs.nexts, bufs.prevs, bufs.cell_flags, num_cells);
-        
+        compute_merge_counts(axis, entries, cells.get(), refs, bufs.merge_counts, bufs.nexts, bufs.prevs, empty_mask, num_cells);
+        compute_cell_flags(bufs.nexts, bufs.prevs, bufs.cell_flags, num_cells);        
         compute_ref_counts(bufs.merge_counts, bufs.cell_flags, bufs.ref_counts, num_cells);
         
         int num_new_refs  = IntArray.exclusiveScan(bufs.ref_counts, num_cells + 1, bufs.ref_scan);
         int num_new_cells = IntArray.exclusiveScan(bufs.cell_flags, num_cells + 1, bufs.cell_scan);
         
-        
-        merge(  axis,entries, cells.array(), refs,
+        merge(  axis,entries, cells.get(), refs,
                 bufs.cell_scan, bufs.ref_scan,
                 bufs.merge_counts, bufs.new_cell_ids,
-                new_cells.array(), new_refs,
+                new_cells.get(), new_refs,
                 num_cells);
         
-        
-        
+        remap_entries(entries, bufs.new_cell_ids, num_entries);
+                        
         new_cells.swap(cells);
         new_refs.swap(refs);
-        
-
-        grid.cells     = cells.array();
+                
+        grid.cells     = cells;
         grid.ref_ids   = refs;
         grid.num_cells = num_new_cells;
         grid.num_refs  = num_new_refs;
@@ -334,6 +325,7 @@ public class Merge extends GridAbstracts{
     /// Performs the neighbor merging optimization (merging cells according to the SAH).
     public void merge_grid(Grid grid, float alpha)
     {
+        
         MergeBuffers bufs = new MergeBuffers();
         
         Cell[] new_cells = new Cell[grid.num_cells];
@@ -358,20 +350,21 @@ public class Merge extends GridAbstracts{
         this.grid_dims = dims;
         this.cell_size = cell_size0;
         this.grid_shift = grid.shift;
-                
-       
+        
+        
         if (alpha > 0) {
             int prev_num_cells = 0, iter = 0;
-            ObjArray<Cell> nnew_cells = new ObjArray(new_cells);
+            ObjHolder<Cell[]> nnew_cells = new ObjHolder(new_cells);
             do {
                 prev_num_cells = grid.num_cells;
                 int mask = iter > 3 ? 0 : (1 << (iter + 1)) - 1;
                 merge_iteration(0, grid, nnew_cells, new_refs, mask, bufs);
                 merge_iteration(1, grid, nnew_cells, new_refs, mask, bufs); 
                 iter++;
-            } while (grid.num_cells < alpha * prev_num_cells);
-            System.out.println(iter);
+            } while (grid.num_cells < alpha * prev_num_cells);            
         }
+
+       engine.setMCellInfo(MCellInfo.getCells(engine, grid.cells.get(), grid.entries, grid.bbox, grid.dims, grid.shift));
         
     }
 }

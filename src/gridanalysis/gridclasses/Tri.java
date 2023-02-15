@@ -122,5 +122,14 @@ public class Tri {
     public static boolean intersect_prim_cell(Tri tri, BBox bbox) {
         return intersect_tri_box(false, true, tri.v0, tri.e1, tri.e2, tri.normal(), bbox.min, bbox.max);
     }
-
+   
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder();
+        builder.append("p0 ").append(p0()).append("\n");
+        builder.append("p1 ").append(p1()).append("\n");
+        builder.append("p2 ").append(p2()).append("\n");
+        return builder.toString();
+    }
 }

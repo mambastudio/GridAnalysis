@@ -7,6 +7,7 @@ package gridanalysis.gridclasses;
 
 import gridanalysis.coordinates.Vec2i;
 import gridanalysis.utilities.IntArray;
+import gridanalysis.utilities.ObjHolder;
 
 /**
  *
@@ -15,7 +16,7 @@ import gridanalysis.utilities.IntArray;
 public class Grid {
     public Entry[] entries;                ///< Voxel map, stored as a contiguous array
     public IntArray   ref_ids;             ///< Array of primitive references
-    public Cell[]  cells;                  ///< Cells of the structure (nullptr if compressed)
+    public ObjHolder<Cell[]>  cells;                  ///< Cells of the structure (nullptr if compressed)
 
     //SmallCell* small_cells;       ///< Compressed cells (nullptr if not compressed)
 

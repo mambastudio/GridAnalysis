@@ -6,6 +6,7 @@
 package gridanalysis.jfx;
 
 import gridanalysis.algorithm.Build;
+import gridanalysis.algorithm.Expand;
 import gridanalysis.algorithm.Merge;
 import gridanalysis.coordinates.Vec2f;
 import gridanalysis.gridclasses.Grid;
@@ -33,8 +34,9 @@ public class MEngine {
     
     Grid grid = new Grid();
     float top_density = 0.12f;
-    float snd_density = 0.0f;
+    float snd_density = 0.09f;
     float alpha = 0.995f;
+    int exp_iters = 3;
     
     public void draw()
     {
@@ -65,7 +67,10 @@ public class MEngine {
         Merge merge = new Merge(this);
         merge.merge_grid(grid, alpha);
         
-        setMCellInfo(MCellInfo.getCells(this, grid.cells, grid.bbox, grid.dims, grid.shift));
+        //Expand expand = new Expand(this);
+        //expand.expand_grid(grid, tris, exp_iters);
+        
+        
     }    
     
     public void drawMCellInfo()
