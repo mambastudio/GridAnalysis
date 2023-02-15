@@ -58,6 +58,10 @@ public class Float2 {
     public static Float2 mul(Float2 a, Float2 b) {
         return new Float2(a.x * b.x, a.y * b.y);
     }
+    
+    public static Float2 div(Float2 a, Float2 b) {
+        return new Float2(a.x / b.x, a.y / b.y);
+    }
 
     public static Float2 min(Float2 a, Float2 b) {
         return new Float2(Math.min(a.x, b.x), Math.min(a.y, b.y));
