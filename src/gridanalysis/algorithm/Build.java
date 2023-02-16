@@ -781,10 +781,13 @@ public class Build extends GridAbstracts{
         BBox grid_bb = Arrays.stream(bboxes, 0, num_prims).reduce(new BBox(), (a, b) ->{
             a.extend(b); return a;});
         
+        
         Vec2i dims = compute_grid_dims(grid_bb, num_prims, top_density);
         // Round to the next multiple of 2 on each dimension (in order to align the memory)
         dims.x = (dims.x % 2) != 0 ? dims.x + 1 : dims.x;
         dims.y = (dims.y % 2) != 0 ? dims.y + 1 : dims.y;
+        
+        System.out.println(dims);
                 
         // Slightly enlarge the bounding box of the grid
         Vec2f extents = grid_bb.extents();

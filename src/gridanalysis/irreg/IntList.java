@@ -60,6 +60,12 @@ public class IntList
         size = 0;
     }
     
+    public void clearResize(int[] array)
+    {
+        this.array = array;
+        this.size = array.length;
+    }
+    
     public final void add(int i)
     {
         ensureCapacity(size + 1);
@@ -127,6 +133,11 @@ public class IntList
     public final int get(int index)
     {
         return array[index];
+    }
+    
+    public final int end()
+    {
+        return array[size-1];
     }
 
     public final int size()

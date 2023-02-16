@@ -91,4 +91,9 @@ public class Float2 {
         float invLength = 1.0f / length(a);
         return mul(a, invLength);
     }
+    
+    @Override
+    public final String toString() {
+        return String.format("(%.2f, %.2f)", x, y);
+    }
 }

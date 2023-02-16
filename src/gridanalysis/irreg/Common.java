@@ -14,6 +14,8 @@ import java.util.function.Supplier;
  */
 public class Common {
     public final static float pi = 3.14159265359f;
+    /// Number of bits to allocate to store the sub-level dimensions in the voxel map.
+    public static int ENTRY_SHIFT = 4;
     
     // A method to swap two ArrayList objects in Java
     public static<T> void swapArrayLists(ArrayList<T> list1, ArrayList<T> list2) {
@@ -71,7 +73,7 @@ public class Common {
         return a * (1 - u - v) + b * u + c * v;
     }
 
-        public static int closest_log2(int k) {
+    public static int closest_log2(int k) {
         // One could use a CLZ instruction if the hardware supports it
         int i = 0;
         while ((1 << i) < k) i++;

@@ -5,7 +5,6 @@
  */
 package gridanalysis.irreg;
 
-import gridanalysis.irreg.Float2;
 import static gridanalysis.irreg.Float2.max;
 import static gridanalysis.irreg.Float2.min;
 import static gridanalysis.irreg.Float2.sub;
@@ -15,12 +14,12 @@ import static gridanalysis.irreg.Float2.sub;
  * @author user
  */
 public class BBox2 {
-    Float2 min, max;
-    public BBox2() {}
+    public Float2 min, max;
+    public BBox2() {min = new Float2(Float.MAX_VALUE);  max = new Float2(-Float.MAX_VALUE);}
     public BBox2(Float2 f){min = (f); max = (f);}
     public BBox2(Float2 min, Float2 max){this.min=min; this.max=max;}
 
-    public BBox2 extend(Float2 f) {
+    public BBox2 extend(Float2 f) {        
         min = min(min, f);
         max = max(max, f);
         return this;
@@ -68,6 +67,11 @@ public class BBox2 {
         return is_included(bb) &&
                (min.x > bb.min.x || max.x < bb.max.x ||
                 min.y > bb.min.y || max.y < bb.max.y);
+    }
+    
+    @Override
+    public final String toString() {
+        return String.format("(%.2f, %.2f) to (%.2f, %.2f)", min.x, min.y, max.x, max.y);
     }
 
     static BBox2 empty() { return new BBox2(new Float2(Float.MAX_VALUE),  new Float2(-Float.MAX_VALUE)); }

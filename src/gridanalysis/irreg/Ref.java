@@ -22,4 +22,9 @@ public class Ref {
     public Ref() {}
     public Ref(int tri, int top, long snd)        
     {this.tri = tri; this.top_cell = top; this.snd_cell = snd;}
+    
+    @Override
+    public final String toString() {
+        return String.format("(%1s, %1s)", tri, top_cell);
+    }
 }
