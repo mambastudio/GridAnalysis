@@ -47,6 +47,12 @@ public class IntList
         array = new int[capacity];
         size = 0;
     }   
+    
+    public IntList(int[] array)
+    {
+        this.array = array;
+        this.size = array.length;
+    }
 
     public void clear()
     {
@@ -133,6 +139,13 @@ public class IntList
         if(size < array.length)
             array = Arrays.copyOf(array, size);        
         return array;
+    }
+    
+    public IntList prefixSum()
+    {
+        int[] trimmed = trim();
+        Arrays.parallelPrefix(trimmed, (x, y) -> x + y);
+        return new IntList(trimmed);
     }
         
     private void rangeCheck(int index) {

@@ -16,7 +16,7 @@ import static gridanalysis.irreg.Float2.sub;
 /// Information required to build an irregular grid.
 public class GridInfo {
     BBox2 bbox;                     ///< Bounding box of the grid
-    int[]  dims = new int[3];       ///< Dimensions of the top level
+    int[]  dims = new int[2];       ///< Dimensions of the top level
     int  max_snd_dim;               ///< Maximum second level density
     
     /// Returns the size of a top-level cell.
