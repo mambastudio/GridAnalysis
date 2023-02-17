@@ -15,15 +15,15 @@ import gridanalysis.utilities.Utility;
 public class Test {
     public static void main(String... args)
     {
-        Vec2i grid = new Vec2i(5, 5);
-        int i = 24;
+        int pop_count[] = { 0, 1, 1, 2,
+                            1, 2, 2, 3,
+                            1, 2, 2, 3,
+                            2, 3, 3, 4};
         
-        Vec2i gridCoord = Utility.getGridCoord(i, grid);
+        int flag = Integer.parseInt("01111", 2); 
         
-        int x = gridCoord.x;
-        int y = gridCoord.y;
+        System.out.println(pop_count[flag]);
+       
         
-        System.out.println("x: " +x+ " y: " +y);
-        System.out.println("index: " +Utility.getGridIndex(x, y, grid));
     }
 }
