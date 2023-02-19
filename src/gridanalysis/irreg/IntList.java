@@ -66,6 +66,23 @@ public class IntList
         this.size = array.length;
     }
     
+    public void resize(int size)
+    {
+        rangeAboveZero(size);
+        int[] arrayNew = new int[size];
+        int length = size < size() ? size : size();
+        System.arraycopy(array, 0, arrayNew, 0, length);
+        
+        this.array = arrayNew;
+        this.size = size;
+    }
+    
+    public void resize(int size, int value)
+    {
+        resize(size);
+        Arrays.fill(array, 0, size, value);
+    }
+    
     public final void add(int i)
     {
         ensureCapacity(size + 1);
@@ -110,6 +127,7 @@ public class IntList
 
     public final int[] remove(int fromIndex, int toIndex)
     {        
+        subListRangeCheck(fromIndex, toIndex, size);
         int removeSize = toIndex - fromIndex;
         int[] arr = new int[removeSize];
         
@@ -119,8 +137,21 @@ public class IntList
         return arr;
     }
     
+    public final void increment(int index)
+    {
+        rangeCheck(index);
+        array[index]++;
+    }
+    
+    public final void decrement(int index)
+    {
+        rangeCheck(index);
+        array[index]--;
+    }
+    
     public final void set(int index, int value)
     {
+        rangeCheck(index);
         array[index] = value;
     }
     
@@ -135,9 +166,31 @@ public class IntList
         return array[index];
     }
     
+    public final int back()
+    {
+        return array[size - 1];
+    }
+    
     public final int end()
     {
-        return array[size-1];
+        return size;
+    }
+    
+    public int find(int value)
+    {
+        return find(0, size, value);
+    }
+    
+    public int find(int first, int end, int value)
+    {
+        int flags_it = -1;
+        for (int i = 0; i < size(); i++) {
+            if (array[i] == value) {
+                flags_it = i;
+                break;
+            }
+        }
+        return flags_it;
     }
 
     public final int size()
@@ -152,16 +205,33 @@ public class IntList
         return array;
     }
     
+    //inclusive
     public IntList prefixSum()
     {
         int[] trimmed = trim();
         Arrays.parallelPrefix(trimmed, (x, y) -> x + y);
         return new IntList(trimmed);
     }
+    
+    private void rangeAboveZero(int index)
+    {
+        if (index < 1)
+            throw new IndexOutOfBoundsException("index out of bound " +index);
+    }
         
     private void rangeCheck(int index) {
         if (index >= size)
             throw new IndexOutOfBoundsException("index out of bound " +index);
+    }
+    
+    private void subListRangeCheck(int fromIndex, int toIndex, int size) {
+        if (fromIndex < 0)
+            throw new IndexOutOfBoundsException("fromIndex = " + fromIndex);
+        if (toIndex > size)
+            throw new IndexOutOfBoundsException("toIndex = " + toIndex);
+        if (fromIndex > toIndex)
+            throw new IllegalArgumentException("fromIndex(" + fromIndex +
+                                               ") > toIndex(" + toIndex + ")");
     }
     
     private void rangeCheckForAdd(int index) {

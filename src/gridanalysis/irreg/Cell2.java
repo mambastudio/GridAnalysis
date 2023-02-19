@@ -5,7 +5,7 @@
  */
 package gridanalysis.irreg;
 
-import gridanalysis.utilities.IntArray;
+import java.util.Arrays;
 
 /**
  *
@@ -13,9 +13,9 @@ import gridanalysis.utilities.IntArray;
  */
 /// A cell in the grid. Contains its boundaries in voxel coordinates, along with the range of primitives it contains.
 public class Cell2 {
-    public int min[] = new int[3];
+    public int min[] = new int[2];
     public int begin;
-    public int max[] = new int[3];
+    public int max[] = new int[2];
     public int end;
     
     // Traversal cost for one cell
@@ -25,7 +25,13 @@ public class Cell2 {
         return (n + 1) / 2;
     }
     
-    public boolean is_merge_profitable(Float2 cell_size, IntArray refs, Cell2 other) {
+    @Override
+    public final String toString() {
+        return String.format("(min %1s, max %1s, begin %1s, end %1s)", Arrays.toString(min), Arrays.toString(max), begin, end);
+    }
+    
+    /*
+    public boolean is_merge_profitable(Float2 cell_size, IntList refs, Cell2 other) {
         float cost0 = cost(cell_size);
         float cost1 = other.cost(cell_size);
         int merged_max[] = { Math.max(max[0], other.max[0]),
@@ -37,6 +43,7 @@ public class Cell2 {
                                       refs.splitSubArrayFrom(other.begin), other.end - other.begin);
         return merged_area * (K(count) + unit_cost) <= (cost0 + cost1);
     }
+    */
     
     public float cost(Float2 cell_size) {
         return half_area(cell_size, min, max) * (K(end - begin) + unit_cost);

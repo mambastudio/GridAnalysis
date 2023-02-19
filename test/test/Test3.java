@@ -6,6 +6,7 @@
 package test;
 
 import gridanalysis.irreg.BBox2;
+import gridanalysis.irreg.Cell2;
 import gridanalysis.irreg.Float2;
 import static gridanalysis.irreg.Float2.sub;
 import gridanalysis.irreg.Grid2;
@@ -32,6 +33,7 @@ public class Test3 {
         
         BBox2[] bboxes = new BBox2[2];
         ArrayList<Ref> refs = new ArrayList();
+        ArrayList<Cell2> cells = new ArrayList();
         IntList snd_dims = new IntList();
         
         GridInfo info = new GridInfo();
@@ -41,8 +43,10 @@ public class Test3 {
         Grid2.gen_top_refs(info, bboxes, tris, refs);
         
         Grid2.compute_snd_dims(info, snd_density, refs, snd_dims);
-                
-        System.out.println(snd_dims);
+        Grid2.subdivide_refs(info, tris, snd_dims, refs);
         
+        Grid2.gen_cells(info, refs, snd_dims, cells);
+                
+        System.out.println(cells);
     }
 }

@@ -9,6 +9,7 @@ import gridanalysis.coordinates.Vec2f;
 import gridanalysis.coordinates.Vec2i;
 import gridanalysis.gridclasses.BBox;
 import gridanalysis.gridclasses.Cell;
+import gridanalysis.irreg.Cell2;
 import gridanalysis.jfx.MEngine;
 import gridanalysis.utilities.IntArray;
 import gridanalysis.utilities.Utility;
@@ -70,6 +71,12 @@ public class MCellInfo {
             cells.add(new MCellInfo(engine.getGraphicsContext(), cellBound));            
         }
         return cells;
+    }
+    
+    public static ArrayList<MCellInfo> getCells2(MEngine engine, Cell2[] cellArray, BBox grid_bound,  Vec2i dims, int shift)
+    {
+        return null;
+        
     }
     
     public static ArrayList<MCellInfo> getCells(MEngine engine, IntArray cell_ids, IntArray array_ids, BBox grid_bound,  Vec2i dims)

@@ -6,7 +6,12 @@
 package gridanalysis.irreg;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
+import static java.util.stream.Collectors.partitioningBy;
 
 /**
  *
@@ -33,6 +38,37 @@ public class Common {
         list2.clear();
         // Add the elements of temp to list2
         list2.addAll(temp);
+    }
+    
+    public static<T> void resize(ArrayList<T> list, int size, Supplier<T> supply)
+    {
+        if (size < 1)
+            throw new IndexOutOfBoundsException("index out of bound " +size);
+        ArrayList<T> arrayListNew = new ArrayList(size);
+        for(int i = 0; i<size; i++)
+            arrayListNew.add(supply.get()); 
+        
+        if(size < list.size())
+            Collections.copy(arrayListNew, list.subList(0, size));
+        else         
+            Collections.copy(arrayListNew, list);
+        
+        list.clear();
+        list.addAll(arrayListNew);
+    }
+    
+    public static<T> int partition(List<T> list, Predicate<T> predicate)
+    {
+        Map<Boolean, List<T>> result = list.stream().collect(partitioningBy(predicate));
+        List<T> trueList = result.get(true);
+        List<T> falseList = result.get(false);
+        int index = trueList.size();
+        
+        list.clear();
+        list.addAll(trueList);
+        list.addAll(falseList);
+        
+        return index;
     }
     
     public static<T> void clearFill(ArrayList list, int size, Supplier<T> supplier)

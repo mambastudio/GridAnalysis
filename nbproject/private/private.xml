@@ -3,19 +3,10 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/jmburu/Documents/GitHub/GridAnalysis/src/gridanalysis/irreg/Tri2.java</file>
-            <file>file:/C:/Users/jmburu/Documents/GitHub/GridAnalysis/src/gridanalysis/gridclasses/Tri.java</file>
-            <file>file:/C:/Users/jmburu/Documents/GitHub/GridAnalysis/src/gridanalysis/irreg/Tri_Overlap_Box.java</file>
-            <file>file:/C:/Users/jmburu/Documents/GitHub/GridAnalysis/src/gridanalysis/irreg/Float2.java</file>
-            <file>file:/C:/Users/jmburu/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/Build.java</file>
-            <file>file:/C:/Users/jmburu/Documents/GitHub/GridAnalysis/src/gridanalysis/irreg/GridInfo.java</file>
-            <file>file:/C:/Users/jmburu/Documents/GitHub/GridAnalysis/test/test/Test3.java</file>
-            <file>file:/C:/Users/jmburu/Documents/GitHub/GridAnalysis/src/gridanalysis/irreg/Grid2.java</file>
-            <file>file:/C:/Users/jmburu/Documents/GitHub/GridAnalysis/test/test/Test.java</file>
-            <file>file:/C:/Users/jmburu/Documents/GitHub/GridAnalysis/src/gridanalysis/irreg/IntList.java</file>
-            <file>file:/C:/Users/jmburu/Documents/GitHub/GridAnalysis/src/gridanalysis/irreg/Common.java</file>
-            <file>file:/C:/Users/jmburu/Documents/GitHub/GridAnalysis/test/test/Test2.java</file>
-            <file>file:/C:/Users/jmburu/Documents/GitHub/GridAnalysis/src/gridanalysis/gridclasses/Range.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/test/test/Test3.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/irreg/Grid2.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/jfx/shape/MCellInfo.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/irreg/GridInfo.java</file>
         </group>
     </open-files>
 </project-private>

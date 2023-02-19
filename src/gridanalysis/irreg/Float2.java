@@ -54,9 +54,33 @@ public class Float2 {
     public static Float2 add(Float2 a, Float2 b) {
         return new Float2(a.x + b.x, a.y + b.y);
     }
+    
+    public static Float2 addAll(Float2... a)
+    {
+        Float2 result = new Float2();
+        for(Float2 f : a)
+        {
+            result.x += f.x;
+            result.y += f.y;
+        }
+        
+        return result;
+    }
 
     public static Float2 mul(Float2 a, Float2 b) {
         return new Float2(a.x * b.x, a.y * b.y);
+    }
+    
+    public void mulAssign(float a)
+    {
+        this.x *= a;
+        this.y *= a;
+    }
+    
+    public void mulAssign(Float2 a)
+    {
+        this.x *= a.x;
+        this.y *= a.y;
     }
     
     public static Float2 div(Float2 a, Float2 b) {
