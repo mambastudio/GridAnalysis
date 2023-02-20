@@ -32,6 +32,21 @@ public class Tri2 {
         this.e2 = sub(v2, v0);
     }
     
+    public Float2 p0()
+    {
+        return v0;
+    }
+    
+    public Float2 p1()
+    {
+        return sub(v0, e1);
+    }
+    
+    public Float2 p2()
+    {
+        return add(v0, e2);
+    }
+    
     /// Packs the normal components into a float2 structure.
     public Float2 normal() { return new Float2(nx, ny); }
     

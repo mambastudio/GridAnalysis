@@ -337,7 +337,7 @@ public class Grid2 {
             pos[0] += (snd_cell & 1) != 0 ? cur_size : 0;
             pos[1] += (snd_cell & 2) != 0 ? cur_size : 0;
             cur_size <<= 1;
-            snd_cell >>= 3;
+            snd_cell >>= 2;
         }
     }
     
@@ -389,7 +389,7 @@ public class Grid2 {
             offset_b[0] -= (kb & 1) !=0 ? cur_size : 0;
             offset_b[1] -= (kb & 2) !=0 ? cur_size : 0;
 
-            boolean same_ancestor = (a & ~3) == (b & ~3); //to the nearest number divisible by 8
+            boolean same_ancestor = (a & ~3) == (b & ~3); //to the nearest number divisible by 4
             long n1 = same_ancestor ? kb : 4;
             long n2 = same_ancestor ? kb : 0;
 
@@ -529,6 +529,24 @@ public class Grid2 {
                         cell.begin = 0;
                         cell.end   = 0;
                     }
+                });
+    }
+    
+    public static void transform_cells(GridInfo info, ArrayList<Cell2> cells) {
+        Float2 subcell_size = div(info.cell_size(), (1 << info.max_snd_dim));
+        IntStream.range(0, cells.size())
+                .parallel()
+                .forEach(i->{
+                    Cell2 cell = cells.get(i);
+
+                    Float2 min = add(info.bbox.min, mul(subcell_size, new Float2(cell.min[0], cell.min[1])));
+                    Float2 max = add(info.bbox.min, mul(subcell_size, new Float2(cell.max[0], cell.max[1])));
+                    
+                    cell.min[0] = Float.floatToIntBits(min.x);
+                    cell.min[1] = Float.floatToIntBits(min.y);
+
+                    cell.max[0] = Float.floatToIntBits(max.x);
+                    cell.max[1] = Float.floatToIntBits(max.y); 
                 });
     }
 }

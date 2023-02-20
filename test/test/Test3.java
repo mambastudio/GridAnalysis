@@ -46,7 +46,11 @@ public class Test3 {
         Grid2.subdivide_refs(info, tris, snd_dims, refs);
         
         Grid2.gen_cells(info, refs, snd_dims, cells);
+        
+        Grid2.transform_cells(info, cells);
                 
         System.out.println(cells);
+        System.out.println(info.cell_size());
+        System.out.println(info.bbox);
     }
 }

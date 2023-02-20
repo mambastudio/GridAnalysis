@@ -6,6 +6,7 @@
 package gridanalysis.jfx.shape;
 
 import gridanalysis.gridclasses.Tri;
+import gridanalysis.irreg.Tri2;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
@@ -14,7 +15,9 @@ import javafx.scene.paint.Color;
  * @author user
  */
 public class MTriangle {
-    private final Tri tri;
+    private Tri tri;
+    private Tri2 tri2;
+    
     private final GraphicsContext ctx;
     
     double[] xPoints, yPoints;
@@ -28,14 +31,32 @@ public class MTriangle {
         xPoints = new double[nPoints];
         yPoints = new double[nPoints];
         
-        xPoints[0] = tri.p0().x;
-        yPoints[0] = tri.p0().y;
+        xPoints[0] = this.tri.p0().x;
+        yPoints[0] = this.tri.p0().y;
         
-        xPoints[1] = tri.p1().x;
-        yPoints[1] = tri.p1().y;
+        xPoints[1] = this.tri.p1().x;
+        yPoints[1] = this.tri.p1().y;
         
-        xPoints[2] = tri.p2().x;
-        yPoints[2] = tri.p2().y;
+        xPoints[2] = this.tri.p2().x;
+        yPoints[2] = this.tri.p2().y;
+    }
+    
+    public MTriangle(GraphicsContext context, Tri2 tri)
+    {
+        this.ctx = context;
+        this.tri2 = tri;
+        
+        xPoints = new double[nPoints];
+        yPoints = new double[nPoints];
+        
+        xPoints[0] = tri2.p0().x;
+        yPoints[0] = tri2.p0().y;
+        
+        xPoints[1] = tri2.p1().x;
+        yPoints[1] = tri2.p1().y;
+        
+        xPoints[2] = tri2.p2().x;
+        yPoints[2] = tri2.p2().y;
     }
     
     public void draw()

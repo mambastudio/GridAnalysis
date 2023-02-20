@@ -11,6 +11,8 @@ import gridanalysis.algorithm.Merge;
 import gridanalysis.coordinates.Vec2f;
 import gridanalysis.gridclasses.Grid;
 import gridanalysis.gridclasses.Tri;
+import gridanalysis.irreg.Float2;
+import gridanalysis.irreg.Tri2;
 import gridanalysis.jfx.math.MTransform;
 import gridanalysis.jfx.shape.MCellInfo;
 import gridanalysis.jfx.shape.MRectangle;
@@ -54,6 +56,7 @@ public class MEngine {
     
     public void setGraphicsContext(GraphicsContext context)
     {
+        /*
         this.ctx = context;
         this.triangles = new ArrayList();
         mtriangles = Utility.generateTriangles(ctx, triangles, 2, new Vec2f(0, 0), new Vec2f(500, 500));
@@ -69,8 +72,17 @@ public class MEngine {
         
         //Expand expand = new Expand(this);
         //expand.expand_grid(grid, tris, exp_iters);
+        */
         
+        this.ctx = context;
         
+        Tri2 tris[] = new Tri2[2];
+        tris[0] = new Tri2(new Float2(370.77f, 330.81f), new Float2(316.49f, 137.53f), new Float2(392.41f, 180.43f));
+        tris[1] = new Tri2(new Float2(74.20f, 85.51f), new Float2(77.92f, 321.43f), new Float2(218.57f, 6.09f));
+        
+        mtriangles = new ArrayList();
+        mtriangles.add(new MTriangle(ctx, tris[0]));
+        mtriangles.add(new MTriangle(ctx, tris[1]));
     }    
     
     public void drawMCellInfo()
