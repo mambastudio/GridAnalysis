@@ -6,7 +6,7 @@
 package gridanalysis.jfx;
 
 import gridanalysis.algorithm.Build;
-import gridanalysis.algorithm.Expand;
+import gridanalysis.algorithm.EngineAbstract;
 import gridanalysis.algorithm.Merge;
 import gridanalysis.coordinates.Vec2f;
 import gridanalysis.gridclasses.Grid;
@@ -25,7 +25,7 @@ import javafx.scene.canvas.GraphicsContext;
  *
  * @author user
  */
-public class MEngine {
+public class MEngine implements EngineAbstract{
     MTransform transform = MTransform.translate(100, 100);
     GraphicsContext ctx;   
     
@@ -40,6 +40,7 @@ public class MEngine {
     float alpha = 0.995f;
     int exp_iters = 3;
     
+    @Override
     public void draw()
     {
         ctx.save();
@@ -54,9 +55,9 @@ public class MEngine {
         ctx.restore();
     }
     
+    @Override
     public void setGraphicsContext(GraphicsContext context)
-    {
-        /*
+    {        
         this.ctx = context;
         this.triangles = new ArrayList();
         mtriangles = Utility.generateTriangles(ctx, triangles, 2, new Vec2f(0, 0), new Vec2f(500, 500));
@@ -72,30 +73,26 @@ public class MEngine {
         
         //Expand expand = new Expand(this);
         //expand.expand_grid(grid, tris, exp_iters);
-        */
         
-        this.ctx = context;
         
-        Tri2 tris[] = new Tri2[2];
-        tris[0] = new Tri2(new Float2(370.77f, 330.81f), new Float2(316.49f, 137.53f), new Float2(392.41f, 180.43f));
-        tris[1] = new Tri2(new Float2(74.20f, 85.51f), new Float2(77.92f, 321.43f), new Float2(218.57f, 6.09f));
         
-        mtriangles = new ArrayList();
-        mtriangles.add(new MTriangle(ctx, tris[0]));
-        mtriangles.add(new MTriangle(ctx, tris[1]));
     }    
     
+    @Override
     public void drawMCellInfo()
     {
-        for(MCellInfo info: cellInfo)
+        cellInfo.forEach(info -> {
             info.draw();
+        });
     }
     
+    @Override
     public GraphicsContext getGraphicsContext()
     {
         return ctx;
     }
         
+    @Override
     public void setMCellInfo(ArrayList<MCellInfo>... cellInfoArray)
     {
         this.cellInfo.clear();

@@ -5,9 +5,11 @@
  */
 package gridanalysis;
 
+import gridanalysis.algorithm.EngineAbstract;
 import gridanalysis.jfx.MBackground;
 import gridanalysis.jfx.MCanvas;
 import gridanalysis.jfx.MEngine;
+import gridanalysis.jfx.MEngine2;
 import javafx.application.Application;
 import static javafx.application.Application.launch;
 import javafx.scene.Scene;
@@ -22,7 +24,7 @@ public class GridAnalysis extends Application {
     
     private final MBackground background = new MBackground();
     private final MCanvas canvas = new MCanvas();
-    private final MEngine engine = new MEngine();
+    private final EngineAbstract engine = new MEngine2();
     @Override
     public void start(Stage primaryStage) {
         

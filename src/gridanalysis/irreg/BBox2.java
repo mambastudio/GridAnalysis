@@ -36,6 +36,10 @@ public class BBox2 {
         max = min(max, bb.max);
         return this;
     }
+    
+     public Float2 extents(){
+        return sub(max, min);
+    }
 
     public float half_area() {
         Float2 len = sub(max, min);

@@ -5,6 +5,7 @@
  */
 package gridanalysis.jfx;
 
+import gridanalysis.algorithm.EngineAbstract;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.layout.Region;
@@ -15,7 +16,7 @@ import javafx.scene.layout.Region;
  */
 public class MCanvas extends Region{
     private final Canvas canvas;
-    private MEngine engine;
+    private EngineAbstract engine;
     
     public MCanvas()
     {
@@ -44,7 +45,7 @@ public class MCanvas extends Region{
         return canvas.getGraphicsContext2D();
     }
     
-    public void setEngine(MEngine engine)
+    public void setEngine(EngineAbstract engine)
     {
         this.engine = engine;
     }

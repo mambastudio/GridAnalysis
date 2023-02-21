@@ -6,6 +6,7 @@
 package gridanalysis.jfx.shape;
 
 import gridanalysis.gridclasses.BBox;
+import gridanalysis.irreg.BBox2;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
@@ -30,6 +31,15 @@ public class MRectangle {
         this.h = bbox.extents().y;
     }
     
+    public MRectangle(GraphicsContext context, BBox2 bbox)
+    {
+        this.ctx = context;
+        this.x = bbox.min.x;
+        this.y = bbox.min.y;
+        this.w = bbox.extents().x;
+        this.h = bbox.extents().y;
+    }
+        
     public void draw()
     {
         ctx.save();
