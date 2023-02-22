@@ -79,6 +79,7 @@ public class MEngine2 implements EngineAbstract{
         ArrayList<Ref> refs = new ArrayList();
         ArrayList<Cell2> cells = new ArrayList();
         IntList snd_dims = new IntList();
+        IntList entries = new IntList();
         
         GridInfo info = new GridInfo();
         
@@ -90,8 +91,15 @@ public class MEngine2 implements EngineAbstract{
         Grid2.subdivide_refs(info, tris, snd_dims, refs);
         
         Grid2.gen_cells(info, refs, snd_dims, cells);
+        Grid2.gen_entries(info, cells, snd_dims, entries);
+        
         
         Grid2.transform_cells(info, cells);
+        
+        for(Cell2 cell: cells)
+        {            
+            cellInfo.add(new MCellInfo(ctx, cell.getBound()));
+        }
         
         this.grid = info;
     }

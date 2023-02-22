@@ -30,24 +30,6 @@ public class Tri_Overlap_Box {
         return d0 * d1 <= 0.0f;
     }
 
-    public static boolean axis_test_x( Float2 half_size,
-                             Float2 e,  Float2 f,
-                             Float2 v0,  Float2 v1) {
-        float p0 = 0;
-        float p1 = 0;
-        float rad = 0;
-        return Math.min(p0, p1) <= rad && Math.max(p0, p1) >= -rad;
-    }
-
-    public static boolean axis_test_y( Float2 half_size,
-                             Float2 e,  Float2 f,
-                             Float2 v0,  Float2 v1) {
-         float p0 = 0;
-         float p1 = 0;
-         float rad = 0;
-        return Math.min(p0, p1) <= rad && Math.max(p0, p1) >= -rad;
-    }
-
     public static boolean axis_test_z( Float2 half_size,
                              Float2 e,  Float2 f,
                              Float2 v0,  Float2 v1) {
@@ -78,27 +60,21 @@ public class Tri_Overlap_Box {
 
         if (cross_checks) {
             Float2 center    = mul(add(max, min), 0.5f);
-            Float2 half_size = mul(add(max, min), 0.5f);
+            Float2 half_size = mul(sub(max, min), 0.5f);
 
             Float2 w0 = sub(v0, center);
             Float2 w1 = sub(v1, center);
             Float2 w2 = sub(v2, center);
 
             Float2 f1 = new Float2(Math.abs(e1.x), Math.abs(e1.y));
-            if (!axis_test_x(half_size, e1, f1, w0, w2)) return false;
-            if (!axis_test_y(half_size, e1, f1, w0, w2)) return false;
             if (!axis_test_z(half_size, e1, f1, w1, w2)) return false;
 
             Float2 f2 = new Float2(Math.abs(e2.x), Math.abs(e2.y));
-            if (!axis_test_x(half_size, e2, f2, w0, w1)) return false;
-            if (!axis_test_y(half_size, e2, f2, w0, w1)) return false;
             if (!axis_test_z(half_size, e2, f2, w1, w2)) return false;
 
             Float2 e3 = add(e1, e2);
 
             Float2 f3 = new Float2(Math.abs(e3.x), Math.abs(e3.y));
-            if (!axis_test_x(half_size, e3, f3, w0, w2)) return false;
-            if (!axis_test_y(half_size, e3, f3, w0, w2)) return false;
             if (!axis_test_z(half_size, e3, f3, w0, w1)) return false;
         }
 

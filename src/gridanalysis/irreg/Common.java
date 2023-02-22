@@ -19,8 +19,7 @@ import static java.util.stream.Collectors.partitioningBy;
  */
 public class Common {
     public final static float pi = 3.14159265359f;
-    /// Number of bits to allocate to store the sub-level dimensions in the voxel map.
-    public static int ENTRY_SHIFT = 4;
+    
     
     // A method to swap two ArrayList objects in Java
     public static<T> void swapArrayLists(ArrayList<T> list1, ArrayList<T> list2) {

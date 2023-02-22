@@ -5,8 +5,10 @@
  */
 package gridanalysis.irreg;
 
+import static gridanalysis.irreg.Voxel_Map.lookup_entry;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.IntStream;
 
 /**
@@ -103,5 +105,42 @@ public class Merge2 {
                 .forEach(i -> {
                     entries.set(i, indices.get(entries.get(i)));
                 });
+    }
+    
+    public static int merge(
+            int iter,
+            GridInfo info,
+            ArrayList<Cell2> cells,
+            IntList refs,
+            IntList entries) {
+        Float2 cell_size = info.cell_size();
+        int top_entries = info.num_top_cells();
+
+        int dims[] = {
+            info.dims[0] << info.max_snd_dim,
+            info.dims[1] << info.max_snd_dim};
+        
+        ArrayList<AtomicBoolean> merge_flag = new ArrayList();
+        Common.clearFill(merge_flag, cells.size(), ()-> new AtomicBoolean(true));
+        ArrayList<MergePair> to_merge = new ArrayList();
+        int total_merged = 0;
+        
+        // Try to merge on x-axis
+        IntStream.range(0, cells.size())
+                .forEach(i->{
+                    Cell2 cell0 = cells.get(i);
+
+                    final int x1 = cell0.max[0];
+                    final int y1 = cell0.min[1];
+                    if (x1 >= dims[0] || restricted_merge(cell0.min[0], info.max_snd_dim, iter)) return;
+                    
+                    int entry = lookup_entry(entries, info.dims, info.max_snd_dim, x1, y1);
+                    Cell2 cell1 = cells.get(entry);
+                    
+                    //if (cell0.can_merge(0, cell1) && cell0.is_merge_profitable(cell_size, refs.data(), cell1)) {
+                        
+                    //}
+                });
+        return -1;
     }
 }

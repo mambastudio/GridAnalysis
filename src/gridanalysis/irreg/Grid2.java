@@ -5,7 +5,6 @@
  */
 package gridanalysis.irreg;
 
-import static gridanalysis.irreg.Common.ENTRY_SHIFT;
 import static gridanalysis.irreg.Common.clamp;
 import static gridanalysis.irreg.Common.closest_log2;
 import static gridanalysis.irreg.Common.partition;
@@ -14,6 +13,10 @@ import static gridanalysis.irreg.Float2.addAll;
 import static gridanalysis.irreg.Float2.div;
 import static gridanalysis.irreg.Float2.mul;
 import static gridanalysis.irreg.Tri_Overlap_Box.tri_overlap_box;
+import static gridanalysis.irreg.Voxel_Map.ENTRY_SHIFT;
+import static gridanalysis.irreg.Voxel_Map.entry_begin;
+import static gridanalysis.irreg.Voxel_Map.entry_log_dim;
+import static gridanalysis.irreg.Voxel_Map.make_entry;
 import static java.lang.Math.cbrt;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -98,21 +101,25 @@ public class Grid2 {
         // Allocate and fill the array of references
         Common.clearFill(refs, approx_ref_counts.back(), ()-> new Ref(-1, -1, -1));        
         IntStream.range(0, tris.length)
-                .parallel()
+                //.parallel()
                 .forEach(i->{
+                    
                     Range2 cov = find_coverage(bboxes[i], inv_org, inv_size, info.dims);
                     Tri2 tri = tris[i];
                     
+                                                           
                     // Examine each cell and determine if the triangle is really inside
-                    AtomicInteger index = new AtomicInteger(approx_ref_counts.get(i));                    
+                    AtomicInteger index = new AtomicInteger(approx_ref_counts.get(i));     
+                    
                     cov.iterate((x, y)->{
                         Float2 cell_min = add(info.bbox.min, mul(cell_size, new Float2(x, y)));
-                        //new Ref(i, x + info.dims[0] * y, 0)
                         Float2 cell_max = add(info.bbox.min, mul(cell_size, new Float2(x + 1, y + 1)));
+                        
                         if(Tri_Overlap_Box.tri_overlap_box(true, true, tri.v0, tri.e1, tri.e2, tri.normal(), cell_min, cell_max))
-                            refs.set(index.getAndIncrement(), new Ref(i, x + info.dims[0] * y, 0));
+                            refs.set(index.getAndIncrement(), new Ref(i, x + info.dims[0] * y, 0));                        
                     });                    
                 });
+       
         
         // Remove the references that were culled by the triangle-box test from the array
         refs.removeIf(ref -> ref.tri < 0);        
@@ -150,29 +157,29 @@ public class Grid2 {
     public static Float2 compute_cell_pos(long snd_cell, Float2 cell_size) {
         Float2 cur_size = cell_size;
         Float2 pos = new Float2(0.0f);
-        while (snd_cell > 0) {
+        while (snd_cell > 0) {            
             pos.x += (snd_cell & 1) != 0 ? cur_size.x : 0.0f;
             pos.y += (snd_cell & 2) != 0 ? cur_size.y : 0.0f;
-            cur_size.mulAssign(2.0f);
-            snd_cell >>= 2;
+            cur_size.mulAssign(2f);
+            snd_cell >>= 2;  
         }
         return pos;
     }
     
-    public static void remove_invalid_references(IntList flags, ArrayList<Ref> refs, int first_ref) {
+    public static void remove_invalid_references(IntList flags, ArrayList<Ref> refs, int first_ref) {        
         int flags_it = flags.find(0, flags.end(), 0);
         
         if (flags_it > 0 && flags_it != flags.end()) {
             int refs_it = first_ref + flags_it;            
             int it1 = refs_it  + 1;
             int it2 = flags_it + 1;
-            for (; it1 != refs.size()-1; ++it1, ++it2) {
+            for (; it1 != refs.size(); ++it1, ++it2) {
                 if (flags.get(it2) != 0) {
                     flags.set(flags_it++, flags.get(it2));
                     refs.set(refs_it++, refs.get(it1));                   
                 }
             }
-
+            
             flags.remove(flags_it, flags.size()); 
             refs.subList(refs_it, refs.size()).clear();
         }
@@ -201,7 +208,7 @@ public class Grid2 {
             // Partition the set of references so that the ones that will not be subdivided anymore are in front
             first_ref.set(partition(refs, (Ref ref)->{ return snd_dims.get(ref.top_cell) <= iter.get(); }));
             
-            int valid_refs = (refs.size()-1) - first_ref.get();
+            int valid_refs = refs.size() - first_ref.get();
             if (valid_refs == 0) break;
                         
             // Compute, for each reference, how many sub-references will be created (up to 8 by reference)
@@ -224,7 +231,8 @@ public class Grid2 {
                                     (j & 1) != 0 ? cell_box.max.x : center.x,
                                     (j & 2) != 0 ? cell_box.max.y : center.y);
                             
-                            if (tri_overlap_box(true, true, tri.v0, tri.e1, tri.e2, tri.normal(), min, max)) flag |= 1 << j;
+                            if (tri_overlap_box(true, true, tri.v0, tri.e1, tri.e2, tri.normal(), min, max)) 
+                                flag |= 1 << j;
                             
                             // The result is a bitfield whose popcount is the number of sub-refs for this reference
                             split_flags.set(i, flag);                            
@@ -380,7 +388,7 @@ public class Grid2 {
         
         // Traverse the tree from bottom to top, starting from both leaves, until a common ancestor is found
         while (a != b) {
-            long ka = a & 3;
+            long ka = a & 3; //similar to a%3 which is a remainder after division by 4
             long kb = b & 3;
 
             offset_a[0] -= (ka & 1) !=0 ? cur_size : 0;
@@ -432,11 +440,12 @@ public class Grid2 {
     public static void gen_cells(GridInfo info, ArrayList<Ref> refs, IntList snd_dims, ArrayList<Cell2> cells) {
         // Sort by cell first, then by morton code index
         Collections.sort(refs, (Ref a, Ref b)->{
-            boolean cond = a.top_cell < b.top_cell || (a.top_cell == b.top_cell && (
-               a.snd_cell < b.snd_cell || (a.snd_cell == b.snd_cell &&
-               a.tri < b.tri)));
+            boolean cond = 
+                    a.top_cell < b.top_cell || (a.top_cell == b.top_cell && (
+                    a.snd_cell < b.snd_cell || (a.snd_cell == b.snd_cell &&
+                    a.tri < b.tri)));
             
-            return cond ? 1 : 0;
+            return cond ? -1 : 1;
         });
         
         // Compact the references in order to keep only one reference per (non-empty) cell.
@@ -473,15 +482,16 @@ public class Grid2 {
 
                     empty_cells.set(cur.top_cell + 1, 0);
                 });
-        System.out.println(empty_cells);
-       
+               
         // Get the insertion position for each compacted reference
         Arrays.parallelPrefix(num_cells, (AtomicInteger a, AtomicInteger b)->{
             return new AtomicInteger(a.get() + b.get());
         });
         
+        
+        
         // Perform a scan to count empty cells
-        empty_cells.set(0, 0);
+        empty_cells.set(0, 0); System.out.println(empty_cells);
         empty_cells.swap(empty_cells.prefixSum());
         
         AtomicInteger num_non_empty = num_cells[num_cells.length-1];
@@ -530,6 +540,59 @@ public class Grid2 {
                         cell.end   = 0;
                     }
                 });
+    }
+    
+    public static void fill_cell_entries(GridInfo info, Cell2 cell, int id, IntList entries) {
+        // Find top-level cell
+        int top_x = cell.min[0] >> info.max_snd_dim;
+        int top_y = cell.min[1] >> info.max_snd_dim;
+        int entry   = entries.get(top_x + info.dims[0] * top_y);
+        int begin   = entry_begin(entry);
+        int log_dim = entry_log_dim(entry);
+        int mask    = (1 << info.max_snd_dim) - 1;
+        int d       = 1 << (info.max_snd_dim - log_dim);
+        
+        for (int y = cell.min[1]; y < cell.max[1]; y += d) {
+            for (int x = cell.min[0]; x < cell.max[0]; x += d) {
+                // Compute offset within top-level cell
+                int snd_x = (x & mask) >> (info.max_snd_dim - log_dim);
+                int snd_y = (y & mask) >> (info.max_snd_dim - log_dim);
+                
+                int k = snd_x + (snd_y << log_dim);
+                
+                entries.set(begin + k, id);
+            }
+        }
+    }
+    
+    public static void gen_entries(GridInfo info, ArrayList<Cell2> cells, IntList snd_dims, IntList entries) {
+        // Reminder: snd_dims.size() == number of top-level cells
+        int num_top_cells = snd_dims.size();
+        IntList accum_dims = new IntList(new int[num_top_cells + 1]);
+        for (int i = 0; i < num_top_cells; i++) {
+            int d = 1 << snd_dims.get(i);
+            accum_dims.set(i + 1, d * d);
+        }
+        
+        accum_dims.set(0, num_top_cells);
+        accum_dims.prefixSum();
+        
+        // Allocate (number of top-level cells) + (accumulated number of second-level cells) entries for the voxel map
+        entries.resize(accum_dims.back(), -1);
+        
+        // Generate the top-level entries
+        IntStream.range(0, num_top_cells)
+                .forEach(i->{
+                    entries.set(i, make_entry(accum_dims.get(i), snd_dims.get(i)));
+                });
+        
+        // Generate the second-level entries
+        IntStream.range(0, cells.size())
+                .forEach(i->{
+                    fill_cell_entries(info, cells.get(i), i, entries);
+                });
+        
+       
     }
     
     public static void transform_cells(GridInfo info, ArrayList<Cell2> cells) {

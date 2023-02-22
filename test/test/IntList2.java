@@ -21,37 +21,61 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package gridanalysis.irreg;
+package test;
 
+import gridanalysis.irreg.FunctionInt;
 import java.util.Arrays;
 
 /**
  *
  * @author user
  */
-public class IntList 
+public class IntList2 
 {
     private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
     
     private int[] array;
     private int size;
+    protected final int offset;
+    
+    private IntList2 parent = null;
 
-    public IntList()
+    public IntList2()
     {
         array = new int[10];
         size = 0;
+        offset = 0;
     }
     
-    public IntList(int capacity)
+    public IntList2(int capacity)
     {
         array = new int[capacity];
         size = 0;
+        offset = 0;
     }   
     
-    public IntList(int[] array)
+    public IntList2(int[] array)
     {
         this.array = array;
         this.size = array.length;
+        this.offset = 0;
+    }
+    
+    private IntList2(IntList2 intList, int offset, int fromIndex, int toIndex)
+    {
+        if(intList.parent == null)
+            parent = intList;
+        else
+            parent = intList.parent;
+        
+        this.array = null;
+        this.offset = offset + fromIndex;
+        this.size = toIndex - fromIndex;
+    }
+    
+    public boolean isSubList()
+    {
+        return parent != null;
     }
 
     public void clear()
@@ -206,11 +230,11 @@ public class IntList
     }
     
     //inclusive
-    public IntList prefixSum()
+    public IntList2 prefixSum()
     {
         int[] trimmed = trim();
         Arrays.parallelPrefix(trimmed, (x, y) -> x + y);
-        return new IntList(trimmed);
+        return new IntList2(trimmed);
     }
     
     private void rangeAboveZero(int index)
@@ -266,7 +290,7 @@ public class IntList
             MAX_ARRAY_SIZE;
     }
     
-    public void swap(IntList list)
+    public void swap(IntList2 list)
     {
         int[] temp = this.array;
         int tempSize = size;
@@ -284,12 +308,12 @@ public class IntList
         return Arrays.toString(trim());
     }
     
-    public String toString(FunctionInt<String> consume)
+    public String toString(FunctionInt<String> function)
     {
         int[] arr = trim();
         String[] result = new String[arr.length];
         for(int i = 0; i<arr.length; i++)
-            result[i] = consume.apply(arr[i]);
+            result[i] = function.apply(arr[i]);
         return Arrays.toString(result);
     }
 }

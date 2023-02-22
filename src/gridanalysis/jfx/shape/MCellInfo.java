@@ -9,6 +9,7 @@ import gridanalysis.coordinates.Vec2f;
 import gridanalysis.coordinates.Vec2i;
 import gridanalysis.gridclasses.BBox;
 import gridanalysis.gridclasses.Cell;
+import gridanalysis.irreg.BBox2;
 import gridanalysis.irreg.Cell2;
 import gridanalysis.jfx.MEngine;
 import gridanalysis.utilities.IntArray;
@@ -33,6 +34,15 @@ public class MCellInfo {
     private Object object;
     
     public MCellInfo(GraphicsContext context, BBox bbox)
+    {
+        this.ctx = context;
+        this.x = bbox.min.x;
+        this.y = bbox.min.y;
+        this.w = bbox.extents().x;
+        this.h = bbox.extents().y;
+    }
+    
+    public MCellInfo(GraphicsContext context, BBox2 bbox)
     {
         this.ctx = context;
         this.x = bbox.min.x;

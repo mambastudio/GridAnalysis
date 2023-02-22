@@ -25,12 +25,20 @@ public class Cell2 {
         return (n + 1) / 2;
     }
     
+    public BBox2 getBound()
+    {
+        Float2 minBound = new Float2(Float.intBitsToFloat(min[0]), Float.intBitsToFloat(min[1]));
+        Float2 maxBound = new Float2(Float.intBitsToFloat(max[0]), Float.intBitsToFloat(max[1]));
+        
+        return new BBox2(minBound, maxBound);
+    }
+    
     @Override
     public final String toString() {
         return String.format("(min %1s, max %1s, begin %1s, end %1s)", Arrays.toString(min), Arrays.toString(max), begin, end);
     }
     
-    /*
+   
     public boolean is_merge_profitable(Float2 cell_size, IntList refs, Cell2 other) {
         float cost0 = cost(cell_size);
         float cost1 = other.cost(cell_size);
@@ -38,12 +46,12 @@ public class Cell2 {
                               Math.max(max[1], other.max[1])};
         int merged_min[] = { Math.min(min[0], other.min[0]),
                               Math.min(min[1], other.min[1])};
-        float merged_area = half_area(cell_size, merged_min, merged_max);
+        float merged_area = half_area(cell_size, merged_min, merged_max); 
         int count = Grid2.count_union(refs.splitSubArrayFrom(begin), end - begin,
                                       refs.splitSubArrayFrom(other.begin), other.end - other.begin);
         return merged_area * (K(count) + unit_cost) <= (cost0 + cost1);
     }
-    */
+   
     
     public float cost(Float2 cell_size) {
         return half_area(cell_size, min, max) * (K(end - begin) + unit_cost);
