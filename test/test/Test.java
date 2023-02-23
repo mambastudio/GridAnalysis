@@ -23,7 +23,7 @@ import static java.util.stream.Collectors.partitioningBy;
 public class Test {
     public static void main(String... args)
     {
-        test5();
+        test6();
        
         
     }
@@ -87,5 +87,22 @@ public class Test {
         System.out.println(list);
         
         System.out.println(19&~7);
+    }
+
+    private static void test6() {
+         IntegerList list = new IntegerList(1, 2, 3, 4, 5, 6);
+         IntegerList subList1 = list.getSubList(1, 3);
+         System.out.println(list);
+         System.out.println(subList1);
+         
+         subList1.add(32);
+         System.out.println(subList1);
+         
+         IntegerList subList2 = subList1.getSubList(0, 1);
+         System.out.println(subList2);         
+         subList2.add(200);         
+         System.out.println(subList2);         
+         
+         System.out.println(list);
     }
 }

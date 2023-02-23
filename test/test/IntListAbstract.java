@@ -16,22 +16,26 @@ public abstract class IntListAbstract<I extends IntListAbstract>  {
     
     protected static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
     
-    private int[] array;
-    private int size;
-    protected int offset;    
+    protected int[] array;
+    protected int size;  
         
     public abstract void add(int value);   
+    public abstract void add(int index, int value);
+    public abstract void add(int index, int[] value);
     public abstract int get(int index);
-    public abstract int set(int index, int value);
+    public abstract void set(int index, int value);
     public abstract int[] trim();
-    public abstract void increment();
-    public abstract void decrement();
+    public abstract void increment(int index);
+    public abstract void decrement(int index);
     public abstract I getSubList(int fromIndex, int toIndex);
     public abstract int remove(int index);     
     public abstract int[] remove(int fromIndex, int toIndex);
     public abstract int size();    
     public abstract int end();  
-    public abstract int back();  
+    public abstract int back();      
+    
+    @Override
+    public abstract String toString();
     
     protected void rangeAboveZero(int index)
     {
@@ -44,7 +48,7 @@ public abstract class IntListAbstract<I extends IntListAbstract>  {
             throw new IndexOutOfBoundsException("index out of bound " +index);
     }
     
-    protected void subListRangeCheck(int fromIndex, int toIndex, int size) {
+    protected void rangeCheckBound(int fromIndex, int toIndex, int size) {
         if (fromIndex < 0)
             throw new IndexOutOfBoundsException("fromIndex = " + fromIndex);
         if (toIndex > size)
