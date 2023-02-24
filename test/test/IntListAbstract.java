@@ -34,6 +34,7 @@ public abstract class IntListAbstract<I extends IntListAbstract>  {
     public abstract int end();  
     public abstract int back();      
     
+    
     @Override
     public abstract String toString();
     

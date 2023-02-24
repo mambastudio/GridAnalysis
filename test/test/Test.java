@@ -90,19 +90,26 @@ public class Test {
     }
 
     private static void test6() {
-         IntegerList list = new IntegerList(1, 2, 3, 4, 5, 6);
-         IntegerList subList1 = list.getSubList(1, 3);
-         System.out.println(list);
-         System.out.println(subList1);
-         
-         subList1.add(32);
-         System.out.println(subList1);
-         
-         IntegerList subList2 = subList1.getSubList(0, 1);
-         System.out.println(subList2);         
-         subList2.add(200);         
-         System.out.println(subList2);         
-         
-         System.out.println(list);
+        IntegerList list = new IntegerList(1, 2, 3, 4, 5, 6);
+        IntegerList subList1 = list.getSubList(1, 3);
+        System.out.println(list);
+        System.out.println(subList1);
+       // System.out.println(Arrays.toString(subList1.remove(0, subList1.size())));
+            
+        
+        subList1.add(32);
+        System.out.println(subList1);
+       
+
+        IntegerList subList2 = subList1.getSubList(0, 1);
+        System.out.println(subList2);         
+        subList2.add(200);         
+        System.out.println(subList2);         
+
+        System.out.println(list);
+        list.remove(0, 6);
+        System.out.println(subList2);
+        System.out.println(subList1);
+       
     }
 }

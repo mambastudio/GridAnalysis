@@ -48,7 +48,7 @@ public class IntegerList extends IntListAbstract<IntegerList> {
 
     @Override
     public int[] trim() {
-        if(size < array.length)
+        if(size < array.length)        
             array = Arrays.copyOfRange(array, 0, size);        
         return array;
     }
@@ -142,6 +142,7 @@ public class IntegerList extends IntListAbstract<IntegerList> {
             this.parent = parent;
             this.offset = fromIndex;
             this.size = toIndex - fromIndex;
+            this.array = null;
         }
 
         @Override
@@ -150,6 +151,13 @@ public class IntegerList extends IntListAbstract<IntegerList> {
             rangeCheck(this.size - 1);
             add(this.size, value);            
         }   
+        
+         @Override
+        public void add(int index, int[] value)
+        {
+            for(int i = 0; i<value.length; i++)
+                add(i, value[i]);
+        }
         
         @Override
         public void add(int index, int e) {
@@ -164,6 +172,12 @@ public class IntegerList extends IntListAbstract<IntegerList> {
             rangeCheck(index);
             return parent.get(offset + index);
         }
+        
+        @Override
+        public void set(int index, int e) {
+            rangeCheck(index);     
+            parent.set(offset + index, e);
+        }
                 
         @Override
         public IntegerList getSubList(int fromIndex, int toIndex)
@@ -172,82 +186,61 @@ public class IntegerList extends IntListAbstract<IntegerList> {
             return new IntegerSubList(this, fromIndex, toIndex);
         }
         
-        /*
         @Override
-        public void set(int index, int value)
-        {
-            
+        public int[] trim() {      
+            int[] arr = parent.trim();
+            if(size < arr.length)        
+                arr = Arrays.copyOfRange(parent.trim(), offset, offset + size);        
+            return arr;
         }
         
         @Override
-        public int[] trim()
-        {
-            
+        public String toString() {            
+            return Arrays.toString(trim());
+        }
+        
+        @Override
+        public int remove(int index) {
+            rangeCheck(index);
+            int oldValue = parent.remove(offset + index);
+            size--;
+            return oldValue;
+        }
+
+        @Override
+        public int[] remove(int fromIndex, int toIndex) {
+            rangeCheckBound(fromIndex, toIndex, size);
+            size -= toIndex - fromIndex;
+            return parent.remove(offset + fromIndex, offset + toIndex);
+        }
+        
+        @Override
+        public int size() {
+            return size;
+        }
+
+        @Override
+        public int end() {
+            return size();
+        }
+
+        @Override
+        public int back() {
+            return get(end() - 1);
         }
         
         @Override
         public void increment(int index)
         {
-            
+            rangeCheck(index);
+            parent.increment(offset + index);
         }
         
         @Override
         public void decrement(int index)
         {
-            
-        }
-        
-        
-        
-        @Override
-        public int remove(int index)
-        {
-            
-        }
-        
-        @Override
-        public int[] remove(int fromIndex, int toIndex)
-        {
-            
-        }
-        
-        @Override
-        public int size()
-        {
-            
-        }
-        
-        @Override
-        public int end()
-        {
-            
-        }
-        
-        @Override
-        public int back()
-        {
-            
-        }
-        
-        @Override
-        public void add(int index, int value)
-        {
-            
-        }
-        
-        @Override
-        public void add(int index, int[] value)
-        {
-            
-        }
-        */
-        
-        @Override
-        public int[] trim() {
-            int[] arr = new int[size];
-            for(int i = 0; i<size; i++)
-                arr[i] = get(i);
-            return arr;
-        }
+            rangeCheck(index);
+            parent.decrement(offset + index);
+        }     
     }
 }
