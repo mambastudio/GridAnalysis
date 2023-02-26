@@ -5,7 +5,8 @@
  */
 package test;
 
-import gridanalysis.irreg.IntList;
+import gridanalysis.irreg.IntegerList;
+
 
 
 /**
@@ -15,7 +16,7 @@ import gridanalysis.irreg.IntList;
 public class Test2 {
     public static void main(String... args)
     {
-        IntList list = new IntList(new int[]{1, 1, 1, 1, 1});
+        IntegerList list = new IntegerList(new int[]{1, 1, 1, 1, 1});
         System.out.println(list);
         System.out.println(list.prefixSum());
     }

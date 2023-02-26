@@ -10,5 +10,5 @@ package gridanalysis.irreg;
  * @author user
  */
 public class Overlap {
-    
+    public int dmin, dmax;
 }

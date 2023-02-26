@@ -37,7 +37,7 @@ public class Voxel_Map {
     }
 
     /// Lookups an entry in the voxel map.
-    public static int lookup_entry(IntList entries,  int[] coarse_dims, int shift, int x, int y) {
+    public static int lookup_entry(IntegerList entries,  int[] coarse_dims, int shift, int x, int y) {
         int entry = entries.get((x >> shift) + coarse_dims[0] * ((y >> shift)));
         int log_dim = entry_log_dim(entry);
         int mask = (1 << log_dim) - 1;

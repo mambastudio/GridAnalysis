@@ -28,15 +28,16 @@ public class Merge2 {
                     int top_entries,
                     ArrayList<MergePair> pairs,
                     ArrayList<Cell2> cells,
-                    IntList refs,
-                    IntList entries) {
+                    IntegerList refs,
+                    IntegerList entries) {
         if (pairs.isEmpty()) return;
         
         pairs.sort(Comparator.<MergePair>comparingInt(a -> a.first).thenComparing(a->a.second));
         
         // Build new references
-        IntList new_refs = new IntList();
-        IntList indices = new IntList(cells.size());
+        IntegerList new_refs = new IntegerList();
+        IntegerList indices = new IntegerList(new int[cells.size()]);
+        
         int cur_id = 0, p = 0;
         
         for (int i = 0; i < cells.size(); i++) {
@@ -46,13 +47,13 @@ public class Merge2 {
                 p++;
 
                 if (e1 < i) continue;
-
+                
+                //System.out.println(cells.size()+ " " +e1);
+                
                 cells.get(cur_id).min[0] = Math.min(cells.get(e0).min[0], cells.get(e1).min[0]);
                 cells.get(cur_id).min[1] = Math.min(cells.get(e0).min[1], cells.get(e1).min[1]);
-                cells.get(cur_id).min[2] = Math.min(cells.get(e0).min[2], cells.get(e1).min[2]);
                 cells.get(cur_id).max[0] = Math.max(cells.get(e0).max[0], cells.get(e1).max[0]);
                 cells.get(cur_id).max[1] = Math.max(cells.get(e0).max[1], cells.get(e1).max[1]);
-                cells.get(cur_id).max[2] = Math.max(cells.get(e0).max[2], cells.get(e1).max[2]);
                 
                 // Merge references
                 int begin = new_refs.size();
@@ -86,10 +87,8 @@ public class Merge2 {
 
                 cells.get(cur_id).min[0] = cells.get(i).min[0];
                 cells.get(cur_id).min[1] = cells.get(i).min[1];
-                cells.get(cur_id).min[2] = cells.get(i).min[2];
                 cells.get(cur_id).max[0] = cells.get(i).max[0];
                 cells.get(cur_id).max[1] = cells.get(i).max[1];
-                cells.get(cur_id).max[2] = cells.get(i).max[2];
 
                 cells.get(cur_id).begin = begin;
                 cells.get(cur_id).end = new_refs.size();
@@ -99,6 +98,7 @@ public class Merge2 {
         }
         refs.swap(new_refs);
         cells.subList(cur_id, cells.size()).clear(); //resize
+        
         
         IntStream.range(top_entries, entries.size())
                 .parallel()
@@ -111,8 +111,8 @@ public class Merge2 {
             int iter,
             GridInfo info,
             ArrayList<Cell2> cells,
-            IntList refs,
-            IntList entries) {
+            IntegerList refs,
+            IntegerList entries) {
         Float2 cell_size = info.cell_size();
         int top_entries = info.num_top_cells();
 
@@ -121,7 +121,7 @@ public class Merge2 {
             info.dims[1] << info.max_snd_dim};
         
         ArrayList<AtomicBoolean> merge_flag = new ArrayList();
-        Common.clearFill(merge_flag, cells.size(), ()-> new AtomicBoolean(true));
+        Common.clearFill(merge_flag, cells.size(), ()-> new AtomicBoolean(false));
         ArrayList<MergePair> to_merge = new ArrayList();
         int total_merged = 0;
         
@@ -137,10 +137,52 @@ public class Merge2 {
                     int entry = lookup_entry(entries, info.dims, info.max_snd_dim, x1, y1);
                     Cell2 cell1 = cells.get(entry);
                     
-                    //if (cell0.can_merge(0, cell1) && cell0.is_merge_profitable(cell_size, refs.data(), cell1)) {
-                        
-                    //}
+                    if (cell0.can_merge(0, cell1) && cell0.is_merge_profitable(cell_size, refs, cell1)) {
+                        //System.out.println(entry);
+                        if (merge_flag.get(entry).compareAndSet(false, true)) {
+                            if (merge_flag.get(i).compareAndSet(false, true)) {                                
+                                to_merge.add(new MergePair(i, entry));
+                                to_merge.add(new MergePair(entry, i));
+                            }else{
+                                merge_flag.get(entry).set(true);   
+                            }
+                        }
+                    }
                 });
-        return -1;
+        
+        total_merged += to_merge.size() / 2; 
+        merge_pairs(top_entries, to_merge, cells, refs, entries);
+        
+        //std::fill(merge_flag.begin(), merge_flag.end(), true);
+        to_merge.clear();
+        Common.clearFill(merge_flag, merge_flag.size(), ()-> new AtomicBoolean(false));
+        
+        // Try to merge on y-axis
+        IntStream.range(0, cells.size())
+                .forEach(i->{
+                    Cell2 cell0 = cells.get(i);
+
+                    int x1 = cell0.min[0];
+                    int y1 = cell0.max[1];
+                    if (y1 >= dims[1] || restricted_merge(cell0.min[1], info.max_snd_dim, iter)) return;
+                    
+                    int entry = lookup_entry(entries, info.dims, info.max_snd_dim, x1, y1);
+                    Cell2 cell1 = cells.get(entry);
+                    
+                    if (cell0.can_merge(1, cell1) && cell0.is_merge_profitable(cell_size, refs, cell1)) {
+                        if (merge_flag.get(entry).compareAndSet(false, true)) {
+                            if (merge_flag.get(i).compareAndSet(false, true)) {
+                                to_merge.add(new MergePair(i, entry));
+                                to_merge.add(new MergePair(entry, i));
+                            }else{
+                                merge_flag.get(entry).set(true);   
+                            }
+                        }
+                    }
+                });
+        
+        total_merged += to_merge.size() / 2;
+        merge_pairs(top_entries, to_merge, cells, refs, entries);
+        return total_merged;
     }
 }

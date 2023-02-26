@@ -31,7 +31,7 @@ import java.util.stream.IntStream;
  */
 public class Grid2 {
     /// Counts the number of elements in the union of two sorted arrays.
-    public static int count_union(IntList p0, int c0, IntList p1, int c1) {
+    public static int count_union(IntegerList p0, int c0, IntegerList p1, int c1) {
         int i = 0;
         int j = 0;
 
@@ -85,7 +85,7 @@ public class Grid2 {
         Float2 inv_size  = div(1.0f, cell_size);
         Float2 inv_org   = mul(info.bbox.min, inv_size);
 
-        IntList approx_ref_counts = new IntList(new int[tris.length + 1]);
+        IntegerList approx_ref_counts = new IntegerList(new int[tris.length + 1]);
         
         IntStream.range(0, tris.length)
                 .parallel()
@@ -125,7 +125,7 @@ public class Grid2 {
         refs.removeIf(ref -> ref.tri < 0);        
     }
     
-    public static void compute_snd_dims(GridInfo info, float snd_density, ArrayList<Ref> refs, IntList snd_dims)
+    public static void compute_snd_dims(GridInfo info, float snd_density, ArrayList<Ref> refs, IntegerList snd_dims)
     {
         final int num_top_cells = info.num_top_cells();
         final Float2 cell_size = info.cell_size();
@@ -141,7 +141,7 @@ public class Grid2 {
                     cell_ref_counts.get(refs.get(i).top_cell).getAndIncrement();
                 });
         
-        snd_dims.clearResize(new int[num_top_cells]);
+        snd_dims.resize(num_top_cells);
                
         // Compute the second level dimensions for each top-level cell
         IntStream.range(0, num_top_cells)
@@ -166,7 +166,7 @@ public class Grid2 {
         return pos;
     }
     
-    public static void remove_invalid_references(IntList flags, ArrayList<Ref> refs, int first_ref) {        
+    public static void remove_invalid_references(IntegerList flags, ArrayList<Ref> refs, int first_ref) {        
         int flags_it = flags.find(0, flags.end(), 0);
         
         if (flags_it > 0 && flags_it != flags.end()) {
@@ -193,12 +193,12 @@ public class Grid2 {
         return new BBox2(pos, add(pos, sub_cell_size));
     }
     
-    public static void subdivide_refs(GridInfo info, Tri2[] tris, IntList snd_dims, ArrayList<Ref> refs) {
+    public static void subdivide_refs(GridInfo info, Tri2[] tris, IntegerList snd_dims, ArrayList<Ref> refs) {
         Float2 cell_size = info.cell_size();
 
         AtomicInteger first_ref = new AtomicInteger(0);
-        IntList split_flags = new IntList();
-        IntList split_counts = new IntList();
+        IntegerList split_flags = new IntegerList();
+        IntegerList split_counts = new IntegerList();        
         ArrayList<Ref> new_refs = new ArrayList();
 
         // Subdivide until the maximum depth is reached
@@ -212,7 +212,7 @@ public class Grid2 {
             if (valid_refs == 0) break;
                         
             // Compute, for each reference, how many sub-references will be created (up to 8 by reference)
-            split_flags.clearResize(new int[valid_refs]);
+            split_flags.resize(valid_refs);
             IntStream.range(0, valid_refs)
                     .forEach(i -> {
                         Ref ref = refs.get(first_ref.get() + i);
@@ -243,7 +243,7 @@ public class Grid2 {
             // because of precision problems. We remove those problematic references here.            
             remove_invalid_references(split_flags, refs, first_ref.get());
             
-            split_counts.clearResize(new int[valid_refs + 1]);
+            split_counts.resize(valid_refs + 1);
             
             IntStream.range(0, valid_refs)
                     .forEach(i->{
@@ -255,13 +255,13 @@ public class Grid2 {
                         int flag = split_flags.get(i);
                         // Could use the popcnt x86 instruction here or a similar one for other
                         // architectures (but we only need 4 bits, and portability is a bigger issue)
-                        split_counts.set(i + 1, pop_count[flag]);                       
+                        split_counts.set(i + 1, pop_count[flag]);  
             });
             
             // Sum the number of primitives split in order to know their insertion point in the array
             split_counts.set(0, first_ref.get());
             split_counts.prefixSum();
-                        
+                                    
             // Allocate the new references
             new_refs.clear();
             for(int i = 0; i<split_counts.back(); i++)
@@ -310,8 +310,8 @@ public class Grid2 {
     public static void compact_references(
                                ArrayList<Ref> refs,
                                ArrayList<Ref> compact_refs, 
-                               IntList cell_begins,
-                               IntList cell_ends) {
+                               IntegerList cell_begins,
+                               IntegerList cell_ends) {
         int cur = 0;
         
         Common.resize(compact_refs, refs.size(), ()-> new Ref());        
@@ -437,7 +437,7 @@ public class Grid2 {
 
         return num_cells;
     }
-    public static void gen_cells(GridInfo info, ArrayList<Ref> refs, IntList snd_dims, ArrayList<Cell2> cells) {
+    public static void gen_cells(GridInfo info, ArrayList<Ref> refs, IntegerList snd_dims, ArrayList<Cell2> cells) {
         // Sort by cell first, then by morton code index
         Collections.sort(refs, (Ref a, Ref b)->{
             boolean cond = 
@@ -451,8 +451,8 @@ public class Grid2 {
         // Compact the references in order to keep only one reference per (non-empty) cell.
         // At the same time, compute the range of references covered by these cells.
         ArrayList<Ref> compact_refs = new ArrayList();
-        IntList cell_begins = new IntList();
-        IntList cell_ends = new IntList();
+        IntegerList cell_begins = new IntegerList();
+        IntegerList cell_ends = new IntegerList();
         
         compact_references(refs, compact_refs, cell_begins, cell_ends);
         
@@ -461,7 +461,7 @@ public class Grid2 {
         AtomicInteger[] num_cells = new AtomicInteger[compact_refs.size() + 1]; 
         for(int i = 0; i<num_cells.length; i++)
             num_cells[i] = new AtomicInteger(0);
-        IntList empty_cells = new IntList(); empty_cells.resize(num_top_cells + 1, 1);
+        IntegerList empty_cells = new IntegerList(); empty_cells.resize(num_top_cells + 1, 1);
         
         IntStream.range(0, compact_refs.size())
                 .forEach(i->{
@@ -491,7 +491,6 @@ public class Grid2 {
         
         
         // Perform a scan to count empty cells
-        empty_cells.set(0, 0); System.out.println(empty_cells);
         empty_cells.swap(empty_cells.prefixSum());
         
         AtomicInteger num_non_empty = num_cells[num_cells.length-1];
@@ -542,7 +541,7 @@ public class Grid2 {
                 });
     }
     
-    public static void fill_cell_entries(GridInfo info, Cell2 cell, int id, IntList entries) {
+    public static void fill_cell_entries(GridInfo info, Cell2 cell, int id, IntegerList entries) {
         // Find top-level cell
         int top_x = cell.min[0] >> info.max_snd_dim;
         int top_y = cell.min[1] >> info.max_snd_dim;
@@ -565,10 +564,10 @@ public class Grid2 {
         }
     }
     
-    public static void gen_entries(GridInfo info, ArrayList<Cell2> cells, IntList snd_dims, IntList entries) {
+    public static void gen_entries(GridInfo info, ArrayList<Cell2> cells, IntegerList snd_dims, IntegerList entries) {
         // Reminder: snd_dims.size() == number of top-level cells
         int num_top_cells = snd_dims.size();
-        IntList accum_dims = new IntList(new int[num_top_cells + 1]);
+        IntegerList accum_dims = new IntegerList(new int[num_top_cells + 1]);
         for (int i = 0; i < num_top_cells; i++) {
             int d = 1 << snd_dims.get(i);
             accum_dims.set(i + 1, d * d);

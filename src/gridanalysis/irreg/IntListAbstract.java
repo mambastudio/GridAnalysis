@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package test;
+package gridanalysis.irreg;
 
 import java.util.Arrays;
 
@@ -18,22 +18,32 @@ public abstract class IntListAbstract<I extends IntListAbstract>  {
     
     protected int[] array;
     protected int size;  
+    protected int modCount = 0;
         
     public abstract void add(int value);   
     public abstract void add(int index, int value);
     public abstract void add(int index, int[] value);
     public abstract int get(int index);
     public abstract void set(int index, int value);
+    public abstract void set(int index, int[] value);
     public abstract int[] trim();
     public abstract void increment(int index);
     public abstract void decrement(int index);
     public abstract I getSubList(int fromIndex, int toIndex);
-    public abstract int remove(int index);     
-    public abstract int[] remove(int fromIndex, int toIndex);
+    public I getSublistFrom(int fromIndex){return getSubList(fromIndex, size());}
+    public abstract void remove(int index);     
+    public abstract void remove(int fromIndex, int toIndex);
     public abstract int size();    
     public abstract int end();  
     public abstract int back();      
+    public abstract int[] toArray();
+    public abstract void clear();
+    public abstract void resize(int size);
+    public abstract void resize(int size, int value);
     
+    public abstract IntegerList prefixSum();
+    public abstract void swap(IntegerList list);
+    public abstract int find(int first, int end, int value);        
     
     @Override
     public abstract String toString();
@@ -66,6 +76,7 @@ public abstract class IntListAbstract<I extends IntListAbstract>  {
         
     protected void ensureCapacity(int minCapacity)
     {
+        modCount++;
         if(minCapacity - array.length > 0)
             grow(minCapacity);
     }

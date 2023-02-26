@@ -39,7 +39,7 @@ public class Cell2 {
     }
     
    
-    public boolean is_merge_profitable(Float2 cell_size, IntList refs, Cell2 other) {
+    public boolean is_merge_profitable(Float2 cell_size, IntegerList refs, Cell2 other) {
         float cost0 = cost(cell_size);
         float cost1 = other.cost(cell_size);
         int merged_max[] = { Math.max(max[0], other.max[0]),
@@ -47,8 +47,8 @@ public class Cell2 {
         int merged_min[] = { Math.min(min[0], other.min[0]),
                               Math.min(min[1], other.min[1])};
         float merged_area = half_area(cell_size, merged_min, merged_max); 
-        int count = Grid2.count_union(refs.splitSubArrayFrom(begin), end - begin,
-                                      refs.splitSubArrayFrom(other.begin), other.end - other.begin);
+        int count = Grid2.count_union(refs.getSublistFrom(begin), end - begin,
+                                      refs.getSublistFrom(other.begin), other.end - other.begin);
         return merged_area * (K(count) + unit_cost) <= (cost0 + cost1);
     }
    
