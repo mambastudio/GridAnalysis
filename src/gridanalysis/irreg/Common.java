@@ -78,27 +78,22 @@ public class Common {
             list.add(supplier.get());
     }
     
-    //need thorough analysis to see if it conforms to C++ std::includes https://en.cppreference.com/w/cpp/algorithm/includes
-    public static boolean isSubset(int[] array1, int[] array2) {       
-        
-        boolean isSubset = true;
-        int index = 0;
+    /// Determines if the given range of references is a subset of the other
+    public static boolean is_subset(IntegerList p0, int c0, IntegerList p1, int c1) {
+        if (c1 > c0) return false;
+        if (c1 == 0) return true;
 
-        // Check if array2 is a subset of array1
-        for (int i = 0; i < array2.length; i++) {
-            index = Arrays.binarySearch(array1, index, array1.length, array2[i]);
-            if (index < 0) {
-                isSubset = false;
-                break;
-            }
-            index++;
-        }
-        return isSubset;
-    }
-    
-    public static boolean isSubset(IntegerList first, IntegerList second)
-    {
-        return isSubset(first.toArray(), second.toArray());
+        int i = 0, j = 0;
+
+        do {
+            int a = p0.get(i);
+            int b = p1.get(j);
+            if (b < a) return false;
+            j += ((a == b) ? 1 : 0);
+            i++;
+        } while (i < c0 & j < c1);
+
+        return j == c1;
     }
 
     public static float radians(float x) {

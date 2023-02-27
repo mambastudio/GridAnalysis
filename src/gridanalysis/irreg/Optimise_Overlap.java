@@ -20,7 +20,7 @@ import java.util.stream.IntStream;
  */
 public class Optimise_Overlap {
     
-    public static boolean OVERLAP_SUBSET = false;
+    public static boolean OVERLAP_SUBSET = true;
     
     // Finds the index of an element in a sorted array, return -1 if not found
     public static int bisection(IntegerList p, int c, int e) {
@@ -39,7 +39,7 @@ public class Optimise_Overlap {
     // Determines if the second sorted array is a subset of the first
     public static boolean is_subset(IntegerList p0, int c0, IntegerList p1, int c1) {
         //return std::includes(p0, p0 + c0, p1, p1 + c1);
-        return Common.isSubset(p0.getSublistFrom(c0), p1.getSublistFrom(c1));
+        return Common.is_subset(p0, c0, p1, c1);
     }
     
     public static boolean overlap_possible(int axis, boolean dir, int[] grid_dims, Cell2 cell) {
@@ -74,144 +74,37 @@ public class Optimise_Overlap {
                 ArrayList<Cell2> cells,
                 int cell_id,
                 Overlap overlap) {
-        if(true)return;
+        
+        
+
+        
+    }
+    
+    public static int find_overlap(
+            int axis, boolean dir, boolean subset_only,
+            GridInfo info,
+            IntegerList entries,
+            IntegerList refs,
+            Tri2[] prims,
+            ArrayList<Cell2> cells,
+            int cell_id,
+            boolean continue_overlap) {
+        int axis1 = (axis + 1) % 2;
+        int[] grid_dims = info.dims;
         Cell2 cell = cells.get(cell_id);
-        final int count = cell.end - cell.begin;
-        final int axis1 = (axis + 1) % 2;
         
-        Float2 cell_size = div(info.cell_size(), (1 << info.max_snd_dim));
-        Float2 min_bb = add(info.bbox.min, mul(new Float2(cell.min[0], cell.min[1]), cell_size));
-        Float2 max_bb = add(info.bbox.min, mul(new Float2(cell.max[0], cell.max[1]), cell_size));
-        
-        int dims[] = {
-            info.dims[0] << info.max_snd_dim,
-            info.dims[1] << info.max_snd_dim            
-        };
-        int dmin = 0, dmax = 0;
-        
-        if (cell.min[axis] > 0) {
-            dmin = -dims[axis];
+        if (!overlap_possible(axis, dir, grid_dims, cell)) return 0;
 
-            int k1;
-            for (int i = cell.min[axis1]; i < cell.max[axis1] && dmin < 0; i += k1) {
-                k1 = dims[axis1]; 
-                                    
-                System.out.println("kubafu");
-                int xy[] = new int[3];
-                xy[axis] = cell.min[axis] - 1;
-                xy[axis1] = i;
-
-                int entry = lookup_entry(entries, info.dims, info.max_snd_dim, xy[0], xy[1]);
-                Cell2 next_cell = cells.get(entry);
-                int next_count = next_cell.end - next_cell.begin;
-
-                if(OVERLAP_SUBSET)
-                {
-                    if (is_subset(refs.getSublistFrom(cell.begin), count,
-                          refs.getSublistFrom(next_cell.begin), next_count)) {
-                    dmin = Math.max(dmin, next_cell.min[axis] - cell.min[axis]);
-                    } else {
-                        dmin = 0;
-                        break;
-                    }
-                }
-                else
-                {
-                    dmin = Math.max(dmin, next_cell.min[axis] - cell.min[axis]);
-
-                    int first_ref = cell.begin;
-                    for (int p = next_cell.begin; p < next_cell.end; p++) {
-                        int ref = refs.get(p);
-                        int found = bisection(refs.getSublistFrom(first_ref), cell.end - first_ref, ref);
-                        first_ref = found + 1 + first_ref;
-                        // If the reference is not in the cell we try to expand
-                        if (found < 0) {
-                            Tri2 tri = tris[ref];
-                            Float2 cur_min = min_bb;
-                            int a = dmin, b = -1;
-                            // Using bisection, find the offset by which we can overlap the neighbour
-                            while (a <= b) {
-                                int m = (a + b) / 2;
-                                cur_min.set(axis, info.bbox.min.get(axis) + cell_size.get(axis) * (cell.min[axis] + m));
-                                if (tri_overlap_box(true, true, tri.v0, tri.e1, tri.e2, tri.normal(), cur_min, max_bb)) {
-                                    a = m + 1;
-                                } else {
-                                    b = m - 1;
-                                }
-                            }
-                            dmin = b + 1;
-                            if (dmin == 0) break;
-                        }
-                    }
-                    if (dmin == 0) break;
-                }                
-                k1 = Math.min(k1, next_cell.max[axis1] - i);
-                
-            }
-        }
-        if (cell.max[axis] < dims[axis]) {
-            dmax = dims[axis];
-
-            int k1;
-            for (int i = cell.min[axis1]; i < cell.max[axis1] && dmax > 0; i += k1) {
-                k1 = dims[axis1];
-                
-                    
-                int xyz[] = new int[2];
-                xyz[axis] = cell.max[axis];
-                xyz[axis1] = i;
-
-                int entry = lookup_entry(entries, info.dims, info.max_snd_dim, xyz[0], xyz[1]);
-                Cell2 next_cell = cells.get(entry);
-                int next_count = next_cell.end - next_cell.begin;
-
-                if(OVERLAP_SUBSET)
-                {
-                    if (is_subset(refs.getSublistFrom(cell.begin), count,
-                                  refs.getSublistFrom(next_cell.begin), next_count)) {
-                        dmax = Math.min(dmax, next_cell.max[axis] - cell.max[axis]);
-                    } else {
-                        dmax = 0;
-                        break;
-                    }
-                }
-                else
-                {
-                    dmax = Math.min(dmax, next_cell.max[axis] - cell.max[axis]);
-
-                    int first_ref = cell.begin;
-                    for (int p = next_cell.begin; p < next_cell.end; p++) {
-                        int ref = refs.get(p);
-                        int found = bisection(refs.getSublistFrom(first_ref), cell.end - first_ref, ref);
-                        first_ref = found + 1 + first_ref;
-                        // If the reference is not in the cell we try to expand
-                        if (found < 0) {
-                            Tri2 tri = tris[ref];
-                            Float2 cur_max = max_bb;
-                            int a = 1, b = dmax;
-                            // Using bisection, find the offset by which we can overlap the neighbour
-                            while (a <= b) {
-                                int m = (a + b) / 2;
-                                cur_max.set(axis, info.bbox.min.get(axis) + cell_size.get(axis) * (cell.max[axis] + m));
-                                if (tri_overlap_box(true, true, tri.v0, tri.e1, tri.e2, tri.normal(), min_bb, cur_max)) {
-                                    b = m - 1;
-                                } else {
-                                    a = m + 1;
-                                }
-                            }
-                            dmax = a - 1;
-                            if (dmax == 0) break;
-                        }
-                    }
-                    if (dmax == 0) break;
-                }
-                k1 = Math.min(k1, next_cell.max[axis1] - i);
-                
-            }
+        int d = dir ? grid_dims[axis] : -grid_dims[axis];
+        int k1;
+        int i = cell.min[axis1];
+        int max_d = d;
+        while (true) {
+            break;
         }
         
-        overlap.dmin = dmin;
-        overlap.dmax = dmax;
+        continue_overlap |= d == max_d;
+        return d;
     }
     
     public static int optimize_overlap(
@@ -224,8 +117,7 @@ public class Optimise_Overlap {
         AtomicInteger overlaps = new AtomicInteger(0);
         
         IntStream.range(0, cells.size())
-                .forEach(i->{
-                    
+                .forEach(i->{                    
                     
                     if (!cell_flags[i]) return;
                     Cell2 cell = cells.get(i);
@@ -241,7 +133,7 @@ public class Optimise_Overlap {
                     cell.min[1] += overlap.dmin;
                     cell.max[1] += overlap.dmax;
                     k += (overlap.dmin < 0 | overlap.dmax > 0) ? 1 : 0;
-                    
+                                       
                     cell_flags[i] = k != 0;
                     overlaps.addAndGet(k);
                 });
