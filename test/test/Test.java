@@ -23,7 +23,7 @@ import static java.util.stream.Collectors.partitioningBy;
 public class Test {
     public static void main(String... args)
     {
-        test6();
+        test7();
        
         
     }
@@ -94,5 +94,12 @@ public class Test {
         list.resize(3, 1);
         list.resize(15, 1);
         System.out.println(list.prefixSum());
+    }
+    
+    private static void test7() {
+        IntegerList first = new IntegerList(new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 9});
+        IntegerList second = new IntegerList(new int[]{1, 4,  9, 9});
+        
+        System.out.println(Common.isSubset(first, second));
     }
 }

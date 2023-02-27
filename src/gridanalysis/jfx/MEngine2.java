@@ -14,6 +14,7 @@ import gridanalysis.irreg.Grid2;
 import gridanalysis.irreg.GridInfo;
 import gridanalysis.irreg.IntegerList;
 import gridanalysis.irreg.Merge2;
+import gridanalysis.irreg.Optimise_Overlap;
 import gridanalysis.irreg.Ref;
 import gridanalysis.irreg.Tri2;
 import gridanalysis.jfx.math.MTransform;
@@ -21,6 +22,7 @@ import gridanalysis.jfx.shape.MCellInfo;
 import gridanalysis.jfx.shape.MRectangle;
 import gridanalysis.jfx.shape.MTriangle;
 import java.util.ArrayList;
+import java.util.Arrays;
 import javafx.scene.canvas.GraphicsContext;
 
 /**
@@ -41,6 +43,8 @@ public class MEngine2 implements EngineAbstract{
     float top_density = 0.12f;
     float snd_density = 1.05f;
     float alpha = 0.995f;
+    boolean do_overlap = true;
+    
     int exp_iters = 3;
 
     @Override
@@ -65,6 +69,7 @@ public class MEngine2 implements EngineAbstract{
     }
 
     @Override
+    @SuppressWarnings("empty-statement")
     public void setGraphicsContext(GraphicsContext context) {
         this.ctx = context;
         
@@ -114,6 +119,15 @@ public class MEngine2 implements EngineAbstract{
                 
             } while (after < before * alpha);            
         }
+        
+        if (do_overlap) {
+            boolean[] cell_flags = new boolean[cells.size()];
+            Arrays.fill(cell_flags, true);     
+            
+            while (Optimise_Overlap.optimize_overlap(info, entries, ref_ids, tris, cell_flags, cells) > 3 * (1 - alpha) * cells.size()) ;
+        }
+   
+
         
         Grid2.transform_cells(info, cells);
         

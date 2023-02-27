@@ -6,6 +6,7 @@
 package gridanalysis.irreg;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +76,29 @@ public class Common {
         list.clear();
         for(int i = 0; i<size; i++)
             list.add(supplier.get());
+    }
+    
+    //need thorough analysis to see if it conforms to C++ std::includes https://en.cppreference.com/w/cpp/algorithm/includes
+    public static boolean isSubset(int[] array1, int[] array2) {       
+        
+        boolean isSubset = true;
+        int index = 0;
+
+        // Check if array2 is a subset of array1
+        for (int i = 0; i < array2.length; i++) {
+            index = Arrays.binarySearch(array1, index, array1.length, array2[i]);
+            if (index < 0) {
+                isSubset = false;
+                break;
+            }
+            index++;
+        }
+        return isSubset;
+    }
+    
+    public static boolean isSubset(IntegerList first, IntegerList second)
+    {
+        return isSubset(first.toArray(), second.toArray());
     }
 
     public static float radians(float x) {
