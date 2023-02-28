@@ -5,6 +5,7 @@
  */
 package gridanalysis.irreg;
 
+import gridanalysis.utilities.list.IntegerList;
 import static gridanalysis.irreg.Float2.add;
 import static gridanalysis.irreg.Float2.div;
 import static gridanalysis.irreg.Float2.mul;

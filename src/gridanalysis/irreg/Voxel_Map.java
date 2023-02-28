@@ -5,6 +5,8 @@
  */
 package gridanalysis.irreg;
 
+import gridanalysis.utilities.list.IntegerList;
+
 /**
  *
  * @author user

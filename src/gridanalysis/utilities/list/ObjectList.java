@@ -3,40 +3,45 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package gridanalysis.irreg;
+package gridanalysis.utilities.list;
 
 import java.util.Arrays;
 import java.util.ConcurrentModificationException;
+import java.util.ListIterator;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 /**
  *
  * @author user
- * 
- * Simple List that behaves like an ArrayList but for integer primitive
- * All codes here are based on jdk 1.8 ArrayList implementation
- * 
- * TODO:
- *  - Primitive iterator - https://javadevcentral.com/primitiveiterator-in-java
- * 
+ * @param <T>
  */
-public class IntegerList extends IntListAbstract<IntegerList> {
-    
-    public IntegerList()
+public class ObjectList<T> extends ObjectListAbstract<T, ObjectList<T>> {
+    public ObjectList()
     {
-        this.array = new int[10];       
+        this.array = new Object[10];       
         this.size = 0;
     }
     
-    public IntegerList(int[] array)
+    public ObjectList(T[] array)
     {
         if(array == null)
             throw new NullPointerException("array is null");
         this.array = array;        
         this.size = array.length;
     }
+    
+    public ObjectList(int size, Supplier<T> supplier)
+    {
+        if(size < 1)
+            throw new IndexOutOfBoundsException("size is less than 1");
+        this.array = new Object[size];    
+        Arrays.fill(array, 0, array.length, supplier.get());
+        this.size = array.length;
+    }
 
     @Override
-    public void add(int value) {
+    public void add(T value) {
         //add and remove have to modify the modcount
         ensureCapacity(size + 1); //increments modCount
         array[size] = value;    
@@ -44,39 +49,27 @@ public class IntegerList extends IntListAbstract<IntegerList> {
     }
 
     @Override
-    public int get(int index) {
+    public T get(int index) {
         rangeCheck(index);
-        return this.array[index];
+        return (T) this.array[index];
     }
 
     @Override
-    public void set(int index, int value) {
+    public void set(int index, T value) {
         rangeCheck(index);
         this.array[index] = value;
     }
     
     @Override
-    public void set(int index, int[] value) {       
+    public void set(int index, T[] value) {       
         rangeCheck(index);   
         System.arraycopy(value, index, array, index, size);        
     }
-
+   
     @Override
-    public void increment(int index) {
-        rangeCheck(index);
-        array[index]++;
-    }
-
-    @Override
-    public void decrement(int index) {
-        rangeCheck(index);
-        array[index]--;
-    }
-
-    @Override
-    public IntegerList getSubList(int fromIndex, int toIndex) {
+    public ObjectList<T> getSubList(int fromIndex, int toIndex) {
         rangeCheckBound(fromIndex, toIndex, size);
-        return new IntegerSubList(this, fromIndex, toIndex);
+        return new ObjectSublist(this, fromIndex, toIndex);
     }
     
     @Override
@@ -102,6 +95,19 @@ public class IntegerList extends IntListAbstract<IntegerList> {
         int newSize = size - (toIndex-fromIndex);
         size = newSize;
     }
+    
+    @Override
+    public void removeIf(Predicate<T> predicate) {
+        ListIterator<T> iterator = listIterator(0);
+        while(iterator.hasNext())
+        {
+            T t = iterator.next();
+            if(predicate.test(t))
+                iterator.remove();
+        }
+            
+    }
+
 
     @Override
     public int size() {
@@ -114,12 +120,12 @@ public class IntegerList extends IntListAbstract<IntegerList> {
     }
 
     @Override
-    public int back() {
+    public T back() {
         return get(end() - 1);
     }
 
     @Override
-    public void add(int index, int value) {
+    public void add(int index, T value) {
         rangeCheckForAdd(index);
         ensureCapacity(size + 1);  //add and remove have to modify the modcount
         System.arraycopy(array, index, array, index + 1,
@@ -129,7 +135,7 @@ public class IntegerList extends IntListAbstract<IntegerList> {
     }
  
     @Override
-    public void add(int index, int[] arr) {
+    public void add(int index, T[] arr) {
         rangeCheckForAdd(index);
         int numNew = arr.length;
         ensureCapacity(size + numNew);  // Increments modCount
@@ -144,15 +150,15 @@ public class IntegerList extends IntListAbstract<IntegerList> {
     }
 
     @Override
-    public int[] toArray() {    
-        return Arrays.copyOfRange(array, 0, size);   
+    public T[] toArray() {    
+        return Arrays.copyOfRange((T[]) array, 0, size);   
     }
     
     @Override
-    public int[] trim() {       
+    public T[] trim() {       
         if(size < array.length)        
             array = Arrays.copyOfRange(array, 0, size);        
-        return array;
+        return (T[]) array;
     }
     
     @Override
@@ -172,36 +178,30 @@ public class IntegerList extends IntListAbstract<IntegerList> {
             remove(size, size());        
         else
         {
-            int[] arrayNew = new int[size - size()];
-            add(size(), arrayNew);
+            Object[] arrayNew = new Object[size - size()];
+            Arrays.fill(arrayNew, 0, arrayNew.length, null);
+            add(size(), (T[]) arrayNew);
         }
     }
 
     @Override
-    public void resize(int size, int value) {
+    public void resize(int size, Supplier<T> supplier) {
         rangeAboveZero(size);               
         if(size < size())        
             remove(size, size());        
         else
         {
-            int[] arrayNew = new int[size - size()];
-            Arrays.fill(arrayNew, 0, arrayNew.length, value);
-            add(size(), arrayNew);
+            Object[] arrayNew = new Object[size - size()];
+            Arrays.fill(arrayNew, 0, arrayNew.length, supplier.get());
+            add(size(), (T[]) arrayNew);
         }
     }
 
-    @Override
-    public IntegerList prefixSum() {
-        int[] arr = toArray();
-        Arrays.parallelPrefix(arr, (x, y) -> x + y);
-        set(0, arr);
-        return new IntegerList(arr);
-    }
     
     @Override
-    public void swap(IntegerList list)
+    public void swap(ObjectListAbstract<T, ObjectList<T>> list)
     {
-        int[] temp = toArray();
+        T[] temp = toArray();
         
         clear();
         add(0, list.toArray());
@@ -211,7 +211,7 @@ public class IntegerList extends IntListAbstract<IntegerList> {
     }
     
     @Override
-    public int find(int first, int end, int value)
+    public int find(int first, int end, T value)
     {
         int flags_it = -1;
         for (int i = 0; i < size(); i++) {
@@ -222,13 +222,14 @@ public class IntegerList extends IntListAbstract<IntegerList> {
         }
         return flags_it;
     }
+
     
-    private class IntegerSubList extends IntegerList
+    private class ObjectSublist<T> extends ObjectList<T>
     {      
-        private final IntegerList parent;
+        private final ObjectList<T> parent;
         private final int offset;
         
-        private IntegerSubList(IntegerList parent,
+        private ObjectSublist(ObjectList<T> parent,
                 int fromIndex, int toIndex) {            
             this.parent = parent;
             this.offset = fromIndex;
@@ -238,7 +239,7 @@ public class IntegerList extends IntListAbstract<IntegerList> {
         }
 
         @Override
-        public void add(int value)
+        public void add(T value)
         {
             checkForComodification();
             rangeCheck(this.size - 1);
@@ -246,7 +247,7 @@ public class IntegerList extends IntListAbstract<IntegerList> {
         }   
         
          @Override
-        public void add(int index, int[] arr)
+        public void add(int index, T[] arr)
         {
             rangeCheckForAdd(index);
             int cSize = arr.length;
@@ -258,7 +259,7 @@ public class IntegerList extends IntListAbstract<IntegerList> {
         }
         
         @Override
-        public void add(int index, int e) {
+        public void add(int index, T e) {
             rangeCheckForAdd(index);    
             checkForComodification();
             parent.add(offset + index, e);   
@@ -267,7 +268,7 @@ public class IntegerList extends IntListAbstract<IntegerList> {
         }
         
         @Override
-        public int get(int index)
+        public T get(int index)
         {
             rangeCheck(index);
             checkForComodification();
@@ -275,40 +276,40 @@ public class IntegerList extends IntListAbstract<IntegerList> {
         }
         
         @Override
-        public void set(int index, int e) {
+        public void set(int index, T e) {
             rangeCheck(index);   
             checkForComodification();
             parent.set(offset + index, e);
         }
         
         @Override
-        public void set(int index, int[] value) {       
+        public void set(int index, T[] value) {       
             rangeCheck(index);   
             checkForComodification();
             parent.set(offset + index, value);
         }
                 
         @Override
-        public IntegerList getSubList(int fromIndex, int toIndex)
+        public ObjectSublist<T> getSubList(int fromIndex, int toIndex)
         {
             rangeCheckBound(fromIndex, toIndex, size);
             checkForComodification(); //confirm if parent is modified
-            return new IntegerSubList(this, fromIndex, toIndex);
+            return new ObjectSublist(this, fromIndex, toIndex);
         }
         
         @Override
-        public int[] trim() {              
+        public T[] trim() {              
             checkForComodification();
-            int[] arr = new int[parent.size];
+            Object[] arr = new Object[parent.size];
             if(size < arr.length)        
             {                
-                arr = Arrays.copyOfRange(parent.trim(), offset, offset + size);
+                arr = Arrays.copyOfRange((T[]) parent.trim(), offset, offset + size);
             }        
-            return arr;
+            return (T[]) arr;
         }
         
         @Override
-        public int[] toArray()
+        public T[] toArray()
         {
             checkForComodification();
             return Arrays.copyOfRange(parent.toArray(), offset, offset + size);
@@ -350,30 +351,15 @@ public class IntegerList extends IntListAbstract<IntegerList> {
         }
 
         @Override
-        public int back() {
+        public T back() {
             checkForComodification();
             return get(end() - 1);
         }
-        
-        @Override
-        public void increment(int index)
-        {
-            rangeCheck(index);
-            checkForComodification();
-            parent.increment(offset + index);
-        }
-        
-        @Override
-        public void decrement(int index)
-        {
-            rangeCheck(index);
-            checkForComodification();
-            parent.decrement(offset + index);
-        } 
-                
+                        
         private void checkForComodification() {            
             if (parent.modCount != this.modCount)
                 throw new ConcurrentModificationException("Parent array has been modified and hence this sublist is obsolete!");
         }
     }
+    
 }

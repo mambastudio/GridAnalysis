@@ -11,11 +11,11 @@ import gridanalysis.irreg.Float2;
 import static gridanalysis.irreg.Float2.sub;
 import gridanalysis.irreg.Grid2;
 import gridanalysis.irreg.GridInfo;
-import gridanalysis.irreg.IntegerList;
+import gridanalysis.utilities.list.IntegerList;
 import gridanalysis.irreg.Merge2;
 import gridanalysis.irreg.Ref;
 import gridanalysis.irreg.Tri2;
-import java.util.ArrayList;
+import gridanalysis.utilities.list.ObjectList;
 import java.util.Arrays;
 
 /**
@@ -34,8 +34,8 @@ public class Test3 {
         tris[1] = new Tri2(new Float2(74.20f, 85.51f), new Float2(77.92f, 321.43f), new Float2(218.57f, 6.09f));
         
         BBox2[] bboxes = new BBox2[2];
-        ArrayList<Ref> refs = new ArrayList();
-        ArrayList<Cell2> cells = new ArrayList();
+        ObjectList<Ref> refs = new ObjectList();
+        ObjectList<Cell2> cells = new ObjectList();
         IntegerList snd_dims = new IntegerList();
         IntegerList entries = new IntegerList();
         

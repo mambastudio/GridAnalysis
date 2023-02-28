@@ -31,7 +31,7 @@ public class MCellInfo {
     private final double w;
     private final double h;
     
-    private Object object;
+    public Object object;
     
     public MCellInfo(GraphicsContext context, BBox bbox)
     {

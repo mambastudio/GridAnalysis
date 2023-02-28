@@ -5,6 +5,7 @@
  */
 package gridanalysis.irreg;
 
+import gridanalysis.utilities.list.IntegerList;
 import java.util.Arrays;
 
 /**

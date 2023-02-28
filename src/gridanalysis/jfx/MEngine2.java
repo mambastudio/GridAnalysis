@@ -12,7 +12,7 @@ import gridanalysis.irreg.Float2;
 import static gridanalysis.irreg.Float2.sub;
 import gridanalysis.irreg.Grid2;
 import gridanalysis.irreg.GridInfo;
-import gridanalysis.irreg.IntegerList;
+import gridanalysis.utilities.list.IntegerList;
 import gridanalysis.irreg.Merge2;
 import gridanalysis.irreg.Optimise_Overlap;
 import gridanalysis.irreg.Ref;
@@ -21,8 +21,10 @@ import gridanalysis.jfx.math.MTransform;
 import gridanalysis.jfx.shape.MCellInfo;
 import gridanalysis.jfx.shape.MRectangle;
 import gridanalysis.jfx.shape.MTriangle;
+import gridanalysis.utilities.list.ObjectList;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.stream.IntStream;
 import javafx.scene.canvas.GraphicsContext;
 
 /**
@@ -34,16 +36,16 @@ public class MEngine2 implements EngineAbstract{
     MTransform transform = MTransform.translate(100, 100);
     GraphicsContext ctx;   
     
-    ArrayList<MTriangle> mtriangles;
-    ArrayList<Tri2> triangles;
+    ObjectList<MTriangle> mtriangles;
+    ObjectList<Tri2> triangles;
     
-    ArrayList<MCellInfo> cellInfo = new ArrayList();
+    ObjectList<MCellInfo> cellInfoList = new ObjectList();
     
     GridInfo grid = new GridInfo();
     float top_density = 0.12f;
     float snd_density = 1.05f;
     float alpha = 0.995f;
-    boolean do_overlap = true;
+    
     
     int exp_iters = 3;
 
@@ -63,7 +65,7 @@ public class MEngine2 implements EngineAbstract{
 
     @Override
     public void drawMCellInfo() {
-        cellInfo.forEach(info -> {
+        cellInfoList.forEach(info -> {
             info.draw();
         });
     }
@@ -73,24 +75,25 @@ public class MEngine2 implements EngineAbstract{
     public void setGraphicsContext(GraphicsContext context) {
         this.ctx = context;
         
+        float x = 200;
         Tri2 tris[] = new Tri2[2];
-        tris[0] = new Tri2(new Float2(370.77f, 330.81f), new Float2(316.49f, 137.53f), new Float2(392.41f, 180.43f));
+        tris[0] = new Tri2(new Float2(370.77f + x, 330.81f), new Float2(316.49f +x, 137.53f), new Float2(392.41f + x, 180.43f));
         tris[1] = new Tri2(new Float2(74.20f, 85.51f), new Float2(77.92f, 321.43f), new Float2(218.57f, 6.09f));
         
-        mtriangles = new ArrayList();
+        mtriangles = new ObjectList();
         mtriangles.add(new MTriangle(ctx, tris[0]));
         mtriangles.add(new MTriangle(ctx, tris[1]));
         
         BBox2[] bboxes = new BBox2[2];
-        ArrayList<Ref> refs = new ArrayList();
-        ArrayList<Cell2> cells = new ArrayList();
+        ObjectList<Ref> refs = new ObjectList();
+        ObjectList<Cell2> cells = new ObjectList();
         IntegerList snd_dims = new IntegerList();
         IntegerList entries = new IntegerList();
         
         GridInfo info = new GridInfo();
         
         Grid2.compute_bboxes(info, tris, bboxes);
-        Grid2.compute_grid_dims(sub(info.bbox.max, info.bbox.min), tris.length, top_density, info.dims);
+        Grid2.compute_grid_dims(sub(info.bbox.max, info.bbox.min), tris.length, top_density, info.dims); 
         Grid2.gen_top_refs(info, bboxes, tris, refs);
         
         Grid2.compute_snd_dims(info, snd_density, refs, snd_dims);
@@ -107,7 +110,7 @@ public class MEngine2 implements EngineAbstract{
         
         
         // Optimizations happen in integer virtual grid coordinates
-        boolean do_merge = true;
+        boolean do_merge = false;
         if (do_merge) {            
             int iter = 0;
             int before, after;
@@ -120,6 +123,7 @@ public class MEngine2 implements EngineAbstract{
             } while (after < before * alpha);            
         }
         
+        boolean do_overlap = false;
         if (do_overlap) {
             boolean[] cell_flags = new boolean[cells.size()];
             Arrays.fill(cell_flags, true);     
@@ -131,10 +135,26 @@ public class MEngine2 implements EngineAbstract{
         
         Grid2.transform_cells(info, cells);
         
-        for(Cell2 cell: cells)
-        {            
-            cellInfo.add(new MCellInfo(ctx, cell.getBound()));
-        }
+      
+        
+        
+        IntStream.range(0, cells.size())
+                .forEach(i->{
+                    Cell2 cell = cells.get(i);
+                    MCellInfo cellInfo = new MCellInfo(ctx, cell.getBound());
+                    cellInfo.object = i;
+                    cellInfoList.add(cellInfo);
+                    
+                    if(i == 6)
+                    {
+                        System.out.println(cell.getBound());
+                        System.out.println(cell);
+                    }
+                });
+        
+       
+        
+        System.out.println(cells.size());
         
         this.grid = info;
     }
@@ -146,9 +166,9 @@ public class MEngine2 implements EngineAbstract{
 
     @Override
     public void setMCellInfo(ArrayList<MCellInfo>... cellInfoArray) {
-        this.cellInfo.clear();
-        for(ArrayList<MCellInfo> cellInfoList : cellInfoArray)
-            this.cellInfo.addAll(cellInfoList);
+        this.cellInfoList.clear();
+        for(ObjectList<MCellInfo> cellInfoList : cellInfoArray)
+            this.cellInfoList.addAll(cellInfoList);
     }
     
 }

@@ -5,13 +5,13 @@
  */
 package test;
 
-import gridanalysis.irreg.IntegerList;
-import gridanalysis.coordinates.Vec2i;
+import gridanalysis.utilities.list.IntegerList;
 import gridanalysis.irreg.Common;
-import gridanalysis.utilities.Utility;
+import gridanalysis.utilities.list.ObjectList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.function.Predicate;
 import static java.util.stream.Collectors.partitioningBy;
@@ -96,10 +96,19 @@ public class Test {
         System.out.println(list.prefixSum());
     }
     
+   
     private static void test7() {
-        IntegerList first = new IntegerList(new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 9});
-        IntegerList second = new IntegerList(new int[]{1, 4,  9, 9});
+        ObjectList<String> stringList = new ObjectList(new String[]{"joe", "mwangi", "mburu", "nduma"});
+        System.out.println(stringList);
+        stringList.resize(112, ()->"string");
         
-        System.out.println(Common.isSubset(first, second));
+        ListIterator<String> iterator = stringList.listIterator(0);
+        while(iterator.hasNext())
+        {
+            if(iterator.next().contains("string"))
+                iterator.remove();
+        }
+        System.out.println(stringList);
     }
+
 }

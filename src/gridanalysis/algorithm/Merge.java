@@ -236,55 +236,51 @@ public class Merge extends GridAbstracts{
                       int num_cells) {
         
         for (int id = 0; id < num_cells; id++) {
-            int new_id = cell_scan.get(id);
-            if (cell_scan.get(id + 1) <= new_id)
-                continue;
+            boolean valid = id < num_cells;
+            int new_id = valid ? cell_scan.get(id) : 0;
+            valid &= cell_scan.get(id + 1) > new_id;
 
             int cell_begin = 0, cell_end = 0;
             int next_begin = 0, next_end = 0;
             int new_refs_begin;
+             
+            if (valid) {
+                Cell cell = cells[id];
+                int merge_count = merge_counts.get(id);
 
-            Cell cell = cells[id];
-            int merge_count = merge_counts.get(id);
+                new_refs_begin = ref_scan.get(id);
+                new_cell_ids.set(id, new_id);
+                cell_begin = cell.begin;
+                cell_end   = cell.end;
 
-            new_refs_begin = ref_scan.get(id);
-            new_cell_ids.set(id, new_id);
-            cell_begin = cell.begin;
-            cell_end = cell.end;
+                Vec2i new_min;
+                Vec2i new_max;
+                int new_refs_end;
+                if (merge_count >= 0) {
+                    // Do the merge and store the references into the new array
+                    int next_id = lookup_entry(entries, grid_shift, grid_dims.rightShift(grid_shift), next_cell(axis, cell.min, cell.max));
+                    Cell next_cell = cells[next_id];
+                    next_begin = next_cell.begin;
+                    next_end   = next_cell.end;
 
-            Vec2i new_min;
-            Vec2i new_max;
-            int new_refs_end;
-            if (merge_count >= 0) {
-                // Do the merge and store the references into the new array
-                int next_id = lookup_entry(entries, grid_shift, grid_dims.rightShift(grid_shift), next_cell(axis, cell.min, cell.max));
-                Cell next_cell = cells[next_id];
-                next_begin = next_cell.begin;
-                next_end = next_cell.end;
+                    // Make the next cell point to the merged one
+                    new_cell_ids.set(next_id, new_id);
 
-                // Make the next cell point to the merged one
-                new_cell_ids.set(next_id, new_id);
+                    new_min = Vec2i.min(next_cell.min, cell.min);
+                    new_max = Vec2i.max(next_cell.max, cell.max);
+                    new_refs_end = new_refs_begin + merge_count;
+                } else {
+                   new_min = cell.min;
+                   new_max = cell.max;
+                   new_refs_end = new_refs_begin + (cell_end - cell_begin);
+                }
 
-                new_min = Vec2i.min(next_cell.min, cell.min);
-                new_max = Vec2i.max(next_cell.max, cell.max);
-                new_refs_end = new_refs_begin + merge_count;
-            } else {
-                new_min = cell.min;
-                new_max = cell.max;
-                new_refs_end = new_refs_begin + (cell_end - cell_begin);
+                new_cells[new_id] = new Cell(new_min, new_refs_begin,
+                                                    new_max, new_refs_end);
             }
-
-            new_cells[new_id] = new Cell(new_min, new_refs_begin, new_max, new_refs_end);
-
-            if (next_begin >= next_end) {
-                for (int i = cell_begin, j = new_refs_begin; i < cell_end; i++, j++)
-                    new_refs.set(j, refs.get(i));
-                continue;
-            }
-
-            merge_refs(refs.splitSubArrayFrom(cell_begin), cell_end - cell_begin,
-                refs.splitSubArrayFrom(next_begin), next_end - next_begin,
-                new_refs.splitSubArrayFrom(new_refs_begin));
+            
+            boolean merge = next_begin < next_end;
+            
         }
     }
     
@@ -364,7 +360,7 @@ public class Merge extends GridAbstracts{
             } while (grid.num_cells < alpha * prev_num_cells);            
         }
 
-       engine.setMCellInfo(MCellInfo.getCells(engine, grid.cells.get(), grid.entries, grid.bbox, grid.dims, grid.shift));
+       engine.setMCellInfo(MCellInfo.getCells(engine, grid.cells.get(), grid.bbox, grid.dims, grid.shift));
         
     }
 }

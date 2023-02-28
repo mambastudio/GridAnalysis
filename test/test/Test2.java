@@ -5,7 +5,7 @@
  */
 package test;
 
-import gridanalysis.irreg.IntegerList;
+import gridanalysis.utilities.list.IntegerList;
 
 
 

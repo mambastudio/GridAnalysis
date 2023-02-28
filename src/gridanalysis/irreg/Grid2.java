@@ -5,6 +5,7 @@
  */
 package gridanalysis.irreg;
 
+import gridanalysis.utilities.list.IntegerList;
 import static gridanalysis.irreg.Common.clamp;
 import static gridanalysis.irreg.Common.closest_log2;
 import static gridanalysis.irreg.Common.partition;
@@ -17,8 +18,8 @@ import static gridanalysis.irreg.Voxel_Map.ENTRY_SHIFT;
 import static gridanalysis.irreg.Voxel_Map.entry_begin;
 import static gridanalysis.irreg.Voxel_Map.entry_log_dim;
 import static gridanalysis.irreg.Voxel_Map.make_entry;
+import gridanalysis.utilities.list.ObjectList;
 import static java.lang.Math.cbrt;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -53,6 +54,8 @@ public class Grid2 {
         float r = (float) (cbrt(d * N / V));
         dims[0] = Math.max(1, (int)(e.x * r));
         dims[1] = Math.max(1, (int)(e.y * r));
+        
+        
     }
 
     
@@ -80,7 +83,7 @@ public class Grid2 {
                         GridInfo info,
                         BBox2[] bboxes,
                         Tri2[] tris,
-                        final ArrayList<Ref> refs) {
+                        final ObjectList<Ref> refs) {
         Float2 cell_size = info.cell_size();
         Float2 inv_size  = div(1.0f, cell_size);
         Float2 inv_org   = mul(info.bbox.min, inv_size);
@@ -99,7 +102,7 @@ public class Grid2 {
         approx_ref_counts.swap(approx_ref_counts.prefixSum());
              
         // Allocate and fill the array of references
-        Common.clearFill(refs, approx_ref_counts.back(), ()-> new Ref(-1, -1, -1));        
+        refs.resize(approx_ref_counts.back(), ()-> new Ref(-1, -1 ,-1));  
         IntStream.range(0, tris.length)
                 //.parallel()
                 .forEach(i->{
@@ -125,16 +128,13 @@ public class Grid2 {
         refs.removeIf(ref -> ref.tri < 0);        
     }
     
-    public static void compute_snd_dims(GridInfo info, float snd_density, ArrayList<Ref> refs, IntegerList snd_dims)
+    public static void compute_snd_dims(GridInfo info, float snd_density, ObjectList<Ref> refs, IntegerList snd_dims)
     {
         final int num_top_cells = info.num_top_cells();
         final Float2 cell_size = info.cell_size();
         
         // Compute the number of references per cell
-        ArrayList<AtomicInteger> cell_ref_counts = new ArrayList(num_top_cells);
-        for(int i = 0; i<num_top_cells; i++)
-            cell_ref_counts.add(new AtomicInteger());
-        
+        ObjectList<AtomicInteger> cell_ref_counts = new ObjectList(num_top_cells, ()-> new AtomicInteger());        
         IntStream.range(0, refs.size())
                 .parallel()
                 .forEach(i->{                   
@@ -166,10 +166,10 @@ public class Grid2 {
         return pos;
     }
     
-    public static void remove_invalid_references(IntegerList flags, ArrayList<Ref> refs, int first_ref) {        
+    public static void remove_invalid_references(IntegerList flags, ObjectList<Ref> refs, int first_ref) {              
         int flags_it = flags.find(0, flags.end(), 0);
-        
         if (flags_it > 0 && flags_it != flags.end()) {
+            
             int refs_it = first_ref + flags_it;            
             int it1 = refs_it  + 1;
             int it2 = flags_it + 1;
@@ -181,7 +181,7 @@ public class Grid2 {
             }
             
             flags.remove(flags_it, flags.size()); 
-            refs.subList(refs_it, refs.size()).clear();
+            refs.remove(refs_it, refs.size());
         }
     }
     
@@ -193,13 +193,13 @@ public class Grid2 {
         return new BBox2(pos, add(pos, sub_cell_size));
     }
     
-    public static void subdivide_refs(GridInfo info, Tri2[] tris, IntegerList snd_dims, ArrayList<Ref> refs) {
+    public static void subdivide_refs(GridInfo info, Tri2[] tris, IntegerList snd_dims, ObjectList<Ref> refs) {
         Float2 cell_size = info.cell_size();
 
         AtomicInteger first_ref = new AtomicInteger(0);
         IntegerList split_flags = new IntegerList();
         IntegerList split_counts = new IntegerList();        
-        ArrayList<Ref> new_refs = new ArrayList();
+        ObjectList<Ref> new_refs = new ObjectList();
 
         // Subdivide until the maximum depth is reached
         AtomicInteger iter = new AtomicInteger(0);
@@ -287,7 +287,7 @@ public class Grid2 {
 
                     });
             
-            Common.swapArrayLists(refs, new_refs);
+            refs.swap(new_refs);
             iter.getAndIncrement();     
         }        
     }
@@ -308,8 +308,8 @@ public class Grid2 {
     }
     
     public static void compact_references(
-                               ArrayList<Ref> refs,
-                               ArrayList<Ref> compact_refs, 
+                               ObjectList<Ref> refs,
+                               ObjectList<Ref> compact_refs, 
                                IntegerList cell_begins,
                                IntegerList cell_ends) {
         int cur = 0;
@@ -437,7 +437,7 @@ public class Grid2 {
 
         return num_cells;
     }
-    public static void gen_cells(GridInfo info, ArrayList<Ref> refs, IntegerList snd_dims, ArrayList<Cell2> cells) {
+    public static void gen_cells(GridInfo info, ObjectList<Ref> refs, IntegerList snd_dims, ObjectList<Cell2> cells) {
         // Sort by cell first, then by morton code index
         Collections.sort(refs, (Ref a, Ref b)->{
             boolean cond = 
@@ -450,14 +450,14 @@ public class Grid2 {
         
         // Compact the references in order to keep only one reference per (non-empty) cell.
         // At the same time, compute the range of references covered by these cells.
-        ArrayList<Ref> compact_refs = new ArrayList();
+        ObjectList<Ref> compact_refs = new ObjectList();
         IntegerList cell_begins = new IntegerList();
         IntegerList cell_ends = new IntegerList();
         
         compact_references(refs, compact_refs, cell_begins, cell_ends);
         
         // Allocate an array to hold the number of cells per top-level cell, and the number of refs per top-level cell
-        int num_top_cells = info.num_top_cells();
+        int num_top_cells = info.num_top_cells(); 
         AtomicInteger[] num_cells = new AtomicInteger[compact_refs.size() + 1]; 
         for(int i = 0; i<num_cells.length; i++)
             num_cells[i] = new AtomicInteger(0);
@@ -489,9 +489,10 @@ public class Grid2 {
         });
         
         
-        
+        System.out.println(empty_cells);
         // Perform a scan to count empty cells
         empty_cells.swap(empty_cells.prefixSum());
+        System.out.println(empty_cells.back());
         
         AtomicInteger num_non_empty = num_cells[num_cells.length-1];
         int num_top_empty = empty_cells.back();
@@ -513,22 +514,24 @@ public class Grid2 {
                         prev_cells = generate_cells(info, snd_dim, cur.top_cell, cells.subList(num.get(), cells.size()), 0, 0, 0, cur.snd_cell);
                     }
                     
-                    long next_snd_cell = cur.top_cell != next.top_cell ? 1 << (2 * snd_dims.get(cur.top_cell)) : next.snd_cell;
+                    long next_snd_cell = cur.top_cell != next.top_cell ? 1 << (2 * snd_dims.get(cur.top_cell)) : next.snd_cell;                    
                     int total = prev_cells + generate_cells(info, snd_dim, cur.top_cell, cells.subList(num.get() + prev_cells, cells.size()), begin, end, cur.snd_cell, next_snd_cell);
+                    
                 });
+                
         IntStream.range(0, num_top_cells)
                 .forEach(i->{
                     int index = empty_cells.get(i);
                     if (index != empty_cells.get(i + 1)) {
                         int x = i % info.dims[0];
-                        int y = (i / info.dims[0]) % info.dims[1];
+                        int y = i / info.dims[0];
                         
                         int d = 1 << info.max_snd_dim;
                         int org_x = d * x;
                         int org_y = d * y;
                         
                         Cell2 cell = cells.get(num_non_empty.get() + index);
-
+                        
                         cell.min[0] = org_x;
                         cell.min[1] = org_y;
                         
@@ -536,8 +539,8 @@ public class Grid2 {
                         cell.max[1] = org_y + d;
                         
                         cell.begin = 0;
-                        cell.end   = 0;
-                    }
+                        cell.end   = 0;              
+                    }                    
                 });
     }
     
@@ -564,12 +567,13 @@ public class Grid2 {
         }
     }
     
-    public static void gen_entries(GridInfo info, ArrayList<Cell2> cells, IntegerList snd_dims, IntegerList entries) {
+    public static void gen_entries(GridInfo info, ObjectList<Cell2> cells, IntegerList snd_dims, IntegerList entries) {
         // Reminder: snd_dims.size() == number of top-level cells
-        int num_top_cells = snd_dims.size();
+        int num_top_cells = snd_dims.size(); 
+        
         IntegerList accum_dims = new IntegerList(new int[num_top_cells + 1]);
         for (int i = 0; i < num_top_cells; i++) {
-            int d = 1 << snd_dims.get(i);
+            int d = 1 << snd_dims.get(i);           
             accum_dims.set(i + 1, d * d);
         }
         
@@ -578,6 +582,7 @@ public class Grid2 {
         
         // Allocate (number of top-level cells) + (accumulated number of second-level cells) entries for the voxel map
         entries.resize(accum_dims.back(), -1);
+        
         
         // Generate the top-level entries
         IntStream.range(0, num_top_cells)
@@ -594,8 +599,11 @@ public class Grid2 {
        
     }
     
-    public static void transform_cells(GridInfo info, ArrayList<Cell2> cells) {
+    public static void transform_cells(GridInfo info, ObjectList<Cell2> cells) {
         Float2 subcell_size = div(info.cell_size(), (1 << info.max_snd_dim));
+        
+        System.out.println(subcell_size);
+        
         IntStream.range(0, cells.size())
                 .parallel()
                 .forEach(i->{

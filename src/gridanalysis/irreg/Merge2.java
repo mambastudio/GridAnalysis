@@ -5,8 +5,9 @@
  */
 package gridanalysis.irreg;
 
+import gridanalysis.utilities.list.IntegerList;
 import static gridanalysis.irreg.Voxel_Map.lookup_entry;
-import java.util.ArrayList;
+import gridanalysis.utilities.list.ObjectList;
 import java.util.Comparator;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.IntStream;
@@ -26,8 +27,8 @@ public class Merge2 {
     
     public static void merge_pairs(
                     int top_entries,
-                    ArrayList<MergePair> pairs,
-                    ArrayList<Cell2> cells,
+                    ObjectList<MergePair> pairs,
+                    ObjectList<Cell2> cells,
                     IntegerList refs,
                     IntegerList entries) {
         if (pairs.isEmpty()) return;
@@ -110,7 +111,7 @@ public class Merge2 {
     public static int merge(
             int iter,
             GridInfo info,
-            ArrayList<Cell2> cells,
+            ObjectList<Cell2> cells,
             IntegerList refs,
             IntegerList entries) {
         Float2 cell_size = info.cell_size();
@@ -120,9 +121,8 @@ public class Merge2 {
             info.dims[0] << info.max_snd_dim,
             info.dims[1] << info.max_snd_dim};
         
-        ArrayList<AtomicBoolean> merge_flag = new ArrayList();
-        Common.clearFill(merge_flag, cells.size(), ()-> new AtomicBoolean(false));
-        ArrayList<MergePair> to_merge = new ArrayList();
+        ObjectList<AtomicBoolean> merge_flag = new ObjectList(cells.size(), ()-> new AtomicBoolean(false));        
+        ObjectList<MergePair> to_merge = new ObjectList();
         int total_merged = 0;
         
         // Try to merge on x-axis
