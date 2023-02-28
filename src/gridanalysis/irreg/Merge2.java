@@ -49,8 +49,6 @@ public class Merge2 {
 
                 if (e1 < i) continue;
                 
-                //System.out.println(cells.size()+ " " +e1);
-                
                 cells.get(cur_id).min[0] = Math.min(cells.get(e0).min[0], cells.get(e1).min[0]);
                 cells.get(cur_id).min[1] = Math.min(cells.get(e0).min[1], cells.get(e1).min[1]);
                 cells.get(cur_id).max[0] = Math.max(cells.get(e0).max[0], cells.get(e1).max[0]);
@@ -98,7 +96,7 @@ public class Merge2 {
             indices.set(i, cur_id++);
         }
         refs.swap(new_refs);
-        cells.subList(cur_id, cells.size()).clear(); //resize
+        cells.resize(cur_id); //resize
         
         
         IntStream.range(top_entries, entries.size())
@@ -155,7 +153,7 @@ public class Merge2 {
         
         //std::fill(merge_flag.begin(), merge_flag.end(), true);
         to_merge.clear();
-        Common.clearFill(merge_flag, merge_flag.size(), ()-> new AtomicBoolean(false));
+        merge_flag.fill(()-> new AtomicBoolean(false));
         
         // Try to merge on y-axis
         IntStream.range(0, cells.size())

@@ -43,7 +43,7 @@ public class MEngine2 implements EngineAbstract{
     
     GridInfo grid = new GridInfo();
     float top_density = 0.12f;
-    float snd_density = 1.05f;
+    float snd_density = 0.05f;
     float alpha = 0.995f;
     
     
@@ -99,7 +99,7 @@ public class MEngine2 implements EngineAbstract{
         Grid2.compute_snd_dims(info, snd_density, refs, snd_dims);
         Grid2.subdivide_refs(info, tris, snd_dims, refs);
         
-        Grid2.gen_cells(info, refs, snd_dims, cells);
+        Grid2.gen_cells(info, refs, snd_dims, cells);      
         Grid2.gen_entries(info, cells, snd_dims, entries);
         
         // Compute the array of references to send to the GPU
@@ -110,7 +110,7 @@ public class MEngine2 implements EngineAbstract{
         
         
         // Optimizations happen in integer virtual grid coordinates
-        boolean do_merge = false;
+        boolean do_merge = true;
         if (do_merge) {            
             int iter = 0;
             int before, after;
@@ -123,6 +123,8 @@ public class MEngine2 implements EngineAbstract{
             } while (after < before * alpha);            
         }
         
+        System.out.println(cells.size());
+        
         boolean do_overlap = false;
         if (do_overlap) {
             boolean[] cell_flags = new boolean[cells.size()];
@@ -130,9 +132,7 @@ public class MEngine2 implements EngineAbstract{
             
             while (Optimise_Overlap.optimize_overlap(info, entries, ref_ids, tris, cell_flags, cells) > 3 * (1 - alpha) * cells.size()) ;
         }
-   
-
-        
+       
         Grid2.transform_cells(info, cells);
         
       
@@ -141,20 +141,15 @@ public class MEngine2 implements EngineAbstract{
         IntStream.range(0, cells.size())
                 .forEach(i->{
                     Cell2 cell = cells.get(i);
+                    
                     MCellInfo cellInfo = new MCellInfo(ctx, cell.getBound());
                     cellInfo.object = i;
-                    cellInfoList.add(cellInfo);
-                    
-                    if(i == 6)
-                    {
-                        System.out.println(cell.getBound());
-                        System.out.println(cell);
-                    }
+                    cellInfoList.add(cellInfo);                   
                 });
         
        
         
-        System.out.println(cells.size());
+        
         
         this.grid = info;
     }
@@ -167,8 +162,8 @@ public class MEngine2 implements EngineAbstract{
     @Override
     public void setMCellInfo(ArrayList<MCellInfo>... cellInfoArray) {
         this.cellInfoList.clear();
-        for(ObjectList<MCellInfo> cellInfoList : cellInfoArray)
-            this.cellInfoList.addAll(cellInfoList);
+        for(ArrayList<MCellInfo> cellInfoArrayList : cellInfoArray)
+            this.cellInfoList.addAll(cellInfoArrayList);
     }
     
 }

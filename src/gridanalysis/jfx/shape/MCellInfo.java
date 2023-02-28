@@ -48,7 +48,7 @@ public class MCellInfo {
         this.x = bbox.min.x;
         this.y = bbox.min.y;
         this.w = bbox.extents().x;
-        this.h = bbox.extents().y;
+        this.h = bbox.extents().y;        
     }
     
     public void draw()

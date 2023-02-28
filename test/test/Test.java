@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import static java.util.stream.Collectors.partitioningBy;
 
@@ -23,7 +24,7 @@ import static java.util.stream.Collectors.partitioningBy;
 public class Test {
     public static void main(String... args)
     {
-        test7();
+        test9();
        
         
     }
@@ -100,15 +101,48 @@ public class Test {
     private static void test7() {
         ObjectList<String> stringList = new ObjectList(new String[]{"joe", "mwangi", "mburu", "nduma"});
         System.out.println(stringList);
-        stringList.resize(112, ()->"string");
-        
-        ListIterator<String> iterator = stringList.listIterator(0);
-        while(iterator.hasNext())
-        {
-            if(iterator.next().contains("string"))
-                iterator.remove();
-        }
+        ObjectList<String> sub = stringList.getSublistFrom(1);
+        System.out.println(sub);
+        sub.sort((String a, String b)->{
+            return a.length() > b.length() ? 1 : -1;
+        });
+        System.out.println(sub);
         System.out.println(stringList);
+    }
+    
+    private static void test8()
+    {
+        ObjectList<AtomicInteger> list = new ObjectList(10, ()->new AtomicInteger(1));
+        System.out.println(list);        
+        list.parallelPrefix((AtomicInteger a, AtomicInteger b)->{
+            return new AtomicInteger(a.get() + b.get());
+        });
+        System.out.println(list);
+        ObjectList<AtomicInteger> list1 = list.getSublistFrom(5);
+        list1.partition((AtomicInteger v) -> {
+            return v.get() > 8;
+        });
+        
+        System.out.println(list1);
+        System.out.println(list);
+       
+    }
+    
+    private static void test9()
+    {
+        ObjectList<AtomicInteger> list = new ObjectList(10, ()->new AtomicInteger(1));
+        System.out.println(list);        
+        list.parallelPrefix((AtomicInteger a, AtomicInteger b)->{
+            return new AtomicInteger(a.get() + b.get());
+        });
+        System.out.println(list);   
+        ArrayList<AtomicInteger> arrList = new ArrayList();
+        arrList.add(new AtomicInteger(3));
+        arrList.add(new AtomicInteger(3));
+        arrList.add(new AtomicInteger(3));
+        arrList.add(new AtomicInteger(3));
+        list.addAll(arrList);
+        System.out.println(list);   
     }
 
 }

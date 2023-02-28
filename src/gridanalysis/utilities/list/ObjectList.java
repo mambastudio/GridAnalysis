@@ -6,10 +6,16 @@
 package gridanalysis.utilities.list;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.ConcurrentModificationException;
+import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
+import java.util.function.BinaryOperator;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import static java.util.stream.Collectors.partitioningBy;
 
 /**
  *
@@ -36,16 +42,15 @@ public class ObjectList<T> extends ObjectListAbstract<T, ObjectList<T>> {
         if(size < 1)
             throw new IndexOutOfBoundsException("size is less than 1");
         this.array = new Object[size];    
-        Arrays.fill(array, 0, array.length, supplier.get());
+        fill(0, array.length, supplier);
         this.size = array.length;
     }
 
     @Override
-    public void add(T value) {
-        //add and remove have to modify the modcount
+    public void add(T value) {        
         ensureCapacity(size + 1); //increments modCount
         array[size] = value;    
-        size++;
+        size++;       
     }
 
     @Override
@@ -63,7 +68,7 @@ public class ObjectList<T> extends ObjectListAbstract<T, ObjectList<T>> {
     @Override
     public void set(int index, T[] value) {       
         rangeCheck(index);   
-        System.arraycopy(value, index, array, index, size);        
+        System.arraycopy(value, 0, array, index, value.length);        
     }
    
     @Override
@@ -104,10 +109,9 @@ public class ObjectList<T> extends ObjectListAbstract<T, ObjectList<T>> {
             T t = iterator.next();
             if(predicate.test(t))
                 iterator.remove();
-        }
-            
+        }            
     }
-
+    
 
     @Override
     public int size() {
@@ -126,17 +130,17 @@ public class ObjectList<T> extends ObjectListAbstract<T, ObjectList<T>> {
 
     @Override
     public void add(int index, T value) {
-        rangeCheckForAdd(index);
+        rangeCheckForAdd(index);        
         ensureCapacity(size + 1);  //add and remove have to modify the modcount
         System.arraycopy(array, index, array, index + 1,
                          size - index);
         array[index] = value;
-        size++;
+        size++;       
     }
  
     @Override
     public void add(int index, T[] arr) {
-        rangeCheckForAdd(index);
+        rangeCheckForAdd(index);        
         int numNew = arr.length;
         ensureCapacity(size + numNew);  // Increments modCount
         
@@ -146,12 +150,106 @@ public class ObjectList<T> extends ObjectListAbstract<T, ObjectList<T>> {
                              numMoved);
         
         System.arraycopy(arr, 0, array, index, numNew);
-        size += numNew;
+        size += numNew;        
+    }
+    
+    public void addAll(List<T> list)
+    {
+        add(size, (T[])list.toArray());
     }
 
     @Override
     public T[] toArray() {    
         return Arrays.copyOfRange((T[]) array, 0, size);   
+    }
+    
+    public void sort(Comparator<? super T> c)
+    {
+        sort(0, size, c);
+    }
+    
+    public void sort(int fromIndex, int toIndex, Comparator<? super T> c) {
+        rangeCheckBound(fromIndex, fromIndex, size);
+        final int expectedModCount = modCount;
+        Arrays.sort((T[]) array, fromIndex, toIndex, c);
+        if (modCount != expectedModCount) {
+          throw new ConcurrentModificationException();
+        }
+        modCount++;
+    }
+    
+    public void parallelPrefix(BinaryOperator<T> op)
+    {
+        parallelPrefix(0, size, op);
+    }
+    
+    public void parallelPrefix(int fromIndex, int toIndex, BinaryOperator<T> op)
+    {
+        rangeCheckBound(fromIndex, fromIndex, size);
+        final int expectedModCount = modCount;
+        Arrays.parallelPrefix((T[])array, fromIndex, toIndex, op);
+        if (modCount != expectedModCount) {
+          throw new ConcurrentModificationException();
+        }
+        modCount++;
+    }
+    
+    public int partition(Predicate<T> predicate)
+    {
+        return partition(0, size, predicate);
+    }
+    
+    public int partition(int fromIndex, int toIndex, Predicate<T> predicate)
+    {
+        rangeCheckBound(fromIndex, fromIndex, size);
+        final int expectedModCount = modCount; //imagine partitioning the whole array - this might cause sublist misbehaviour
+        Map<Boolean, List<T>> result = Arrays.stream((T[])array, fromIndex, toIndex).collect(partitioningBy(predicate));
+        List<T> trueList = result.get(true);
+        List<T> falseList = result.get(false);
+        int index = trueList.size();        
+        this.set(fromIndex, (T[]) trueList.toArray());
+        if(index < toIndex)
+            this.set(fromIndex + index, (T[]) falseList.toArray());
+        if (modCount != expectedModCount) {
+          throw new ConcurrentModificationException();
+        }
+        modCount++;
+        
+        return index;
+    }
+    
+    public void fill(Supplier<T> supplier)
+    {
+        fill(0, size, supplier);
+    }
+    
+    public void fill(int fromIndex, int toIndex, Supplier<T> supplier)
+    {
+        rangeCheckBound(fromIndex, fromIndex, size);
+        final int expectedModCount = modCount;
+        for(int i = fromIndex; i<toIndex; i++)
+            array[i] = supplier.get();        
+        if (modCount != expectedModCount) {
+          throw new ConcurrentModificationException();
+        }
+        modCount++;
+    }
+    
+    @Override
+    public void forEach(Consumer<? super T> action) {
+        forEach(0, size, action);
+    }
+    
+    public void forEach(int fromIndex, int toIndex, Consumer<? super T> action) {
+        if(action == null)
+            throw new NullPointerException("action is null");
+        final int expectedModCount = modCount;
+        for (int i = fromIndex; modCount == expectedModCount && i < toIndex; i++) {
+            action.accept(get(i));
+        }
+        if (modCount != expectedModCount) {
+            throw new ConcurrentModificationException();
+        }
     }
     
     @Override
@@ -179,7 +277,8 @@ public class ObjectList<T> extends ObjectListAbstract<T, ObjectList<T>> {
         else
         {
             Object[] arrayNew = new Object[size - size()];
-            Arrays.fill(arrayNew, 0, arrayNew.length, null);
+            for(int i = 0; i<arrayNew.length; i++)
+                arrayNew[i] = null;
             add(size(), (T[]) arrayNew);
         }
     }
@@ -192,7 +291,8 @@ public class ObjectList<T> extends ObjectListAbstract<T, ObjectList<T>> {
         else
         {
             Object[] arrayNew = new Object[size - size()];
-            Arrays.fill(arrayNew, 0, arrayNew.length, supplier.get());
+            for(int i = 0; i<arrayNew.length; i++)
+                arrayNew[i] = supplier.get();
             add(size(), (T[]) arrayNew);
         }
     }
@@ -246,6 +346,15 @@ public class ObjectList<T> extends ObjectListAbstract<T, ObjectList<T>> {
             add(this.size, value);            
         }   
         
+        @Override
+        public void addAll(List<T> list)
+        {
+            checkForComodification();
+            rangeCheck(this.size - 1);
+            add(this.size, (T[])list.toArray());      
+            this.modCount = parent.modCount;
+        }
+        
          @Override
         public void add(int index, T[] arr)
         {
@@ -255,7 +364,8 @@ public class ObjectList<T> extends ObjectListAbstract<T, ObjectList<T>> {
             checkForComodification();
             parent.add(offset + index, arr);
             this.modCount = parent.modCount;
-            this.size += cSize;            
+            this.size += cSize;    
+            this.modCount = parent.modCount;
         }
         
         @Override
@@ -354,6 +464,65 @@ public class ObjectList<T> extends ObjectListAbstract<T, ObjectList<T>> {
         public T back() {
             checkForComodification();
             return get(end() - 1);
+        }
+        
+        @Override
+        public void sort(Comparator<? super T> c)
+        {
+            sort(0, size, c);
+        }
+
+        @Override
+        public void sort(int fromIndex, int toIndex, Comparator<? super T> c) {
+            rangeCheckBound(fromIndex, fromIndex, size);
+            checkForComodification();
+            parent.sort(offset + fromIndex, offset + toIndex, c);
+            this.modCount = parent.modCount;
+        }
+        
+        @Override
+        public void parallelPrefix(BinaryOperator<T> op)
+        {
+            parallelPrefix(0, size, op);
+        }
+
+        @Override
+        public void parallelPrefix(int fromIndex, int toIndex, BinaryOperator<T> op) {
+            rangeCheckBound(fromIndex, fromIndex, size);
+            checkForComodification();
+            parent.parallelPrefix(offset + fromIndex, offset + toIndex, op);
+            this.modCount = parent.modCount;
+        }
+        
+        @Override
+        public int partition(Predicate<T> predicate)
+        {
+            return partition(0, size, predicate);
+        }
+
+        @Override
+        public int partition(int fromIndex, int toIndex, Predicate<T> predicate)
+        {
+            rangeCheckBound(fromIndex, fromIndex, size);
+            checkForComodification();
+            int index = parent.partition(offset + fromIndex, offset + toIndex, predicate);
+            this.modCount = parent.modCount;
+            return index;
+        }
+        
+        @Override
+        public void fill(Supplier<T> supplier)
+        {
+            fill(0, size, supplier);
+        }
+
+        @Override
+        public void fill(int fromIndex, int toIndex, Supplier<T> supplier)
+        {            
+            rangeCheckBound(fromIndex, fromIndex, size);
+            checkForComodification();
+            parent.fill(offset + fromIndex, offset + toIndex, supplier);
+            this.modCount = parent.modCount;            
         }
                         
         private void checkForComodification() {            

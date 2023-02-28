@@ -6,11 +6,7 @@
 package gridanalysis.irreg;
 
 import gridanalysis.utilities.list.IntegerList;
-import static gridanalysis.irreg.Float2.add;
-import static gridanalysis.irreg.Float2.div;
-import static gridanalysis.irreg.Float2.mul;
-import static gridanalysis.irreg.Tri_Overlap_Box.tri_overlap_box;
-import static gridanalysis.irreg.Voxel_Map.lookup_entry;
+import gridanalysis.utilities.list.ObjectList;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
@@ -72,7 +68,7 @@ public class Optimise_Overlap {
                 IntegerList entries,
                 IntegerList refs,
                 Tri2[] tris,
-                ArrayList<Cell2> cells,
+                ObjectList<Cell2> cells,
                 int cell_id,
                 Overlap overlap) {
         
@@ -114,7 +110,7 @@ public class Optimise_Overlap {
                     IntegerList refs,
                     Tri2[] tris,
                     boolean[] cell_flags,
-                    ArrayList<Cell2> cells) {
+                    ObjectList<Cell2> cells) {
         AtomicInteger overlaps = new AtomicInteger(0);
         
         IntStream.range(0, cells.size())

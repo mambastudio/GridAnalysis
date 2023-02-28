@@ -102,7 +102,8 @@ public class Grid2 {
         approx_ref_counts.swap(approx_ref_counts.prefixSum());
              
         // Allocate and fill the array of references
-        refs.resize(approx_ref_counts.back(), ()-> new Ref(-1, -1 ,-1));  
+        
+        refs.resize(approx_ref_counts.back(), ()-> new Ref(-1, -1 ,-1));         
         IntStream.range(0, tris.length)
                 //.parallel()
                 .forEach(i->{
@@ -122,10 +123,9 @@ public class Grid2 {
                             refs.set(index.getAndIncrement(), new Ref(i, x + info.dims[0] * y, 0));                        
                     });                    
                 });
-       
-        
+              
         // Remove the references that were culled by the triangle-box test from the array
-        refs.removeIf(ref -> ref.tri < 0);        
+        refs.removeIf(ref -> ref.tri < 0);          
     }
     
     public static void compute_snd_dims(GridInfo info, float snd_density, ObjectList<Ref> refs, IntegerList snd_dims)
@@ -205,8 +205,8 @@ public class Grid2 {
         AtomicInteger iter = new AtomicInteger(0);
         
         while (iter.get() < info.max_snd_dim) {
-            // Partition the set of references so that the ones that will not be subdivided anymore are in front
-            first_ref.set(partition(refs, (Ref ref)->{ return snd_dims.get(ref.top_cell) <= iter.get(); }));
+            // Partition the set of references so that the ones that will not be subdivided anymore are in front            
+            first_ref.set(refs.partition((Ref ref)-> snd_dims.get(ref.top_cell) <= iter.get()));
             
             int valid_refs = refs.size() - first_ref.get();
             if (valid_refs == 0) break;
@@ -314,7 +314,7 @@ public class Grid2 {
                                IntegerList cell_ends) {
         int cur = 0;
         
-        Common.resize(compact_refs, refs.size(), ()-> new Ref());        
+        compact_refs.resize(refs.size());   
         cell_begins.resize(refs.size());
         cell_ends.resize(refs.size());
         
@@ -333,8 +333,7 @@ public class Grid2 {
                 cur++;
             }
         }
-        
-        Common.resize(refs, cur, ()->new Ref());
+        refs.resize(cur);
         cell_begins.resize(cur);
         cell_ends.resize(cur);
     }
@@ -352,7 +351,7 @@ public class Grid2 {
     public static int generate_cells(
                         GridInfo info,
                         int snd_dim, int top_cell,
-                        List<Cell2> cells, int begin, int end,
+                        ObjectList<Cell2> cells, int begin, int end,
                         long a, long b) {
         // This function generates a cell with with morton code 'a' and primitive range [begin, end],
         // and then proceeds to generate the empty cells between this cell and the cell with morton code 'b'.
@@ -439,7 +438,7 @@ public class Grid2 {
     }
     public static void gen_cells(GridInfo info, ObjectList<Ref> refs, IntegerList snd_dims, ObjectList<Cell2> cells) {
         // Sort by cell first, then by morton code index
-        Collections.sort(refs, (Ref a, Ref b)->{
+        refs.sort((Ref a, Ref b)->{
             boolean cond = 
                     a.top_cell < b.top_cell || (a.top_cell == b.top_cell && (
                     a.snd_cell < b.snd_cell || (a.snd_cell == b.snd_cell &&
@@ -458,10 +457,8 @@ public class Grid2 {
         
         // Allocate an array to hold the number of cells per top-level cell, and the number of refs per top-level cell
         int num_top_cells = info.num_top_cells(); 
-        AtomicInteger[] num_cells = new AtomicInteger[compact_refs.size() + 1]; 
-        for(int i = 0; i<num_cells.length; i++)
-            num_cells[i] = new AtomicInteger(0);
-        IntegerList empty_cells = new IntegerList(); empty_cells.resize(num_top_cells + 1, 1);
+        ObjectList<AtomicInteger> num_cells = new ObjectList(compact_refs.size() + 1, ()-> new AtomicInteger(0));        
+        IntegerList empty_cells = new IntegerList(); empty_cells.resize(num_top_cells + 1, 1);        
         
         IntStream.range(0, compact_refs.size())
                 .forEach(i->{
@@ -469,7 +466,7 @@ public class Grid2 {
                     Ref next = i < compact_refs.size() - 1 ? compact_refs.get(i + 1) : new Ref(-1, -1, -1);
                     Ref cur  = compact_refs.get(i);
 
-                    AtomicInteger num = num_cells[i + 1];
+                    AtomicInteger num = num_cells.get(i + 1);
                     
                     int prev_cells = 0;
                     if (cur.top_cell != prev.top_cell) {
@@ -478,29 +475,28 @@ public class Grid2 {
                     }
                     
                     final long next_snd_cell = cur.top_cell != next.top_cell ? 1 << (2 * snd_dims.get(cur.top_cell)) : next.snd_cell;
-                    num.addAndGet(prev_cells + 1 + compute_empty_cells(cur.snd_cell, next_snd_cell, false));
-
+                    num.addAndGet(prev_cells + 1 + compute_empty_cells(cur.snd_cell, next_snd_cell, false));                    
                     empty_cells.set(cur.top_cell + 1, 0);
                 });
+        
+        
                
         // Get the insertion position for each compacted reference
-        Arrays.parallelPrefix(num_cells, (AtomicInteger a, AtomicInteger b)->{
+        num_cells.parallelPrefix((AtomicInteger a, AtomicInteger b)->{
             return new AtomicInteger(a.get() + b.get());
         });
-        
-        
-        System.out.println(empty_cells);
+                
         // Perform a scan to count empty cells
-        empty_cells.swap(empty_cells.prefixSum());
-        System.out.println(empty_cells.back());
-        
-        AtomicInteger num_non_empty = num_cells[num_cells.length-1];
-        int num_top_empty = empty_cells.back();
-        Common.resize(cells, num_non_empty.get() + num_top_empty, ()->new Cell2());
+        empty_cells.set(0, 0);
+        empty_cells.prefixSum();
+                
+        AtomicInteger num_non_empty = num_cells.get(num_cells.size()-1);
+        int num_top_empty = empty_cells.back(); 
+        cells.resize(num_non_empty.get() + num_top_empty, ()-> new Cell2());
                 
         IntStream.range(0, compact_refs.size())
                 .forEach(i->{
-                    AtomicInteger num   = num_cells[i];
+                    AtomicInteger num   = num_cells.get(i);
                     Ref cur             = compact_refs.get(i);
                     Ref prev            = i > 0 ? compact_refs.get(i - 1) : new Ref(-1, -1, -1);
                     Ref next            = i < compact_refs.size() - 1 ? compact_refs.get(i + 1) : new Ref(-1, -1, -1);
@@ -511,11 +507,11 @@ public class Grid2 {
                     int prev_cells = 0;
                     if (cur.top_cell != prev.top_cell) {
                         // Generate empty cells before this one if it is the beginning of a top-level cell
-                        prev_cells = generate_cells(info, snd_dim, cur.top_cell, cells.subList(num.get(), cells.size()), 0, 0, 0, cur.snd_cell);
+                        prev_cells = generate_cells(info, snd_dim, cur.top_cell, cells.getSublistFrom(num.get()), 0, 0, 0, cur.snd_cell);
                     }
                     
                     long next_snd_cell = cur.top_cell != next.top_cell ? 1 << (2 * snd_dims.get(cur.top_cell)) : next.snd_cell;                    
-                    int total = prev_cells + generate_cells(info, snd_dim, cur.top_cell, cells.subList(num.get() + prev_cells, cells.size()), begin, end, cur.snd_cell, next_snd_cell);
+                    int total = prev_cells + generate_cells(info, snd_dim, cur.top_cell, cells.getSublistFrom(num.get() + prev_cells), begin, end, cur.snd_cell, next_snd_cell);
                     
                 });
                 
@@ -601,9 +597,7 @@ public class Grid2 {
     
     public static void transform_cells(GridInfo info, ObjectList<Cell2> cells) {
         Float2 subcell_size = div(info.cell_size(), (1 << info.max_snd_dim));
-        
-        System.out.println(subcell_size);
-        
+                
         IntStream.range(0, cells.size())
                 .parallel()
                 .forEach(i->{

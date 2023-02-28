@@ -19,7 +19,7 @@ import java.util.function.Supplier;
  * @param <T>
  * @param <O>
  */
-public abstract class ObjectListAbstract<T, O extends ObjectListAbstract<T, O>> {
+public abstract class ObjectListAbstract<T, O extends ObjectListAbstract<T, O>> implements Iterable<T>{
     protected static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
     
     protected Object[] array;
@@ -46,13 +46,22 @@ public abstract class ObjectListAbstract<T, O extends ObjectListAbstract<T, O>> 
     public abstract void resize(int size);
     public abstract void resize(int size, Supplier<T> supply);
     
+    public boolean isEmpty()
+    {
+        return size < 1;
+    }
+    
     public abstract void swap(ObjectListAbstract<T, O> list);
     public abstract int find(int first, int end, T value);       
     
     public ListIterator<T> listIterator(final int index) {
         rangeCheckForAdd(index);
-
         return new ListItr(index);
+    }
+    
+    @Override
+    public Iterator<T> iterator() {
+        return new Itr();
     }
     
     @Override
