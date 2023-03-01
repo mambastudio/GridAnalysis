@@ -24,7 +24,7 @@ import static java.util.stream.Collectors.partitioningBy;
 public class Test {
     public static void main(String... args)
     {
-        test9();
+        test10();
        
         
     }
@@ -143,6 +143,20 @@ public class Test {
         arrList.add(new AtomicInteger(3));
         list.addAll(arrList);
         System.out.println(list);   
+    }
+    
+    private static void test10()
+    {
+        ObjectList<Integer> list1 = new ObjectList(5, ()->4);
+        ObjectList<Integer> list2 = new ObjectList(8, ()->1);
+        
+        System.out.println(list1);
+        System.out.println(list2);
+        
+        list1.swap(list2);
+        
+        System.out.println(list1);
+        System.out.println(list2);
     }
 
 }

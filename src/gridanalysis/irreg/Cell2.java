@@ -19,6 +19,19 @@ public class Cell2 {
     public int max[] = new int[2];
     public int end;
     
+    public Cell2 copy()
+    {
+        Cell2 cell = new Cell2();
+        cell.min[0] = min[0];
+        cell.min[1] = min[1];
+        cell.begin = begin;
+        cell.max[0] = min[0];
+        cell.max[1] = max[1];
+        cell.end = end;
+        
+        return cell;
+    }
+    
     // Traversal cost for one cell
     public static float unit_cost = 1.0f;
     // Cost of intersecting n triangles

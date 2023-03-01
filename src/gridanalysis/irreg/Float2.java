@@ -26,6 +26,8 @@ public class Float2 {
         this.x = x;
         this.y = y;
     }
+    
+    
 
     public float get(int axis) {
         return (axis == 0) ? x : y;

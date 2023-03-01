@@ -34,6 +34,15 @@ public class IntegerList extends IntListAbstract<IntegerList> {
         this.array = array;        
         this.size = array.length;
     }
+    
+    public IntegerList(int size, int value)
+    {
+        if(size < 1)
+            throw new IndexOutOfBoundsException("size is less than 1");
+        this.array = new int[size];    
+        fill(0, array.length, value);
+        this.size = array.length;
+    }
 
     @Override
     public void add(int value) {
@@ -141,6 +150,23 @@ public class IntegerList extends IntListAbstract<IntegerList> {
         
         System.arraycopy(arr, 0, array, index, numNew);
         size += numNew;
+    }
+    
+    public void fill(int value)
+    {
+        fill(0, size, value);
+    }
+    
+    public void fill(int fromIndex, int toIndex, int value)
+    {
+        rangeCheckBound(fromIndex, fromIndex, size);
+        final int expectedModCount = modCount;
+        for(int i = fromIndex; i<toIndex; i++)
+            array[i] = value;        
+        if (modCount != expectedModCount) {
+          throw new ConcurrentModificationException();
+        }
+        modCount++;
     }
 
     @Override
@@ -305,6 +331,21 @@ public class IntegerList extends IntListAbstract<IntegerList> {
                 arr = Arrays.copyOfRange(parent.trim(), offset, offset + size);
             }        
             return arr;
+        }
+        
+        @Override
+        public void fill(int value)
+        {
+            fill(0, size, value);
+        }
+
+        @Override
+        public void fill(int fromIndex, int toIndex, int value)
+        {            
+            rangeCheckBound(fromIndex, fromIndex, size);
+            checkForComodification();
+            parent.fill(offset + fromIndex, offset + toIndex, value);
+            this.modCount = parent.modCount;            
         }
         
         @Override
