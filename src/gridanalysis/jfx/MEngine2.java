@@ -44,7 +44,7 @@ public class MEngine2 implements EngineAbstract{
     
     GridInfo grid = new GridInfo();
     float top_density = 0.12f;
-    float snd_density = 1.05f;
+    float snd_density = 0.05f;
     float alpha = 0.995f;
     
     
@@ -76,7 +76,7 @@ public class MEngine2 implements EngineAbstract{
     public void setGraphicsContext(GraphicsContext context) {
         this.ctx = context;
         
-        float x = 200;
+        float x = 10;
         Tri2 tris[] = new Tri2[2];
         tris[0] = new Tri2(new Float2(370.77f + x, 330.81f), new Float2(316.49f +x, 137.53f), new Float2(392.41f + x, 180.43f));
         tris[1] = new Tri2(new Float2(74.20f, 85.51f), new Float2(77.92f, 321.43f), new Float2(218.57f, 6.09f));
@@ -124,16 +124,18 @@ public class MEngine2 implements EngineAbstract{
             } while (after < before * alpha);            
         }
         
-        System.out.println(cells.size());
+        
         
         boolean do_overlap = true;
         if (do_overlap) {
-            //boolean[] cell_flags = new boolean[cells.size()];
-            //Arrays.fill(cell_flags, true);     
+            boolean[] cell_flags = new boolean[cells.size()];
+            Arrays.fill(cell_flags, true);     
             
-            //while (Optimise_Overlap.optimize_overlap(info, entries, ref_ids, tris, cell_flags, cells) > 3 * (1 - alpha) * cells.size()) ;
-            Optimise_Overlap2.optimise_overlap(info, entries, ref_ids, tris, cells);
+            while (Optimise_Overlap.optimize_overlap(info, entries, ref_ids, tris, cell_flags, cells) > 3 * (1 - alpha) * cells.size()) ;
+            
         }
+        
+   
        
         Grid2.transform_cells(info, cells);
         

@@ -12,6 +12,7 @@ import static gridanalysis.irreg.Voxel_Map.lookup_entry;
 import gridanalysis.utilities.list.IntegerList;
 import gridanalysis.utilities.list.ObjectList;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
@@ -75,76 +76,66 @@ public class Optimise_Overlap {
                 ObjectList<Cell2> cells,
                 int cell_id,
                 Overlap overlap) {
+        
         Cell2 cell = cells.get(cell_id);
         int count = cell.end - cell.begin;
-        int axis1 = (0 + 1) % 2;
-        int axis2 = (0 + 2) % 2;
+        int axis1 = (axis + 1) % 2;
+                
+        int dims[] = info.max_subcells_dims();
         
-        int dims[] = {
-            info.dims[0] << info.max_snd_dim,
-            info.dims[1] << info.max_snd_dim
-        };
         int dmin = 0, dmax = 0;
         
         if (cell.min[axis] > 0) {
             dmin = -dims[axis];
 
-            int k1, k2;
+            int k1; 
             for (int i = cell.min[axis1]; i < cell.max[axis1] && dmin < 0; i += k1) {
                 k1 = dims[axis1];
-                for (int j = cell.min[axis2]; j < cell.max[axis2]; j += k2) {
-                    k2 = dims[axis2];
-                    
-                    int xy[] = new int[2];
-                    xy[0] = cell.min[0] - 1;
-                    xy[1] = i;
-                    
-                    int entry = lookup_entry(entries, info.dims, info.max_snd_dim, xy[0], xy[1]);
-                    Cell2 next_cell = cells.get(entry);
-                    int next_count = next_cell.end - next_cell.begin;
+                
+                int xy[] = new int[2];
+                xy[0] = cell.min[axis] - 1;
+                xy[1] = i;
 
-                    if (is_subset(refs.getSublistFrom(cell.begin), count,
-                                  refs.getSublistFrom(next_cell.begin), next_count)) {
-                        dmin = Math.max(dmin, next_cell.min[0] - cell.min[0]);
-                    } else {
-                        dmin = 0;
-                        break;
-                    }
+                int entry = lookup_entry(entries, info.dims, info.max_snd_dim, xy[0], xy[1]);
+                Cell2 next_cell = cells.get(entry);
+                int next_count = next_cell.end - next_cell.begin;
 
-                    k2 = next_cell.max[axis2] - j;
-                    k1 = Math.min(k1, next_cell.max[axis1] - i);
-                }
+                if (is_subset(refs.getSublistFrom(cell.begin), count,
+                              refs.getSublistFrom(next_cell.begin), next_count)) {
+                    dmin = Math.max(dmin, next_cell.min[0] - cell.min[0]);
+                } else {
+                    dmin = 0;                    
+                }                
+                k1 = Math.min(k1, next_cell.max[axis1] - i);         
+                System.out.println("asdfa");                
+             
             }
         }
         
-        if (cell.max[0] < dims[0]) {
-            dmax = dims[0];
+        if (cell.max[axis] < dims[axis]) {
+            dmax = dims[axis];
             
-            int k1, k2;
+            int k1; 
             for (int i = cell.min[axis1]; i < cell.max[axis1] && dmax > 0; i += k1) {
-                k1 = dims[axis1];
-                for (int j = cell.min[axis2]; j < cell.max[axis2]; j += k2) {
-                    k2 = dims[axis2];
+                k1 = dims[axis1];               
 
-                    int xy[] = new int[2];
-                    xy[0] = cell.max[0];
-                    xy[1] = i;
-                    
-                    int entry = lookup_entry(entries, info.dims, info.max_snd_dim, xy[0], xy[1]);
-                    Cell2 next_cell = cells.get(entry);
-                    int next_count = next_cell.end - next_cell.begin;
-                    
-                    if (is_subset(refs.getSublistFrom(cell.begin), count,
-                              refs.getSublistFrom(next_cell.begin), next_count)) {
-                        dmax = Math.min(dmax, next_cell.max[axis] - cell.max[axis]);
-                    } else {
-                        dmax = 0;
-                        break;
-                    }
+                int xy[] = new int[2];
+                xy[0] = cell.max[axis];
+                xy[1] = i;
+               // System.out.println(dmax);
+                int entry = lookup_entry(entries, info.dims, info.max_snd_dim, xy[0], xy[1]);
+                Cell2 next_cell = cells.get(entry);
+                int next_count = next_cell.end - next_cell.begin;
 
-                    k2 = next_cell.max[axis2] - j;
-                    k1 = Math.min(k1, next_cell.max[axis1] - i);
+                if (is_subset(refs.getSublistFrom(cell.begin), count,
+                          refs.getSublistFrom(next_cell.begin), next_count)) {
+                    dmax = Math.min(dmax, next_cell.max[axis] - cell.max[axis]);
+                } else {
+                    dmax = 0;                   
                 }
+
+                
+                k1 = Math.min(k1, next_cell.max[axis1] - i);                
             }
         }
         
@@ -152,32 +143,7 @@ public class Optimise_Overlap {
         overlap.dmax = dmax;
     }
     
-    public static int find_overlap(
-            int axis, boolean dir, boolean subset_only,
-            GridInfo info,
-            IntegerList entries,
-            IntegerList refs,
-            Tri2[] prims,
-            ArrayList<Cell2> cells,
-            int cell_id,
-            boolean continue_overlap) {
-        int axis1 = (axis + 1) % 2;
-        int[] grid_dims = info.dims;
-        Cell2 cell = cells.get(cell_id);
-        
-        if (!overlap_possible(axis, dir, grid_dims, cell)) return 0;
-
-        int d = dir ? grid_dims[axis] : -grid_dims[axis];
-        int k1;
-        int i = cell.min[axis1];
-        int max_d = d;
-        while (true) {
-            break;
-        }
-        
-        continue_overlap |= d == max_d;
-        return d;
-    }
+    
     
     public static int optimize_overlap(
                     GridInfo info,
@@ -188,6 +154,32 @@ public class Optimise_Overlap {
                     ObjectList<Cell2> cells) {
         AtomicInteger overlaps = new AtomicInteger(0);
         
+        int axis = 0;
+        int axis1 = 1;
+        int k1 = 0;
+        
+        Cell2 cel = cells.get(5);
+        
+        int p = cel.min[axis1];
+        
+        int xy[] = new int[2];
+        xy[0] = cel.max[axis];
+        xy[1] = p;
+                
+        
+        int entry = lookup_entry(entries, info.dims, info.max_snd_dim, xy[0], xy[1]);
+        Cell2 next_cell = cells.get(entry);
+        
+        System.out.println(entry);
+        
+        int kk = next_cell.max[axis1] - p;
+        xy[0] = cel.max[axis];
+        xy[1] = p+kk;       
+        
+        entry = lookup_entry(entries, info.dims, info.max_snd_dim, xy[0], xy[1]);
+        System.out.println(entry);
+        
+        
         IntStream.range(0, cells.size())
                 .forEach(i->{                    
                     
@@ -195,16 +187,16 @@ public class Optimise_Overlap {
                     Cell2 cell = cells.get(i);
                     int k = 0;
                     
-                    Overlap overlap = new Overlap();
-                    find_overlap(0, info, entries, refs, tris, cells, i, overlap);
-                    cell.min[0] += overlap.dmin;
-                    cell.max[0] += overlap.dmax;
-                    k += (overlap.dmin < 0 | overlap.dmax > 0) ? 1 : 0;
+                    //Overlap overlap = new Overlap();
+                    //find_overlap(0, info, entries, refs, tris, cells, i, overlap);
+                    //cell.min[0] += overlap.dmin;
+                    //cell.max[0] += overlap.dmax;
+                    //k += (overlap.dmin < 0 | overlap.dmax > 0) ? 1 : 0;
                     
-                    find_overlap(1, info, entries, refs, tris, cells, i, overlap);
-                    cell.min[1] += overlap.dmin;
-                    cell.max[1] += overlap.dmax;
-                    k += (overlap.dmin < 0 | overlap.dmax > 0) ? 1 : 0;
+                    //find_overlap(1, info, entries, refs, tris, cells, i, overlap);
+                   // cell.min[1] += overlap.dmin;
+                    //cell.max[1] += overlap.dmax;
+                   // k += (overlap.dmin < 0 | overlap.dmax > 0) ? 1 : 0;
                                        
                     cell_flags[i] = k != 0;
                     overlaps.addAndGet(k);

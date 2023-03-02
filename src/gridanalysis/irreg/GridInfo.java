@@ -9,6 +9,11 @@ import static gridanalysis.irreg.Float2.div;
 import static gridanalysis.irreg.Float2.sub;
 
 /**
+ * 
+ * info.dims                          = total number of cells in top level
+ * info.max_snd_dim                   = max depth of octree or maximum second level
+ * info.dims << info.max_snd_dim      = total number of sub cells in grid for each dimension (smallest cells)
+ * 1 << info.max_snd_dim              = theoretical max/total number of subcells of top cell in each dimension
  *
  * @author jmburu
  */
@@ -24,4 +29,13 @@ public class GridInfo {
 
     /// Returns the number of top-level cells.
     public int num_top_cells() { return dims[0] * dims[1]; }
+    
+    /// Maximum depth of grid
+    public int max_depth(){ return max_snd_dim;}
+    
+    /// Maximum dims of all subcells in the main grid
+    public int[] max_subcells_dims(){return new int[]{dims[0] << max_snd_dim, dims[1] << max_snd_dim};}
+    
+    /// Total subcell for each top cell
+    public int total_subcells_top_cell(){return 1 << max_snd_dim;};
 }

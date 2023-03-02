@@ -11,12 +11,13 @@ import java.util.Arrays;
 /**
  *
  * @author jmburu
+ * 
  */
 /// A cell in the grid. Contains its boundaries in voxel coordinates, along with the range of primitives it contains.
 public class Cell2 {
-    public int min[] = new int[2];
+    public int min[] = new int[2]; //indices in the grid based on the dims of maximum sub cells
     public int begin;
-    public int max[] = new int[2];
+    public int max[] = new int[2]; //indices in the grid based on the dims of maximum sub cells
     public int end;
     
     public Cell2 copy()
