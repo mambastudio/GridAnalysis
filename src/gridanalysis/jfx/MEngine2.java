@@ -18,6 +18,7 @@ import gridanalysis.irreg.Optimise_Overlap;
 import gridanalysis.irreg.Optimise_Overlap2;
 import gridanalysis.irreg.Ref;
 import gridanalysis.irreg.Tri2;
+import static gridanalysis.irreg.Voxel_Map.lookup_entry;
 import gridanalysis.jfx.math.MTransform;
 import gridanalysis.jfx.shape.MCellInfo;
 import gridanalysis.jfx.shape.MRectangle;
@@ -44,7 +45,7 @@ public class MEngine2 implements EngineAbstract{
     
     GridInfo grid = new GridInfo();
     float top_density = 0.12f;
-    float snd_density = 0.05f;
+    float snd_density = 1.05f;
     float alpha = 0.995f;
     
     
@@ -76,7 +77,7 @@ public class MEngine2 implements EngineAbstract{
     public void setGraphicsContext(GraphicsContext context) {
         this.ctx = context;
         
-        float x = 10;
+        float x = 0;
         Tri2 tris[] = new Tri2[2];
         tris[0] = new Tri2(new Float2(370.77f + x, 330.81f), new Float2(316.49f +x, 137.53f), new Float2(392.41f + x, 180.43f));
         tris[1] = new Tri2(new Float2(74.20f, 85.51f), new Float2(77.92f, 321.43f), new Float2(218.57f, 6.09f));
@@ -85,7 +86,7 @@ public class MEngine2 implements EngineAbstract{
         mtriangles.add(new MTriangle(ctx, tris[0]));
         mtriangles.add(new MTriangle(ctx, tris[1]));
         
-        BBox2[] bboxes = new BBox2[2];
+        BBox2[] bboxes = new BBox2[tris.length];
         ObjectList<Ref> refs = new ObjectList();
         ObjectList<Cell2> cells = new ObjectList();
         IntegerList snd_dims = new IntegerList();
@@ -124,24 +125,19 @@ public class MEngine2 implements EngineAbstract{
             } while (after < before * alpha);            
         }
         
+        call(info, refs, cells, snd_dims, entries);
         
-        
-        boolean do_overlap = true;
+        boolean do_overlap = false;
         if (do_overlap) {
             boolean[] cell_flags = new boolean[cells.size()];
             Arrays.fill(cell_flags, true);     
             
-            while (Optimise_Overlap.optimize_overlap(info, entries, ref_ids, tris, cell_flags, cells) > 3 * (1 - alpha) * cells.size()) ;
-            
+            while (Optimise_Overlap.optimize_overlap(info, entries, ref_ids, tris, cell_flags, cells) > 3 * (1 - alpha) * cells.size()) ;           
         }
         
-   
-       
         Grid2.transform_cells(info, cells);
         
       
-        
-        
         IntStream.range(0, cells.size())
                 .forEach(i->{
                     Cell2 cell = cells.get(i);
@@ -157,6 +153,28 @@ public class MEngine2 implements EngineAbstract{
         
         this.grid = info;
     }
+    
+    public void call(
+                GridInfo info,
+                ObjectList<Ref> refs,  
+                ObjectList<Cell2> cells,
+                IntegerList snd_dims, 
+                IntegerList entries   
+    )
+    {
+        int cell_id = 12;
+        Cell2 cell = cells.get(cell_id);
+        
+        int axis = 0;
+        
+        int[] xy = new int[2];
+        xy[0] = cell.max[axis];
+        xy[1] = cell.min[axis + 1] + 3;
+        
+        int entry = lookup_entry(entries, info.dims, info.max_snd_dim, xy[0], xy[1]);
+        System.out.println(entry);
+    }
+    
 
     @Override
     public GraphicsContext getGraphicsContext() {
