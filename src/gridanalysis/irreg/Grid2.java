@@ -99,7 +99,7 @@ public class Grid2 {
         
         // Get the insertion position into the array of references
         approx_ref_counts.set(0, 0);
-        approx_ref_counts.swap(approx_ref_counts.prefixSum());
+        approx_ref_counts.prefixSum();
              
         // Allocate and fill the array of references
         
@@ -151,7 +151,7 @@ public class Grid2 {
                     int max_dim = Math.max(inner_dims[0], inner_dims[1]);
                     snd_dims.set(i, Math.min(closest_log2(max_dim), (1 << ENTRY_SHIFT) - 1));
                 });
-        info.max_snd_dim = Arrays.stream(snd_dims.trim()).max().getAsInt();        
+        info.max_snd_dim = snd_dims.max(); 
     }
     
     public static Float2 compute_cell_pos(long snd_cell, Float2 cell_size) {

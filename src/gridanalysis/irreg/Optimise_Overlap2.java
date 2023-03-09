@@ -75,8 +75,8 @@ public class Optimise_Overlap2 {
                 : max(max_d, next.min[axis] - cell.min[axis]);
             d = dir ? min(d, max_d) : max(d, max_d);
             
-            if (!is_subset(refs.getSublistFrom(cell.begin), cell.end - cell.begin,
-                           refs.getSublistFrom(next.begin), next.end - next.begin)) {
+            if (!is_subset(refs.getSubListFrom(cell.begin), cell.end - cell.begin,
+                           refs.getSubListFrom(next.begin), next.end - next.begin)) {
                 d = 0;
                 break;
             }

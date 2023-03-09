@@ -6,8 +6,8 @@
 package gridanalysis.gridclasses;
 
 import gridanalysis.coordinates.Vec2i;
-import gridanalysis.utilities.IntArray;
-import gridanalysis.utilities.ObjHolder;
+import gridanalysis.utilities.list.IntegerList;
+import gridanalysis.utilities.list.ObjectList;
 
 /**
  *
@@ -15,8 +15,8 @@ import gridanalysis.utilities.ObjHolder;
  */
 public class Grid {
     public Entry[] entries;                ///< Voxel map, stored as a contiguous array
-    public IntArray   ref_ids;             ///< Array of primitive references
-    public ObjHolder<Cell[]>  cells;                  ///< Cells of the structure (nullptr if compressed)
+    public IntegerList   ref_ids;             ///< Array of primitive references
+    public ObjectList<Cell>  cells;                  ///< Cells of the structure (nullptr if compressed)
 
     //SmallCell* small_cells;       ///< Compressed cells (nullptr if not compressed)
 
@@ -26,5 +26,5 @@ public class Grid {
     public int num_entries;                ///< Number of elements in the voxel map
     public int num_refs;                   ///< Number of primitive references
     public int shift;                      ///< Amount of bits to shift to get from the deepest level to the top-level
-    public IntArray offsets;               ///< Offset to each level of the voxel map octree
+    public IntegerList offsets;               ///< Offset to each level of the voxel map octree
 }

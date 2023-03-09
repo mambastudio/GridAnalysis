@@ -7,13 +7,18 @@ package gridanalysis.utilities.list;
 
 import java.util.Arrays;
 import java.util.ConcurrentModificationException;
+import java.util.function.BiPredicate;
+import java.util.function.IntBinaryOperator;
+import java.util.function.IntFunction;
+import java.util.stream.IntStream;
 
 /**
  *
  * @author user
  * 
  * Simple List that behaves like an ArrayList but for integer primitive
- * All codes here are based on jdk 1.8 ArrayList implementation
+ * Inspired by jdk 1.8 ArrayList implementation and CUDA Cub
+ * 
  * 
  * TODO:
  *  - Primitive iterator - https://javadevcentral.com/primitiveiterator-in-java
@@ -60,26 +65,46 @@ public class IntegerList extends IntListAbstract<IntegerList> {
 
     @Override
     public void set(int index, int value) {
-        rangeCheck(index);
+        rangeCheck(index);       
+        final int expectedModCount = modCount;
         this.array[index] = value;
+        if (modCount != expectedModCount) {
+            throw new ConcurrentModificationException();
+        }
+        modCount++;        
     }
     
     @Override
     public void set(int index, int[] value) {       
-        rangeCheck(index);   
-        System.arraycopy(value, index, array, index, size);        
+        rangeCheck(index);    
+        final int expectedModCount = modCount;
+        System.arraycopy(value, index, array, index, size);       
+        if (modCount != expectedModCount) {
+            throw new ConcurrentModificationException();
+        }
+        modCount++;    
     }
 
     @Override
     public void increment(int index) {
         rangeCheck(index);
+        final int expectedModCount = modCount;
         array[index]++;
+        if (modCount != expectedModCount) {
+            throw new ConcurrentModificationException();
+        }
+        modCount++;   
     }
 
     @Override
     public void decrement(int index) {
         rangeCheck(index);
+        final int expectedModCount = modCount;
         array[index]--;
+        if (modCount != expectedModCount) {
+            throw new ConcurrentModificationException();
+        }
+        modCount++;
     }
 
     @Override
@@ -92,24 +117,32 @@ public class IntegerList extends IntListAbstract<IntegerList> {
     public void remove(int index) {
         rangeCheck(index);
         
-        modCount++; //add and remove have to modify the modcount       
+        final int expectedModCount = modCount;
         int numMoved = size - (index) - 1;
         if (numMoved > 0)
             System.arraycopy(array, index + 1, array, index,
                              numMoved);
         size--;
+        if (modCount != expectedModCount) {
+            throw new ConcurrentModificationException();
+        }
+        modCount++;
     }
    
     @Override
     public void remove(int fromIndex, int toIndex) {
         rangeCheckBound(fromIndex, toIndex, size);
         
-        modCount++; //add and remove have to modify the modcount  
+        final int expectedModCount = modCount;
         int numMoved = size - toIndex;
         System.arraycopy(array, toIndex, array, fromIndex,
                          numMoved);
         int newSize = size - (toIndex-fromIndex);
         size = newSize;
+        if (modCount != expectedModCount) {
+            throw new ConcurrentModificationException();
+        }
+        modCount++;
     }
 
     @Override
@@ -152,11 +185,7 @@ public class IntegerList extends IntListAbstract<IntegerList> {
         size += numNew;
     }
     
-    public void fill(int value)
-    {
-        fill(0, size, value);
-    }
-    
+    @Override
     public void fill(int fromIndex, int toIndex, int value)
     {
         rangeCheckBound(fromIndex, fromIndex, size);
@@ -215,15 +244,50 @@ public class IntegerList extends IntListAbstract<IntegerList> {
             add(size(), arrayNew);
         }
     }
-
+    
     @Override
-    public IntegerList prefixSum() {
-        int[] arr = toArray();
-        Arrays.parallelPrefix(arr, (x, y) -> x + y);
-        set(0, arr);
-        return new IntegerList(arr);
+    public int prefixSum(int fromIndex, int toIndex)
+    {
+        rangeCheckBound(fromIndex, fromIndex, size);
+        final int expectedModCount = modCount;
+        Arrays.parallelPrefix(array, fromIndex, toIndex, (x, y) -> x + y);
+        if (modCount != expectedModCount) {
+          throw new ConcurrentModificationException();
+        }
+        modCount++;
+        return back();
     }
     
+    @Override
+    public int reduce(int fromIndex, int toIndex)
+    {
+        rangeCheckBound(fromIndex, toIndex, size);
+        final int expectedModCount = modCount;
+        int count = Arrays.stream(array, fromIndex, toIndex)
+                .parallel()
+                .sum();
+        if (modCount != expectedModCount) {
+          throw new ConcurrentModificationException();
+        }
+        modCount++;
+        return count;        
+    }
+    
+    @Override
+    public int reduce(int fromIndex, int toIndex, int identity, IntBinaryOperator op)
+    {
+        rangeCheckBound(fromIndex, toIndex, size);
+        final int expectedModCount = modCount;
+        int count = Arrays.stream(array, fromIndex, toIndex)
+                .parallel()
+                .reduce(identity, op);
+        if (modCount != expectedModCount) {
+          throw new ConcurrentModificationException();
+        }
+        modCount++;
+        return count;        
+    }
+        
     @Override
     public void swap(IntegerList list)
     {
@@ -237,6 +301,16 @@ public class IntegerList extends IntListAbstract<IntegerList> {
     }
     
     @Override
+    public void swapElement(int index1, int index2)
+    {
+        rangeCheck(index1);
+        rangeCheck(index2);       
+        int temp = get(index1);
+        array[index1] = get(index2);
+        array[index2] = temp;        
+    }
+    
+    @Override
     public int find(int first, int end, int value)
     {
         int flags_it = -1;
@@ -247,6 +321,146 @@ public class IntegerList extends IntListAbstract<IntegerList> {
             }
         }
         return flags_it;
+    }
+    
+    //Parallel Butterfly Sorting Algorithm on GPU by Bilal et al    
+    @Override
+    public void sort(int fromIndex, int toIndex, BiPredicate op)
+    {
+        final int expectedModCount = modCount;
+        
+        int radix  = 2;
+        int until = until(toIndex - fromIndex);
+        int sizeList = toIndex - fromIndex;
+        int T = (int) (Math.pow(radix, until)/radix);//data.length/radix if n is power of 2;
+
+        for(int xout = 1; xout<=until; xout++)
+        {            
+            double[] PowerX = new double[]{Math.pow(radix, xout)};
+            IntStream.range(0, T)
+                    .parallel()
+                    .forEach(t->{                        
+                        if(t >= sizeList)
+                            return;
+                        
+                        int yIndex      = (int) (t/(PowerX[0]/radix));  
+                        int kIndex      = (int) (t%(PowerX[0]/radix));
+                        int PosStart    = (int) (kIndex + yIndex * PowerX[0]);
+                        int PosEnd      = (int) (PowerX[0] - kIndex - 1 + yIndex * PowerX[0]);
+                        
+                        if(!isInRange(PosStart + fromIndex, fromIndex, toIndex)) 
+                            return;
+                        if(!isInRange(PosEnd + fromIndex, fromIndex, toIndex)) 
+                            return;
+                        
+                        if(op.test(get(PosStart + fromIndex), get(PosEnd + fromIndex)))
+                           swapElement(PosStart + fromIndex, PosEnd + fromIndex);
+                    });
+            if(xout > 1)
+            {                
+                for(int xin = xout; xin > 0; xin--)
+                {
+                    PowerX[0] = (Math.pow(radix, xin));
+                    IntStream.range(0, T)
+                        .parallel()
+                        .forEach(t->{      
+                            if(t >= sizeList)
+                                return;
+                            
+                            int yIndex      = (int) (t/(PowerX[0]/radix));  
+                            int kIndex      = (int) (t%(PowerX[0]/radix));
+                            int PosStart    = (int) (kIndex + yIndex * PowerX[0]);
+                            int PosEnd      = (int) (kIndex + yIndex * PowerX[0] + PowerX[0]/radix);
+                            
+                            if(!isInRange(PosStart + fromIndex, fromIndex, toIndex)) 
+                                return;
+                            if(!isInRange(PosEnd + fromIndex, fromIndex, toIndex)) 
+                                return;
+
+                            if(op.test(get(PosStart + fromIndex), get(PosEnd + fromIndex)))
+                                swapElement(PosStart + fromIndex, PosEnd + fromIndex);
+                        });
+                }
+            }                    
+        }
+        
+        if (modCount != expectedModCount) {
+          throw new ConcurrentModificationException();
+        }
+        modCount++;
+    }
+    
+    private  int until(int size)
+    {
+        int log2 = log2nlz(size);
+        int difference = (int)(Math.pow(2, log2)) - size;
+
+        if(difference == 0) return log2;
+        else                return log2+1;
+    }
+
+    @Override
+    public IntegerList transform(int fromIndex, int toIndex, IntFunction<Integer> function) {
+        rangeCheckBound(fromIndex, toIndex, size);       
+        final int expectedModCount = modCount;
+        IntegerList list = new IntegerList(new int[toIndex - fromIndex]);
+        IntStream.range(fromIndex, toIndex)
+                .parallel()
+                .forEach(i->{
+                    list.array[i - fromIndex] = function.apply(get(i));                    
+                });
+        if (modCount != expectedModCount) {
+          throw new ConcurrentModificationException();
+        }
+        modCount++;
+        return list;
+    }
+
+    @Override
+    public void transform(int fromIndex, int toIndex, IntegerList output, IntFunction<Integer> function) {
+        rangeCheckBound(fromIndex, toIndex, size);     
+        compatibleCheck(output);
+        final int expectedModCount = modCount;
+        IntStream.range(fromIndex, toIndex)
+                .parallel()
+                .forEach(i->{
+                    output.array[i] = function.apply(get(i));
+                });
+        if (modCount != expectedModCount) {
+          throw new ConcurrentModificationException();
+        }
+        modCount++;
+    }
+
+    //partition while maintaining order
+    @Override
+    public int partition_stable(int fromIndex, int toIndex, IntegerList output, IntegerList flags) {
+        output.compatibleCheck(flags);
+        rangeCheckBound(fromIndex, toIndex, size); 
+        
+        IntegerList stencil_1 = flags.transform(i -> i != 0 ? 1 : 0);        
+        stencil_1.add(0, 0);          
+        IntegerList stencil_2 = stencil_1.transform(i -> i != 0 ? 0 : 1);
+        stencil_2.set(0, 0);
+        int st1 = stencil_1.prefixSum(); 
+        int st2 = stencil_2.prefixSum();
+        
+        IntStream.range(fromIndex, toIndex)
+                .parallel()
+                .forEach(i->{
+                    if(flags.get(i - fromIndex) != 0)                      
+                        output.array[stencil_1.get(i - fromIndex)] = get(i);              
+                });
+        IntStream.range(fromIndex, toIndex)
+                .parallel()
+                .forEach(i->{
+                    if(flags.get(i - fromIndex) == 0)                    
+                        output.array[stencil_2.get(i - fromIndex) + st1] = get(i);                    
+                });
+        if((st1 + st2) != output.size)
+            throw new IndexOutOfBoundsException("Issue with partition");    
+        
+        return st1;
     }
     
     private class IntegerSubList extends IntegerList
@@ -305,6 +519,7 @@ public class IntegerList extends IntListAbstract<IntegerList> {
             rangeCheck(index);   
             checkForComodification();
             parent.set(offset + index, e);
+            this.modCount = parent.modCount;
         }
         
         @Override
@@ -312,6 +527,7 @@ public class IntegerList extends IntListAbstract<IntegerList> {
             rangeCheck(index);   
             checkForComodification();
             parent.set(offset + index, value);
+            this.modCount = parent.modCount;
         }
                 
         @Override
@@ -334,12 +550,6 @@ public class IntegerList extends IntListAbstract<IntegerList> {
         }
         
         @Override
-        public void fill(int value)
-        {
-            fill(0, size, value);
-        }
-
-        @Override
         public void fill(int fromIndex, int toIndex, int value)
         {            
             rangeCheckBound(fromIndex, fromIndex, size);
@@ -348,6 +558,45 @@ public class IntegerList extends IntListAbstract<IntegerList> {
             this.modCount = parent.modCount;            
         }
         
+        @Override
+        public int prefixSum(int fromIndex, int toIndex)
+        {
+            rangeCheckBound(fromIndex, fromIndex, size);
+            checkForComodification();
+            parent.prefixSum(offset + fromIndex, offset + toIndex);
+            this.modCount = parent.modCount;            
+            return back();
+        }
+        
+        @Override
+        public int reduce(int fromIndex, int toIndex)
+        {
+            rangeCheckBound(fromIndex, fromIndex, size);
+            checkForComodification();
+            int reduce = parent.reduce(offset + fromIndex, offset + toIndex);
+            this.modCount = parent.modCount;            
+            return reduce;
+        }
+        
+        @Override
+        public int reduce(int fromIndex, int toIndex, int identity, IntBinaryOperator op)
+        {
+            rangeCheckBound(fromIndex, fromIndex, size);
+            checkForComodification();
+            int reduce = parent.reduce(offset + fromIndex, offset + toIndex, identity, op);
+            this.modCount = parent.modCount;            
+            return reduce;
+        }
+               
+        @Override
+        public void sort(int fromIndex, int toIndex, BiPredicate op)
+        {
+            rangeCheckBound(fromIndex, fromIndex, size);
+            checkForComodification();
+            parent.sort(offset + fromIndex, offset + toIndex, op);
+            this.modCount = parent.modCount;              
+        }
+            
         @Override
         public int[] toArray()
         {
@@ -411,6 +660,33 @@ public class IntegerList extends IntListAbstract<IntegerList> {
             checkForComodification();
             parent.decrement(offset + index);
         } 
+        
+        @Override
+        public IntegerList transform(int fromIndex, int toIndex, IntFunction<Integer> function) 
+        {
+            rangeCheckBound(fromIndex, toIndex, size);
+            checkForComodification(); 
+            IntegerList list = parent.transform(offset + fromIndex, offset + toIndex, function);
+            this.modCount = parent.modCount;
+            return list;
+        }
+        
+        @Override
+        public void transform(int fromIndex, int toIndex, IntegerList output, IntFunction<Integer> function) {
+            rangeCheckBound(fromIndex, toIndex, size);
+            checkForComodification(); 
+            parent.transform(offset + fromIndex, offset + toIndex, output, function);
+            this.modCount = parent.modCount;
+        }
+        
+        @Override
+        public int partition_stable(int fromIndex, int toIndex, IntegerList output, IntegerList flags) {
+            rangeCheckBound(fromIndex, toIndex, size);
+            checkForComodification(); 
+            int partition = parent.partition_stable(offset + fromIndex, offset + toIndex, output, flags);
+            this.modCount = parent.modCount;
+            return partition;
+        }
                 
         private void checkForComodification() {            
             if (parent.modCount != this.modCount)

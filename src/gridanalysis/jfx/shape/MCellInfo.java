@@ -12,8 +12,8 @@ import gridanalysis.gridclasses.Cell;
 import gridanalysis.irreg.BBox2;
 import gridanalysis.irreg.Cell2;
 import gridanalysis.jfx.MEngine;
-import gridanalysis.utilities.IntArray;
 import gridanalysis.utilities.Utility;
+import gridanalysis.utilities.list.IntegerList;
 import java.util.ArrayList;
 import javafx.geometry.VPos;
 import javafx.scene.canvas.GraphicsContext;
@@ -62,7 +62,7 @@ public class MCellInfo {
         ctx.restore();
     }
     
-    public static ArrayList<MCellInfo> getCells(MEngine engine, IntArray cell_ids, BBox grid_bound,  Vec2i dims)
+    public static ArrayList<MCellInfo> getCells(MEngine engine, IntegerList cell_ids, BBox grid_bound,  Vec2i dims)
     {        
         ArrayList<MCellInfo> cells = new ArrayList();
         for(int i = 0; i<cell_ids.size(); i++)
@@ -89,7 +89,7 @@ public class MCellInfo {
         
     }
     
-    public static ArrayList<MCellInfo> getCells(MEngine engine, IntArray cell_ids, IntArray array_ids, BBox grid_bound,  Vec2i dims)
+    public static ArrayList<MCellInfo> getCells(MEngine engine, IntegerList cell_ids, IntegerList array_ids, BBox grid_bound,  Vec2i dims)
     {        
         ArrayList<MCellInfo> cells = new ArrayList();
         for(int i = 0; i<cell_ids.size(); i++)
@@ -136,7 +136,7 @@ public class MCellInfo {
     }
     
     
-    public static ArrayList<MCellInfo> getCells(MEngine engine, Cell[] cellArray, IntArray array_ids, BBox grid_bound,  Vec2i dims, int shift)
+    public static ArrayList<MCellInfo> getCells(MEngine engine, Cell[] cellArray, IntegerList array_ids, BBox grid_bound,  Vec2i dims, int shift)
     {
         ArrayList<MCellInfo> cells = new ArrayList();
         int i = 0;

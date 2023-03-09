@@ -5,15 +5,16 @@
  */
 package gridanalysis.gridclasses;
 
-import gridanalysis.utilities.IntArray;
+import gridanalysis.utilities.list.IntegerList;
+
 
 /**
  *
  * @author user
  */
 public class Level {
-    public IntArray ref_ids;               ///< Array of primitive indices
-    public IntArray cell_ids;              ///< Array of cell indices
+    public IntegerList ref_ids;               ///< Array of primitive indices
+    public IntegerList cell_ids;              ///< Array of cell indices
     public int      num_refs;               ///< Number of references in the level
     public int      num_kept;               ///< Number of references kept (remaining is split)
     public Cell[]   cells;                ///< Array of cells

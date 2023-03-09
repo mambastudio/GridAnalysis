@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import static java.util.stream.Collectors.partitioningBy;
@@ -147,16 +148,23 @@ public class Test {
     
     private static void test10()
     {
-        ObjectList<Integer> list1 = new ObjectList(5, ()->4);
-        ObjectList<Integer> list2 = new ObjectList(8, ()->1);
+        int size = 20;
+        //int size_half = size/2;
         
-        System.out.println(list1);
-        System.out.println(list2);
+        IntegerList list = new IntegerList(new Random().ints(size, 0, 100).toArray());
+        IntegerList li = list.getSubListFrom(10);
         
-        list1.swap(list2);
+        IntegerList flags = li.transform(i-> i < 50 ? 1 : 0);
+        IntegerList output = new IntegerList(new int[li.size()]);
         
-        System.out.println(list1);
-        System.out.println(list2);
+        System.out.println(list);
+        System.out.println(flags);
+        
+        System.out.println(li);
+        int value = li.partition_stable(output, flags);
+        System.out.println(value);
+        System.out.println(output);
+        System.out.println(list);
     }
 
 }

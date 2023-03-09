@@ -6,6 +6,10 @@
 package gridanalysis.utilities.list;
 
 import java.util.Arrays;
+import java.util.ConcurrentModificationException;
+import java.util.function.BiPredicate;
+import java.util.function.IntBinaryOperator;
+import java.util.function.IntFunction;
 
 /**
  *
@@ -30,7 +34,7 @@ public abstract class IntListAbstract<I extends IntListAbstract>  {
     public abstract void increment(int index);
     public abstract void decrement(int index);
     public abstract I getSubList(int fromIndex, int toIndex);
-    public I getSublistFrom(int fromIndex){return getSubList(fromIndex, size());}
+    public I getSubListFrom(int fromIndex){return getSubList(fromIndex, size());}
     public abstract void remove(int index);     
     public abstract void remove(int fromIndex, int toIndex);
     public abstract int size();    
@@ -41,12 +45,48 @@ public abstract class IntListAbstract<I extends IntListAbstract>  {
     public abstract void resize(int size);
     public abstract void resize(int size, int value);
     
-    public abstract IntegerList prefixSum();
-    public abstract void swap(IntegerList list);
-    public abstract int find(int first, int end, int value);        
+    public int max(){return reduce(Integer.MIN_VALUE, (a, b) -> Math.max(a, b));}
+    
+    public  int prefixSum() {return prefixSum(0, size());}
+    public abstract int prefixSum(int fromIndex, int toIndex);
+    
+    public  int reduce() {return reduce(0, size());}
+    public abstract int reduce(int fromIndex, int toIndex);
+    
+    public  int reduce(int identity, IntBinaryOperator op) {return reduce(0, size(), identity, op);}
+    public abstract int reduce(int fromIndex, int toIndex, int identity, IntBinaryOperator op);
+    
+    public void sort(){sort(0, size(), (a, b) -> a > b);}
+    public void sort(BiPredicate<Integer, Integer> op){sort(0, size(), op);}
+    public abstract void sort(int fromIndex, int toIndex, BiPredicate<Integer, Integer> op);
+       
+    public int partition_stable(I output, I flags){return partition_stable(0, size(), output, flags);};
+    public abstract int partition_stable(int fromIndex, int toIndex, I output, I flags);
+    
+    public I transform(IntFunction<Integer> function){return transform(0, size(), function);}
+    public abstract I transform(int fromIndex, int toIndex, IntFunction<Integer> function);
+    public void transform(I output, IntFunction<Integer> function){transform(0, size(), output, function);}
+    public abstract void transform(int fromIndex, int toIndex, I output, IntFunction<Integer> function);
+    
+    public int find(int value){return find(0, size(), value);};
+    public abstract int find(int first, int end, int value);    
+    
+    public void fill(int value){fill(0, size(), value);}
+    public abstract void fill(int fromIndex, int toIndex, int value);    
+            
+    public abstract void swapElement(int index1, int index2);
+    public abstract void swap(I list);
+    
     
     @Override
     public abstract String toString();
+    
+    protected boolean isInRange(float index, int fromIndex, int toIndex)
+    {
+        if(index < fromIndex)
+            return false;
+        else return index < toIndex;
+    }
     
     protected void rangeAboveZero(int index)
     {
@@ -76,9 +116,13 @@ public abstract class IntListAbstract<I extends IntListAbstract>  {
         
     protected void ensureCapacity(int minCapacity)
     {
-        modCount++;
+        final int expectedModCount = modCount;
         if(minCapacity - array.length > 0)
             grow(minCapacity);
+        if (modCount != expectedModCount) {
+            throw new ConcurrentModificationException();
+        }
+        modCount++;    
     }
     
     protected void grow(int minCapacity)
@@ -100,5 +144,19 @@ public abstract class IntListAbstract<I extends IntListAbstract>  {
         return (minCapacity > MAX_ARRAY_SIZE) ?
             Integer.MAX_VALUE :
             MAX_ARRAY_SIZE;
+    }
+    
+    //log2
+    protected int log2nlz(int bits )
+    {
+        if( bits == 0 )
+            throw new UnsupportedOperationException("value should be zero");
+        return 31 - Integer.numberOfLeadingZeros( bits );
+    }
+    
+    protected void compatibleCheck(I list)
+    {
+        if(list.size() != size())
+            throw new UnsupportedOperationException("list not compatible");
     }
 }

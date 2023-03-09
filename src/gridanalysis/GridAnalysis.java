@@ -24,7 +24,7 @@ public class GridAnalysis extends Application {
     
     private final MBackground background = new MBackground();
     private final MCanvas canvas = new MCanvas();
-    private final EngineAbstract engine = new MEngine2();
+    private final EngineAbstract engine = new MEngine();
     @Override
     public void start(Stage primaryStage) {
         
