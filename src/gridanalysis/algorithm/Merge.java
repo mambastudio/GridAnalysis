@@ -13,8 +13,8 @@ import gridanalysis.gridclasses.Grid;
 import gridanalysis.gridclasses.MergeBuffers;
 import gridanalysis.jfx.MEngine;
 import gridanalysis.jfx.shape.MCellInfo;
-import gridanalysis.utilities.IntArray;
-import gridanalysis.utilities.ObjHolder;
+import gridanalysis.utilities.list.IntegerList;
+import gridanalysis.utilities.list.ObjectList;
 import static java.lang.Math.max;
 import java.util.Arrays;
 
@@ -67,8 +67,8 @@ public class Merge extends GridAbstracts{
     }
     
     /// Counts the number of elements in the union of two sorted arrays
-    public int count_union(IntArray p0, int c0,
-                           IntArray p1, int c1) {
+    public int count_union(IntegerList p0, int c0,
+                           IntegerList p1, int c1) {
          int i = 0, j = 0, c = 0;
          while (i < c0 & j < c1) {
              int a = p0.get(i);
@@ -81,9 +81,9 @@ public class Merge extends GridAbstracts{
     }
     
     /// Merges the two sorted reference arrays
-    public void merge_refs( IntArray p0, int c0,
-                            IntArray p1, int c1,
-                            IntArray q) {
+    public void merge_refs( IntegerList p0, int c0,
+                            IntegerList p1, int c1,
+                            IntegerList q) {
         int i = 0;
         int j = 0;
         int s = 0;
@@ -96,7 +96,7 @@ public class Merge extends GridAbstracts{
         }
         int k = i < c0 ? i  :  j;
         int c = i < c0 ? c0 : c1;
-        IntArray p = i < c0 ? p0 : p1;
+        IntegerList p = i < c0 ? p0 : p1;
         while (k < c) 
             q.set(s++, p.get(k++));
     }
@@ -105,10 +105,10 @@ public class Merge extends GridAbstracts{
                                     int axis,
                                     Entry[] entries,
                                     Cell[] cells,
-                                    IntArray refs,
-                                    IntArray merge_counts,
-                                    IntArray nexts,
-                                    IntArray prevs,
+                                    IntegerList refs,
+                                    IntegerList merge_counts,
+                                    IntegerList nexts,
+                                    IntegerList prevs,
                                     int empty_mask,
                                     int num_cells) {  
         for(int id = 0; id<num_cells; id++)
@@ -140,8 +140,8 @@ public class Merge extends GridAbstracts{
                     // Early exit test: there is a minimum of max(n1, n2)
                     // primitives in the union of the two cells
                     if (a * (max(n1, n2) + unit_cost) <= c1 + c2) {
-                        int n = count_union(refs.splitSubArrayFrom(cell1.begin), n1,
-                                            refs.splitSubArrayFrom(cell2.begin), n2);
+                        int n = count_union(refs.getSubListFrom(cell1.begin), n1,
+                                            refs.getSubListFrom(cell2.begin), n2);
                         float c = a * (n + unit_cost);
                         if (c <= c1 + c2) count = n;
                     }
@@ -160,9 +160,9 @@ public class Merge extends GridAbstracts{
         }
     }
     
-    public void compute_cell_flags(IntArray nexts,
-                                   IntArray prevs,
-                                   IntArray cell_flags,
+    public void compute_cell_flags(IntegerList nexts,
+                                   IntegerList prevs,
+                                   IntegerList cell_flags,
                                    int num_cells) {
         
         for(int id = 0; id<num_cells; id++)
@@ -190,9 +190,9 @@ public class Merge extends GridAbstracts{
     }
     
     /// Computes the number of new references per cell
-    public void compute_ref_counts(IntArray merge_counts,
-                                   IntArray cell_flags,
-                                   IntArray ref_counts,
+    public void compute_ref_counts(IntegerList merge_counts,
+                                   IntegerList cell_flags,
+                                   IntegerList ref_counts,
                                        int num_cells) 
     {
         for(int id = 0; id<num_cells; id++)
@@ -210,7 +210,7 @@ public class Merge extends GridAbstracts{
     
     /// Maps the old cell indices in the voxel map to the new ones
     public void remap_entries(Entry[] entries,
-                              IntArray new_cell_ids,
+                              IntegerList new_cell_ids,
                               int num_entries) {
         for(int id = 0; id<num_entries; id++)
         {            
@@ -226,13 +226,13 @@ public class Merge extends GridAbstracts{
     public void merge(int axis,
                       Entry[] entries,
                       Cell[] cells,
-                      IntArray refs,
-                      IntArray cell_scan,
-                      IntArray ref_scan,
-                      IntArray merge_counts,
-                      IntArray new_cell_ids,
+                      IntegerList refs,
+                      IntegerList cell_scan,
+                      IntegerList ref_scan,
+                      IntegerList merge_counts,
+                      IntegerList new_cell_ids,
                       Cell[] new_cells,
-                      IntArray new_refs,
+                      IntegerList new_refs,
                       int num_cells) {
         
         for (int id = 0; id < num_cells; id++) {
@@ -284,13 +284,13 @@ public class Merge extends GridAbstracts{
         }
     }
     
-    public void merge_iteration(int axis, Grid grid, ObjHolder<Cell[]> new_cells, IntArray new_refs, int empty_mask, MergeBuffers bufs)
+    public void merge_iteration(int axis, Grid grid, ObjectList<Cell> new_cells, IntegerList new_refs, int empty_mask, MergeBuffers bufs)
     {
         
         int num_cells           = grid.num_cells;
         int num_entries         = grid.num_entries;
-        ObjHolder<Cell[]> cells = new ObjHolder(grid.cells);
-        IntArray refs           = grid.ref_ids;
+        ObjectList<Cell> cells  = grid.cells;
+        IntegerList refs        = grid.ref_ids;
         Entry[] entries         = grid.entries;
         
         bufs.prevs.fillOne(num_cells);
@@ -298,8 +298,8 @@ public class Merge extends GridAbstracts{
         compute_cell_flags(bufs.nexts, bufs.prevs, bufs.cell_flags, num_cells);        
         compute_ref_counts(bufs.merge_counts, bufs.cell_flags, bufs.ref_counts, num_cells);
         
-        int num_new_refs  = IntArray.exclusiveScan(bufs.ref_counts, num_cells + 1, bufs.ref_scan);
-        int num_new_cells = IntArray.exclusiveScan(bufs.cell_flags, num_cells + 1, bufs.cell_scan);
+        int num_new_refs  = IntegerList.exclusiveScan(bufs.ref_counts, num_cells + 1, bufs.ref_scan);
+        int num_new_cells = IntegerList.exclusiveScan(bufs.cell_flags, num_cells + 1, bufs.cell_scan);
         
         merge(  axis,entries, cells.get(), refs,
                 bufs.cell_scan, bufs.ref_scan,
@@ -325,16 +325,16 @@ public class Merge extends GridAbstracts{
         MergeBuffers bufs = new MergeBuffers();
         
         Cell[] new_cells = new Cell[grid.num_cells];
-        IntArray new_refs  = new IntArray(new int[grid.num_refs]);
+        IntegerList new_refs  = new IntegerList(new int[grid.num_refs]);
         
         int buf_size = grid.num_cells + 1;
         buf_size = (buf_size % 4) != 0 ? buf_size + 4 - buf_size % 4 : buf_size;
         
-        bufs.merge_counts = new IntArray(new int[buf_size]);
-        bufs.ref_counts   = new IntArray(new int[buf_size]);
-        bufs.cell_flags   = new IntArray(new int[buf_size]);
-        bufs.cell_scan    = new IntArray(new int[buf_size]);
-        bufs.ref_scan     = new IntArray(new int[buf_size]);
+        bufs.merge_counts = new IntegerList(new int[buf_size]);
+        bufs.ref_counts   = new IntegerList(new int[buf_size]);
+        bufs.cell_flags   = new IntegerList(new int[buf_size]);
+        bufs.cell_scan    = new IntegerList(new int[buf_size]);
+        bufs.ref_scan     = new IntegerList(new int[buf_size]);
         bufs.new_cell_ids = bufs.cell_flags;
         bufs.prevs        = bufs.cell_scan;
         bufs.nexts        = bufs.ref_scan;
