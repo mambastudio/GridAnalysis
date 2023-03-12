@@ -46,7 +46,7 @@ public abstract class IntListAbstract<I extends IntListAbstract>  {
     public abstract void resize(int size, int value);
     
     public int max(){return reduce(Integer.MIN_VALUE, (a, b) -> Math.max(a, b));}
-    
+      
     public  int prefixSum() {return prefixSum(0, size());}
     public abstract int prefixSum(int fromIndex, int toIndex);
     
@@ -58,28 +58,47 @@ public abstract class IntListAbstract<I extends IntListAbstract>  {
     
     public void sort(){sort(0, size(), (a, b) -> a > b);}
     public void sort(BiPredicate<Integer, Integer> op){sort(0, size(), op);}
-    public abstract void sort(int fromIndex, int toIndex, BiPredicate<Integer, Integer> op);
-       
-    public int partition_stable(I output, I flags){return partition_stable(0, size(), output, flags);};
-    public abstract int partition_stable(int fromIndex, int toIndex, I output, I flags);
+    public void sort(int fromIndex, int toIndex, BiPredicate<Integer, Integer> op){sort_pairs(fromIndex, toIndex, null, op);}
     
+    public void sort_pairs(I values){sort_pairs(0, size(), values, (a, b) -> a > b);}
+    public abstract void sort_pairs(int fromIndex, int toIndex, I values, BiPredicate<Integer, Integer> op);
+    
+    public int partition_stable(I output, I flags){return partition_stable(0, size(), output, flags);}    
+    public int partition_stable(int n, I output, I flags){return partition_stable(0, n, output, flags);}    
+    public abstract int partition_stable(int fromIndex, int toIndex, I output, I flags); //output, flags sizes should be equal or larger than (toIndex - fromIndex)
+        
     public I transform(IntFunction<Integer> function){return transform(0, size(), function);}
     public abstract I transform(int fromIndex, int toIndex, IntFunction<Integer> function);
+    
     public void transform(I output, IntFunction<Integer> function){transform(0, size(), output, function);}
     public abstract void transform(int fromIndex, int toIndex, I output, IntFunction<Integer> function);
-    
+        
     public int find(int value){return find(0, size(), value);};
     public abstract int find(int first, int end, int value);    
     
     public void fill(int value){fill(0, size(), value);}
     public abstract void fill(int fromIndex, int toIndex, int value);    
+    
+    public void shiftRight(int steps){shiftRight(0, size(), steps);}
+    protected abstract void shiftRight(int fromIndex, int toIndex, int steps);
             
     public abstract void swapElement(int index1, int index2);
     public abstract void swap(I list);
     
+    public I copyTo(I list){return copyTo(0, size(), list);}
+    public abstract I copyTo(int fromIndex, int toIndex, I list);
+    
+    
     
     @Override
     public abstract String toString();
+    
+    protected void sizeRangeCheck(int fromIndex, int toIndex, int size)
+    {
+        if((toIndex - fromIndex) > size)
+            throw new IndexOutOfBoundsException("size range out of bound: index size range - " 
+                    +(toIndex - fromIndex)+ " target size bound - " +size);
+    }
     
     protected boolean isInRange(float index, int fromIndex, int toIndex)
     {
@@ -96,7 +115,7 @@ public abstract class IntListAbstract<I extends IntListAbstract>  {
         
     protected void rangeCheck(int index) {
         if (index >= size)
-            throw new IndexOutOfBoundsException("index out of bound " +index);
+            throw new IndexOutOfBoundsException("index out of bound " +index+ " size - " +size);
     }
     
     protected void rangeCheckBound(int fromIndex, int toIndex, int size) {
@@ -157,6 +176,12 @@ public abstract class IntListAbstract<I extends IntListAbstract>  {
     protected void compatibleCheck(I list)
     {
         if(list.size() != size())
+            throw new UnsupportedOperationException("list not compatible");
+    }
+    
+    protected void compatibleCheck(int fromIndex, int toIndex, I list)
+    {
+        if(list.size() != toIndex - fromIndex)
             throw new UnsupportedOperationException("list not compatible");
     }
 }

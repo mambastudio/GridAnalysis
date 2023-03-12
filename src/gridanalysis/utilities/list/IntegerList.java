@@ -17,7 +17,7 @@ import java.util.stream.IntStream;
  * @author user
  * 
  * Simple List that behaves like an ArrayList but for integer primitive
- * Inspired by jdk 1.8 ArrayList implementation and CUDA Cub
+ * Inspired by jdk 1.8 ArrayList and CUDA Cub
  * 
  * 
  * TODO:
@@ -65,24 +65,14 @@ public class IntegerList extends IntListAbstract<IntegerList> {
 
     @Override
     public void set(int index, int value) {
-        rangeCheck(index);       
-        final int expectedModCount = modCount;
-        this.array[index] = value;
-        if (modCount != expectedModCount) {
-            throw new ConcurrentModificationException();
-        }
-        modCount++;        
+        rangeCheck(index);               
+        this.array[index] = value;       
     }
     
     @Override
     public void set(int index, int[] value) {       
-        rangeCheck(index);    
-        final int expectedModCount = modCount;
-        System.arraycopy(value, index, array, index, size);       
-        if (modCount != expectedModCount) {
-            throw new ConcurrentModificationException();
-        }
-        modCount++;    
+        rangeCheck(index);            
+        System.arraycopy(value, index, array, index, size());              
     }
 
     @Override
@@ -291,13 +281,31 @@ public class IntegerList extends IntListAbstract<IntegerList> {
     @Override
     public void swap(IntegerList list)
     {
-        int[] temp = toArray();
-        
-        clear();
-        add(0, list.toArray());
-        
-        list.clear();
-        list.add(0, temp);        
+        if(this.array != null && list.array != null)     
+        {           
+            if(this.size() == list.size())
+            {
+                int[] tempArr = this.array;
+                this.array = list.array;
+                list.array = tempArr;                
+            }   
+            else
+                throw new UnsupportedOperationException("list to be swapped not the same size");       
+        }
+        else
+        {
+            if(this.array == null && list.array == null && this.size == list.size)
+            { 
+                for(int i = 0; i<size; i++)
+                {
+                    int temp = get(i);
+                    this.set(i, list.get(i));
+                    list.set(i, temp);                    
+                }
+            }
+            else
+                throw new UnsupportedOperationException("mismatch size of array or not sublist for swapping");       
+        }
     }
     
     @Override
@@ -325,9 +333,13 @@ public class IntegerList extends IntListAbstract<IntegerList> {
     
     //Parallel Butterfly Sorting Algorithm on GPU by Bilal et al    
     @Override
-    public void sort(int fromIndex, int toIndex, BiPredicate op)
+    public void sort_pairs(int fromIndex, int toIndex, IntegerList values, BiPredicate<Integer, Integer> op)
     {
+        this.compatibleCheck(fromIndex, toIndex, values);
         final int expectedModCount = modCount;
+        int inner_expectedModCount = -1;
+        if(values != null)
+            inner_expectedModCount = values.modCount;
         
         int radix  = 2;
         int until = until(toIndex - fromIndex);
@@ -354,7 +366,11 @@ public class IntegerList extends IntListAbstract<IntegerList> {
                             return;
                         
                         if(op.test(get(PosStart + fromIndex), get(PosEnd + fromIndex)))
-                           swapElement(PosStart + fromIndex, PosEnd + fromIndex);
+                        {
+                            swapElement(PosStart + fromIndex, PosEnd + fromIndex);
+                            if(values != null)
+                                values.swapElement(PosStart + fromIndex, PosEnd + fromIndex);
+                        }
                     });
             if(xout > 1)
             {                
@@ -378,7 +394,11 @@ public class IntegerList extends IntListAbstract<IntegerList> {
                                 return;
 
                             if(op.test(get(PosStart + fromIndex), get(PosEnd + fromIndex)))
+                            {
                                 swapElement(PosStart + fromIndex, PosEnd + fromIndex);
+                                if(values != null)
+                                    values.swapElement(PosStart + fromIndex, PosEnd + fromIndex);
+                            }
                         });
                 }
             }                    
@@ -388,7 +408,28 @@ public class IntegerList extends IntListAbstract<IntegerList> {
           throw new ConcurrentModificationException();
         }
         modCount++;
+        
+        if(values != null)
+        {
+            if (values.modCount != inner_expectedModCount) {
+                throw new ConcurrentModificationException();
+            }
+            values.modCount++;
+        }
     }
+    
+    public static void sort_pairs(IntegerList keys_in, IntegerList values_in, IntegerList keys_out, IntegerList values_out) 
+    {
+        keys_in.compatibleCheck(values_in);
+        values_in.compatibleCheck(keys_out);
+        keys_out.compatibleCheck(values_out);
+
+        keys_in.copyTo(keys_out);
+        values_in.copyTo(values_out);
+
+        keys_out.sort_pairs(values_out);
+    }
+            
     
     private  int until(int size)
     {
@@ -435,10 +476,12 @@ public class IntegerList extends IntListAbstract<IntegerList> {
     //partition while maintaining order
     @Override
     public int partition_stable(int fromIndex, int toIndex, IntegerList output, IntegerList flags) {
-        output.compatibleCheck(flags);
+        sizeRangeCheck(fromIndex, toIndex, output.size());
+        sizeRangeCheck(fromIndex, toIndex, flags.size());
         rangeCheckBound(fromIndex, toIndex, size); 
         
-        IntegerList stencil_1 = flags.transform(i -> i != 0 ? 1 : 0);        
+        //flags should bin the range of 0 to (toIndex - fromIndex)
+        IntegerList stencil_1 = flags.getSubList(0, toIndex - fromIndex).transform(i -> i != 0 ? 1 : 0);        
         stencil_1.add(0, 0);          
         IntegerList stencil_2 = stencil_1.transform(i -> i != 0 ? 0 : 1);
         stencil_2.set(0, 0);
@@ -449,18 +492,33 @@ public class IntegerList extends IntListAbstract<IntegerList> {
                 .parallel()
                 .forEach(i->{
                     if(flags.get(i - fromIndex) != 0)                      
-                        output.array[stencil_1.get(i - fromIndex)] = get(i);              
+                        output.set(stencil_1.get(i - fromIndex), get(i));              
                 });
         IntStream.range(fromIndex, toIndex)
                 .parallel()
-                .forEach(i->{
+                .forEach(i->{ 
                     if(flags.get(i - fromIndex) == 0)                    
-                        output.array[stencil_2.get(i - fromIndex) + st1] = get(i);                    
+                        output.set(stencil_2.get(i - fromIndex) + st1, get(i));                    
                 });
-        if((st1 + st2) != output.size)
+        if((st1 + st2) > output.size)
             throw new IndexOutOfBoundsException("Issue with partition");    
         
         return st1;
+    }
+
+    @Override
+    public IntegerList copyTo(int fromIndex, int toIndex, IntegerList list) {        
+        rangeCheckBound(fromIndex, toIndex, size()); 
+        compatibleCheck(fromIndex, toIndex, list);
+        System.arraycopy(array, fromIndex, list.array, fromIndex, toIndex - fromIndex);
+        return list;
+    }
+
+    @Override
+    protected void shiftRight(int fromIndex, int toIndex, int steps) {
+        rangeCheckBound(fromIndex, toIndex, size());      
+        System.arraycopy(array, fromIndex, array, fromIndex + steps, (toIndex - fromIndex) - steps);
+        Arrays.fill(array, fromIndex, fromIndex + steps, 0);
     }
     
     private class IntegerSubList extends IntegerList
@@ -481,8 +539,9 @@ public class IntegerList extends IntListAbstract<IntegerList> {
         public void add(int value)
         {
             checkForComodification();
-            rangeCheck(this.size - 1);
-            add(this.size, value);            
+            rangeCheck(this.size - 1);            
+            add(this.size, value);  
+            this.modCount = parent.modCount;
         }   
         
          @Override
@@ -492,9 +551,9 @@ public class IntegerList extends IntListAbstract<IntegerList> {
             int cSize = arr.length;
             
             checkForComodification();
-            parent.add(offset + index, arr);
+            parent.add(offset + index, arr);            
+            this.size += cSize;     
             this.modCount = parent.modCount;
-            this.size += cSize;            
         }
         
         @Override
@@ -516,18 +575,16 @@ public class IntegerList extends IntListAbstract<IntegerList> {
         
         @Override
         public void set(int index, int e) {
-            rangeCheck(index);   
+            rangeCheck(index); 
             checkForComodification();
-            parent.set(offset + index, e);
-            this.modCount = parent.modCount;
+            parent.set(offset + index, e);            
         }
         
         @Override
         public void set(int index, int[] value) {       
-            rangeCheck(index);   
+            rangeCheck(index);         
             checkForComodification();
-            parent.set(offset + index, value);
-            this.modCount = parent.modCount;
+            parent.set(offset + index, value);            
         }
                 
         @Override
@@ -589,14 +646,23 @@ public class IntegerList extends IntListAbstract<IntegerList> {
         }
                
         @Override
-        public void sort(int fromIndex, int toIndex, BiPredicate op)
+        public void sort(int fromIndex, int toIndex, BiPredicate<Integer, Integer> op)
         {
             rangeCheckBound(fromIndex, fromIndex, size);
             checkForComodification();
             parent.sort(offset + fromIndex, offset + toIndex, op);
             this.modCount = parent.modCount;              
         }
-            
+        
+        @Override
+        public void sort_pairs(int fromIndex, int toIndex, IntegerList values, BiPredicate<Integer, Integer> op)
+        {
+            rangeCheckBound(fromIndex, fromIndex, size);
+            checkForComodification();
+            parent.sort_pairs(offset + fromIndex, offset + toIndex, values, op);
+            this.modCount = parent.modCount;              
+        }
+        
         @Override
         public int[] toArray()
         {
@@ -651,6 +717,7 @@ public class IntegerList extends IntListAbstract<IntegerList> {
             rangeCheck(index);
             checkForComodification();
             parent.increment(offset + index);
+            this.modCount = parent.modCount;
         }
         
         @Override
@@ -659,6 +726,7 @@ public class IntegerList extends IntListAbstract<IntegerList> {
             rangeCheck(index);
             checkForComodification();
             parent.decrement(offset + index);
+            this.modCount = parent.modCount;
         } 
         
         @Override
@@ -686,6 +754,22 @@ public class IntegerList extends IntListAbstract<IntegerList> {
             int partition = parent.partition_stable(offset + fromIndex, offset + toIndex, output, flags);
             this.modCount = parent.modCount;
             return partition;
+        }
+        
+        @Override
+        protected void shiftRight(int fromIndex, int toIndex, int steps) {
+            rangeCheckBound(fromIndex, toIndex, size);
+            checkForComodification(); 
+            parent.shiftRight(offset + fromIndex, offset + toIndex, steps);
+            this.modCount = parent.modCount;
+            
+        }
+        
+        @Override
+        public IntegerList copyTo(int fromIndex, int toIndex, IntegerList list) {
+            rangeCheckBound(fromIndex, toIndex, list.size());
+            checkForComodification(); 
+            return parent.copyTo(fromIndex, toIndex, list);        
         }
                 
         private void checkForComodification() {            

@@ -25,7 +25,7 @@ import static java.util.stream.Collectors.partitioningBy;
 public class Test {
     public static void main(String... args)
     {
-        test10();
+        test6();
        
         
     }
@@ -92,10 +92,16 @@ public class Test {
     }
 
     private static void test6() {
-        IntegerList list = new IntegerList();
-        list.resize(3, 1);
-        list.resize(15, 1);
-        System.out.println(list.prefixSum());
+        IntegerList list = new IntegerList(new int[]{1, 1, 2, 1, 1, 0});               
+        list.shiftRight(1);
+        list.prefixSum();
+     //   System.out.println(list);
+        
+        int arr[] = new int[]{1, 1, 2, 1};
+        int arr2[] = new int[5];
+        
+     //   System.arraycopy(arr, 0, arr2, 3, arr.length);
+      //  System.out.println(Arrays.toString(arr2));
     }
     
    
@@ -115,7 +121,7 @@ public class Test {
     {
         ObjectList<AtomicInteger> list = new ObjectList(10, ()->new AtomicInteger(1));
         System.out.println(list);        
-        list.parallelPrefix((AtomicInteger a, AtomicInteger b)->{
+        list.prefix((AtomicInteger a, AtomicInteger b)->{
             return new AtomicInteger(a.get() + b.get());
         });
         System.out.println(list);
@@ -133,7 +139,7 @@ public class Test {
     {
         ObjectList<AtomicInteger> list = new ObjectList(10, ()->new AtomicInteger(1));
         System.out.println(list);        
-        list.parallelPrefix((AtomicInteger a, AtomicInteger b)->{
+        list.prefix((AtomicInteger a, AtomicInteger b)->{
             return new AtomicInteger(a.get() + b.get());
         });
         System.out.println(list);   
@@ -151,20 +157,47 @@ public class Test {
         int size = 20;
         //int size_half = size/2;
         
-        IntegerList list = new IntegerList(new Random().ints(size, 0, 100).toArray());
-        IntegerList li = list.getSubListFrom(10);
-        
-        IntegerList flags = li.transform(i-> i < 50 ? 1 : 0);
-        IntegerList output = new IntegerList(new int[li.size()]);
+        IntegerList list = new IntegerList(new Random().ints(size, 0, 100).toArray());       
+        IntegerList flags = list.transform(i-> i < 50 ? 1 : 0);
         
         System.out.println(list);
         System.out.println(flags);
         
-        System.out.println(li);
-        int value = li.partition_stable(output, flags);
-        System.out.println(value);
+        IntegerList output = new IntegerList(new int[21]);
+        
+        list.partition_stable(10, output, flags);
         System.out.println(output);
-        System.out.println(list);
     }
 
+    private static void test11()
+    {
+        IntegerList list = new IntegerList(new int[]{8, 6, 7, 5, 3, 0, 9});
+        list.resize(20);
+        
+        IntegerList keys = list.getSubList(0, 7);
+        IntegerList values = new IntegerList(new int[]{0, 1, 2, 3, 4, 5, 6});
+        
+        keys.sort_pairs(values);
+        
+        System.out.println(keys);
+        System.out.println(values);
+    }
+    
+    private static void test12()
+    {
+        int size = 10;
+        IntegerList list1 = new IntegerList(new Random().ints(size, 0, 100).toArray());       
+        IntegerList list2 = new IntegerList(new Random().ints(size, 0, 100).toArray());
+        
+        System.out.println(list1);
+        System.out.println(list2);
+        
+        IntegerList list3 = list1.getSubListFrom(5);
+        IntegerList list4 = list2.getSubListFrom(5);
+        
+        list3.swap(list4);
+        
+        System.out.println(list3);
+        System.out.println(list4);
+    }
 }

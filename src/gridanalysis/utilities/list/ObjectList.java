@@ -15,6 +15,7 @@ import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import static java.util.stream.Collectors.partitioningBy;
 
 /**
@@ -178,12 +179,10 @@ public class ObjectList<T> extends ObjectListAbstract<T, ObjectList<T>> {
         modCount++;
     }
     
-    public void parallelPrefix(BinaryOperator<T> op)
-    {
-        parallelPrefix(0, size, op);
-    }
     
-    public void parallelPrefix(int fromIndex, int toIndex, BinaryOperator<T> op)
+    
+    @Override
+    public void prefix(int fromIndex, int toIndex, BinaryOperator<T> op)
     {
         rangeCheckBound(fromIndex, fromIndex, size);
         final int expectedModCount = modCount;
@@ -192,6 +191,21 @@ public class ObjectList<T> extends ObjectListAbstract<T, ObjectList<T>> {
           throw new ConcurrentModificationException();
         }
         modCount++;
+    }
+    
+    @Override
+    public T reduce(int fromIndex, int toIndex, T identity, BinaryOperator<T> op)
+    {
+        rangeCheckBound(fromIndex, toIndex, size);
+        final int expectedModCount = modCount;
+        T count = Arrays.stream((T[])array, fromIndex, toIndex)               
+                   .parallel()               
+                   .reduce(identity, op);
+        if (modCount != expectedModCount) {
+          throw new ConcurrentModificationException();
+        }
+        modCount++;
+        return count;        
     }
     
     public int partition(Predicate<T> predicate)
@@ -481,16 +495,10 @@ public class ObjectList<T> extends ObjectListAbstract<T, ObjectList<T>> {
         }
         
         @Override
-        public void parallelPrefix(BinaryOperator<T> op)
-        {
-            parallelPrefix(0, size, op);
-        }
-
-        @Override
-        public void parallelPrefix(int fromIndex, int toIndex, BinaryOperator<T> op) {
+        public void prefix(int fromIndex, int toIndex, BinaryOperator<T> op) {
             rangeCheckBound(fromIndex, fromIndex, size);
             checkForComodification();
-            parent.parallelPrefix(offset + fromIndex, offset + toIndex, op);
+            parent.prefix(offset + fromIndex, offset + toIndex, op);
             this.modCount = parent.modCount;
         }
         
@@ -508,6 +516,16 @@ public class ObjectList<T> extends ObjectListAbstract<T, ObjectList<T>> {
             int index = parent.partition(offset + fromIndex, offset + toIndex, predicate);
             this.modCount = parent.modCount;
             return index;
+        }
+        
+        @Override
+        public T reduce(int fromIndex, int toIndex, T identity, BinaryOperator<T> op)
+        {
+            rangeCheckBound(fromIndex, fromIndex, size);
+            checkForComodification();
+            T reduce = parent.reduce(offset + fromIndex, offset + toIndex, identity, op);
+            this.modCount = parent.modCount;            
+            return reduce;
         }
         
         @Override
