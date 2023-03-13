@@ -25,7 +25,7 @@ import static java.util.stream.Collectors.partitioningBy;
 public class Test {
     public static void main(String... args)
     {
-        test6();
+        test13();
        
         
     }
@@ -199,5 +199,15 @@ public class Test {
         
         System.out.println(list3);
         System.out.println(list4);
+    }
+    
+    public static void test13()
+    {
+        IntegerList list1 = new IntegerList(10, 5);
+        System.out.println(list1);
+        IntegerList list2 = new IntegerList(5, 2);
+        System.out.println(list2);
+        list2.copyTo(list1);
+        System.out.println(list1);
     }
 }

@@ -509,8 +509,7 @@ public class IntegerList extends IntListAbstract<IntegerList> {
     @Override
     public IntegerList copyTo(int fromIndex, int toIndex, IntegerList list) {        
         rangeCheckBound(fromIndex, toIndex, size()); 
-        compatibleCheck(fromIndex, toIndex, list);
-        System.arraycopy(array, fromIndex, list.array, fromIndex, toIndex - fromIndex);
+        System.arraycopy(array, 0, list.array, fromIndex, toIndex - fromIndex);
         return list;
     }
 

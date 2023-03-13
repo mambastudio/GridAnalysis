@@ -85,8 +85,8 @@ public abstract class IntListAbstract<I extends IntListAbstract>  {
     public abstract void swapElement(int index1, int index2);
     public abstract void swap(I list);
     
-    public I copyTo(I list){return copyTo(0, size(), list);}
-    public abstract I copyTo(int fromIndex, int toIndex, I list);
+    public I copyTo(I list){return copyTo(0, list);}
+    public abstract I copyTo(int fromIndex, I list);
     
     
     

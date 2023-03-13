@@ -3,27 +3,18 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/utilities/list/ObjectList.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/jfx/MEngine2.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/irreg/Grid2.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/gridclasses/Grid.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/Build.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/utilities/list/IntListAbstract.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/utilities/list/ObjectListAbstract.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/utilities/list/IntegerList.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/test/test/Test.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/jfx/MEngine.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/GridAbstracts.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/GridAnalysis.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/gridclasses/BBox.java</file>
-        </group>
-        <group>
             <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/gridclasses/Grid.java</file>
             <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/Build.java</file>
             <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/utilities/list/IntegerList.java</file>
             <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/test/test/Test.java</file>
             <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/utilities/list/IntListAbstract.java</file>
             <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/Hagrid.java</file>
+        </group>
+        <group>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/Build.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/test/test/Test.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/utilities/list/IntegerList.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/utilities/list/IntListAbstract.java</file>
         </group>
     </open-files>
 </project-private>
