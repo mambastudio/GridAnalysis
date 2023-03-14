@@ -71,8 +71,8 @@ public class IntegerList extends IntListAbstract<IntegerList> {
     
     @Override
     public void set(int index, int[] value) {       
-        rangeCheck(index);            
-        System.arraycopy(value, index, array, index, size());              
+        rangeCheckBound(index, index + value.length, size()); 
+        System.arraycopy(value, 0, array, index, value.length);              
     }
 
     @Override
@@ -189,8 +189,15 @@ public class IntegerList extends IntListAbstract<IntegerList> {
     }
 
     @Override
-    public int[] toArray() {    
-        return Arrays.copyOfRange(array, 0, size);   
+    public int[] trimCopy() {    
+        return Arrays.copyOfRange(trim(), 0, size);   
+    }
+    
+    @Override
+    protected int[] trimCopy(int fromIndex, int toIndex)
+    {
+        rangeCheckBound(fromIndex, fromIndex, size);
+        return Arrays.copyOfRange(trim(), fromIndex, toIndex);
     }
     
     @Override
@@ -202,7 +209,7 @@ public class IntegerList extends IntListAbstract<IntegerList> {
     
     @Override
     public String toString() {
-        return Arrays.toString(toArray());
+        return Arrays.toString(trimCopy());
     }
 
     @Override
@@ -424,9 +431,9 @@ public class IntegerList extends IntListAbstract<IntegerList> {
         values_in.compatibleCheck(keys_out);
         keys_out.compatibleCheck(values_out);
 
-        keys_in.copyTo(keys_out);
-        values_in.copyTo(values_out);
-
+        keys_out.set(keys_in);
+        values_out.set(values_in);
+        
         keys_out.sort_pairs(values_out);
     }
             
@@ -504,13 +511,6 @@ public class IntegerList extends IntListAbstract<IntegerList> {
             throw new IndexOutOfBoundsException("Issue with partition");    
         
         return st1;
-    }
-
-    @Override
-    public IntegerList copyTo(int fromIndex, int toIndex, IntegerList list) {        
-        rangeCheckBound(fromIndex, toIndex, size()); 
-        System.arraycopy(array, 0, list.array, fromIndex, toIndex - fromIndex);
-        return list;
     }
 
     @Override
@@ -597,13 +597,23 @@ public class IntegerList extends IntListAbstract<IntegerList> {
         @Override
         public int[] trim() {              
             checkForComodification();
-            int[] arr = new int[parent.size];
-            if(size < arr.length)        
-            {                
-                arr = Arrays.copyOfRange(parent.trim(), offset, offset + size);
-            }        
-            return arr;
+            return parent.trim();
         }
+        
+        @Override
+        public int[] trimCopy()
+        {
+            checkForComodification();
+            return parent.trimCopy(offset, offset + size());
+        }
+        
+        @Override
+        protected int[] trimCopy(int fromIndex, int toIndex)
+        {
+            checkForComodification();
+            return parent.trimCopy(offset + fromIndex, offset + toIndex);
+        }
+        
         
         @Override
         public void fill(int fromIndex, int toIndex, int value)
@@ -661,17 +671,10 @@ public class IntegerList extends IntListAbstract<IntegerList> {
             parent.sort_pairs(offset + fromIndex, offset + toIndex, values, op);
             this.modCount = parent.modCount;              
         }
-        
-        @Override
-        public int[] toArray()
-        {
-            checkForComodification();
-            return Arrays.copyOfRange(parent.toArray(), offset, offset + size);
-        }
-        
+                
         @Override
         public String toString() {            
-            return Arrays.toString(toArray());
+            return Arrays.toString(trimCopy());
         }
         
         @Override
@@ -763,14 +766,7 @@ public class IntegerList extends IntListAbstract<IntegerList> {
             this.modCount = parent.modCount;
             
         }
-        
-        @Override
-        public IntegerList copyTo(int fromIndex, int toIndex, IntegerList list) {
-            rangeCheckBound(fromIndex, toIndex, list.size());
-            checkForComodification(); 
-            return parent.copyTo(fromIndex, toIndex, list);        
-        }
-                
+                        
         private void checkForComodification() {            
             if (parent.modCount != this.modCount)
                 throw new ConcurrentModificationException("Parent array has been modified and hence this sublist is obsolete!");

@@ -29,8 +29,9 @@ public abstract class IntListAbstract<I extends IntListAbstract>  {
     public abstract void add(int index, int[] value);
     public abstract int get(int index);
     public abstract void set(int index, int value);
-    public abstract void set(int index, int[] value);
-    public abstract int[] trim();
+    public void set(I list){set(0, list);}
+    public void set(int index, I list){set(index, list.trimCopy());}
+    public abstract void set(int index, int[] value);        
     public abstract void increment(int index);
     public abstract void decrement(int index);
     public abstract I getSubList(int fromIndex, int toIndex);
@@ -40,7 +41,9 @@ public abstract class IntListAbstract<I extends IntListAbstract>  {
     public abstract int size();    
     public abstract int end();  
     public abstract int back();      
-    public abstract int[] toArray();
+    public int[] trimCopy(){return trimCopy(0, size());}
+    protected abstract int[] trimCopy(int fromIndex, int toIndex);
+    public abstract int[] trim();   
     public abstract void clear();
     public abstract void resize(int size);
     public abstract void resize(int size, int value);
@@ -84,10 +87,7 @@ public abstract class IntListAbstract<I extends IntListAbstract>  {
             
     public abstract void swapElement(int index1, int index2);
     public abstract void swap(I list);
-    
-    public I copyTo(I list){return copyTo(0, list);}
-    public abstract I copyTo(int fromIndex, I list);
-    
+     
     
     
     @Override
@@ -115,7 +115,7 @@ public abstract class IntListAbstract<I extends IntListAbstract>  {
         
     protected void rangeCheck(int index) {
         if (index >= size)
-            throw new IndexOutOfBoundsException("index out of bound " +index+ " size - " +size);
+            throw new IndexOutOfBoundsException("index out of bound at index " +index+ " whereby available size is " +size);
     }
     
     protected void rangeCheckBound(int fromIndex, int toIndex, int size) {

@@ -25,7 +25,7 @@ import static java.util.stream.Collectors.partitioningBy;
 public class Test {
     public static void main(String... args)
     {
-        test13();
+        test11();
        
         
     }
@@ -173,8 +173,9 @@ public class Test {
     {
         IntegerList list = new IntegerList(new int[]{8, 6, 7, 5, 3, 0, 9});
         list.resize(20);
+        System.out.println(list);
         
-        IntegerList keys = list.getSubList(0, 7);
+        IntegerList keys = list.getSubList(1, 8);
         IntegerList values = new IntegerList(new int[]{0, 1, 2, 3, 4, 5, 6});
         
         keys.sort_pairs(values);
@@ -205,9 +206,10 @@ public class Test {
     {
         IntegerList list1 = new IntegerList(10, 5);
         System.out.println(list1);
-        IntegerList list2 = new IntegerList(5, 2);
+        IntegerList list_1 = list1.getSubListFrom(5);
+        IntegerList list2 = new IntegerList(3, 2);
         System.out.println(list2);
-        list2.copyTo(list1);
+        list1.set( list2);       
         System.out.println(list1);
     }
 }
