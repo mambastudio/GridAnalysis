@@ -482,7 +482,7 @@ public class Grid2 {
         
                
         // Get the insertion position for each compacted reference
-        num_cells.parallelPrefix((AtomicInteger a, AtomicInteger b)->{
+        num_cells.prefix((AtomicInteger a, AtomicInteger b)->{
             return new AtomicInteger(a.get() + b.get());
         });
                 

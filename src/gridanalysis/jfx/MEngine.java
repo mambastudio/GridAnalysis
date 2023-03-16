@@ -68,8 +68,10 @@ public class MEngine implements EngineAbstract{
         Build build = new Build(this);
         build.build_grid((Tri[]) tris, triangles.size(), grid, top_density, snd_density);
         
-        Merge merge = new Merge(this);
-        merge.merge_grid(grid, alpha);
+        System.out.println(grid.cells);
+        
+       // Merge merge = new Merge(this);
+      //  merge.merge_grid(grid, alpha);
         
         //Expand expand = new Expand(this);
         //expand.expand_grid(grid, tris, exp_iters);

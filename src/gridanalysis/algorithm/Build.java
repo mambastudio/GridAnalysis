@@ -16,6 +16,7 @@ import gridanalysis.gridclasses.Range;
 import gridanalysis.gridclasses.Tri;
 import gridanalysis.jfx.MEngine;
 import gridanalysis.utilities.list.IntegerList;
+import gridanalysis.utilities.list.ObjectList;
 import static java.lang.Math.cbrt;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -64,17 +65,17 @@ public class Build extends GridAbstracts{
     
     public void compute_bboxes(
             Tri[] prims,
-            BBox[] bboxes,
+            ObjectList<BBox> bboxes,
             int num_prims) 
     {
         for(int i = 0; i<num_prims; i++)
-            bboxes[i] = prims[i].bbox();
+            bboxes.set(i, prims[i].bbox());
     }
     
     /// Compute an over-approximation of the number of references
     /// that are going to be generated during reference emission
     public void count_new_refs(
-            BBox[]  bboxes,
+            ObjectList<BBox>  bboxes,
             IntegerList counts,
             int num_prims) {
         
@@ -82,7 +83,7 @@ public class Build extends GridAbstracts{
         {
             if (id >= num_prims) return;
             
-            BBox ref_bb = bboxes[id];//load_bbox(bboxes + id);
+            BBox ref_bb = bboxes.get(id);//load_bbox(bboxes + id);
             Range range  = compute_range(grid_dims, grid_bbox, ref_bb);
             counts.set(id, Math.max(0, range.size()));               
         }    
@@ -151,7 +152,7 @@ public class Build extends GridAbstracts{
             
             Vec2i dims = compute_grid_dims(bbox, refs_per_cell.get(id), snd_density);
             int max_dim = max(dims.x, dims.y);
-            int log_dim = 31 - Integer.numberOfLeadingZeros(max_dim);
+            int log_dim = 31 - Integer.numberOfLeadingZeros(max_dim); //log2
             log_dim = (1 << log_dim) < max_dim ? log_dim + 1 : log_dim;
             log_dims.set(id, log_dim);            
         }
@@ -275,42 +276,38 @@ public class Build extends GridAbstracts{
         }
     }
        
+    /// Emit the new references by inserting existing ones into the sub-levels
     public void emit_new_refs(
-            BBox[] bboxes,
-            IntegerList start_emit,
+            ObjectList<BBox> bboxes,
+            IntegerList start_emit, //this is a prefix sum
             IntegerList new_ref_ids,
             IntegerList new_cell_ids,
-            int num_prims){
-        System.out.println(new_cell_ids.size());
-        System.out.println(new_cell_ids);
+            int num_prims){              
         for(int id = 0; id<num_prims; id++)
         {
             int start = start_emit.get(id + 0);
             int end   = start_emit.get(id + 1);
-            
+            Range range;
+            //Very strange method. In the cuda code, it seems quite complex
             if (start < end) 
             {
-                BBox ref_bb = bboxes[id];
-                Range range  = compute_range(grid_dims, grid_bbox, ref_bb);
-            
+                BBox ref_bb = bboxes.get(id);
+                range  = compute_range(grid_dims, grid_bbox, ref_bb);
+                             
                 int x = range.lx;
                 int y = range.ly;               
                 int cur = start;
                 while (cur < end) 
-                {
-                    new_ref_ids .set(cur, id);
-                    new_cell_ids.set(cur, x + grid_dims.x * (y));
-                    cur++;
+                {                    
+                    new_ref_ids.set(cur, id);
+                    new_cell_ids.set(cur, x + grid_dims.x * y);
+                    cur++; 
                     x++;
                     if (x > range.hx) { x = range.lx; y++; }
                     if (y > range.hy) { y = range.ly;} 
-                }
-            }
-            else
-            {
-                
-            }
-        }
+                }                
+            }            
+        }        
     }
     
     /// Generate cells for the top level
@@ -457,8 +454,7 @@ public class Build extends GridAbstracts{
                     IntegerList start_split,
                     IntegerList new_cell_ids,
                     IntegerList new_ref_ids,
-                    int num_split) {
-      
+                    int num_split) { 
         for(int id = 0; id<num_split; id++)
         {
             if (id >= num_split) return;
@@ -476,7 +472,7 @@ public class Build extends GridAbstracts{
             while (mask != 0) {
                 int child_id = __ffs(mask) - 1;
                 mask &= ~(1 << child_id);
-                new_ref_ids.set(start, ref);
+                new_ref_ids.set(start, ref); 
                 new_cell_ids.set(start, begin + child_id);
                 start++;
             }
@@ -515,36 +511,37 @@ public class Build extends GridAbstracts{
     public void first_build_iter(
             float snd_density,
             Tri[] prims, int num_prims,
-            BBox[] bboxes, BBox grid_bb, Vec2i dims,
-            IntegerList log_dims, int[] grid_shift, ArrayList<Level> levels) 
+            ObjectList<BBox> bboxes, BBox grid_bb, Vec2i dims, IntegerList log_dims, 
+            int[] grid_shift, ObjectList<Level> levels) 
     {
         int num_top_cells = dims.x * dims.y;
        
         IntegerList start_emit        = new IntegerList(new int[num_prims + 1]);
         IntegerList new_ref_counts    = new IntegerList(new int[num_prims + 1]);
         IntegerList refs_per_cell     = new IntegerList(new int[num_top_cells]);
-        //int[] log_dims          = new int[num_top_cells + 1];
+        log_dims.resize(num_top_cells + 1);
         
-        count_new_refs(bboxes, new_ref_counts, num_prims);  
-        int num_new_refs = start_emit.prefixSum(); 
+        count_new_refs(bboxes, new_ref_counts, num_prims);  //new references generated based on how many cells each ref overlaps      
+        new_ref_counts.copyTo(start_emit).shiftRight(1); //copy to and shift to the right
+        int num_new_refs = start_emit.prefixSum(1, start_emit.size()); 
         
-        IntegerList new_ref_ids  = new IntegerList(new int[2 * num_new_refs]);
+        // We are creating cells and their references of top level
+        IntegerList new_ref_ids  = new IntegerList(new int[2 * num_new_refs]); 
         IntegerList new_cell_ids = new_ref_ids.getSubListFrom(num_new_refs);   
-        emit_new_refs(bboxes, start_emit, new_ref_ids, new_cell_ids, num_prims); 
-                
+        emit_new_refs(bboxes, start_emit, new_ref_ids, new_cell_ids, num_prims); //insert the initial references into the new cells 
+        
         // Compute the number of references per cell
-        count_refs_per_cell(new_cell_ids, refs_per_cell, num_new_refs);
+        count_refs_per_cell(new_cell_ids, refs_per_cell, num_new_refs); //simple atomic add
         
         // Compute an independent resolution in each of the top-level cells
         compute_log_dims(refs_per_cell, log_dims, snd_density, num_top_cells);
-                
+        
         // Find the max sub-level resolution
         grid_shift[0] = log_dims.reduce(0, (a, b) -> Math.max(a, b));
-        
-        
+                        
         this.cell_size = grid_bb.extents().div(new Vec2f(dims.leftShift(grid_shift[0])));
         this.grid_shift = grid_shift[0];
-        
+                
         //Emission of the new cells
         Cell[] new_cells   = new Cell[num_top_cells + 0];
         Entry[] new_entries = new Entry[num_top_cells + 1];
@@ -554,8 +551,8 @@ public class Build extends GridAbstracts{
             new_entries[i] = new Entry();
         
         
-        
         // Filter out the references that do not intersect the cell they are in
+        // Initially cell intersection was based on primitive bounding box, here we are more precise with primitive intersection with cell
         filter_refs(new_cell_ids, new_ref_ids, prims, new_cells, num_new_refs);
         
         Level level = new Level();
@@ -573,16 +570,16 @@ public class Build extends GridAbstracts{
     public boolean build_iter(
                 Tri[] prims, int num_prims,
                 Vec2i dims, IntegerList log_dims,
-                ArrayList<Level> levels)
+                ObjectList<Level> levels)
     {
-        IntegerList cell_ids  = levels.get(levels.size()-1).cell_ids;
-        IntegerList ref_ids   = levels.get(levels.size()-1).ref_ids;
-        Cell[] cells    = levels.get(levels.size()-1).cells;
-        Entry[] entries = levels.get(levels.size()-1).entries;
+        IntegerList cell_ids    = levels.back().cell_ids;
+        IntegerList ref_ids     = levels.back().ref_ids;
+        Cell[] cells            = levels.back().cells;
+        Entry[] entries         = levels.back().entries;
         
-        int num_top_cells = dims.x * dims.y;
-        int num_refs  = levels.get(levels.size()-1).num_refs;
-        int num_cells = levels.get(levels.size()-1).num_cells;
+        int num_top_cells       = dims.x * dims.y;
+        int num_refs            = levels.back().num_refs;
+        int num_cells           = levels.back().num_cells;
 
         int cur_level  = levels.size();
         
@@ -594,19 +591,20 @@ public class Build extends GridAbstracts{
         mark_kept_refs(cell_ids, entries, kept_flags, num_refs);
                         
         // Store the sub-cells starting index in the entries
-        IntegerList start_cell = new IntegerList(new int[num_cells + 1]);
+        IntegerList start_cell = new IntegerList(new int[num_cells + 1]);        
         for(int i = 0; i<num_cells; i++)
-            start_cell.set(i, entries[i].log_dim == 0 ? 0 : 4);        
+            start_cell.set(i, entries[i].log_dim == 0 ? 0 : 4);    
+        start_cell.shiftRight(1);
         int num_new_cells = start_cell.prefixSum(0, num_cells + 1);
 
         update_entries(start_cell, entries, num_cells);   
                 
         // Partition the set of cells into the sets of those which will be split and those which won't
         IntegerList tmp_ref_ids  = new IntegerList(new int[num_refs * 2]);
-        IntegerList tmp_cell_ids = tmp_ref_ids.getSubList(num_refs, tmp_ref_ids.size());
-        int num_sel_refs  = IntegerList.partition(ref_ids,  tmp_ref_ids,  num_refs, kept_flags);
-        int num_sel_cells = IntegerList.partition(cell_ids, tmp_cell_ids, num_refs, kept_flags);
-                
+        IntegerList tmp_cell_ids = tmp_ref_ids.getSubListFrom(num_refs); 
+        int num_sel_refs  = ref_ids.partition_stable(num_refs, tmp_ref_ids, kept_flags); 
+        int num_sel_cells = cell_ids.partition_stable(num_refs, tmp_cell_ids, kept_flags);
+            System.out.println("kubafu");    
         if(num_sel_refs != num_sel_cells)
             throw new UnsupportedOperationException("num_sel_refs is not equal to num_sel_cells");
         
@@ -615,9 +613,9 @@ public class Build extends GridAbstracts{
         tmp_cell_ids.swap(cell_ids);
                 
         int num_kept = num_sel_refs;
-        levels.get(levels.size()-1).ref_ids  = ref_ids;
-        levels.get(levels.size()-1).cell_ids = cell_ids;
-        levels.get(levels.size()-1).num_kept = num_kept;
+        levels.back().ref_ids  = ref_ids;
+        levels.back().cell_ids = cell_ids;
+        levels.back().num_kept = num_kept;
         
         if (num_new_cells == 0) {
             // Exit here because no new reference will be emitted            
@@ -639,6 +637,7 @@ public class Build extends GridAbstracts{
         // Store the sub-cells starting index in the entries        
         for(int i = 0; i<split_masks.size(); i++)
             start_split.set(i, __popc(split_masks.get(i)));
+        start_split.shiftRight(1);
         int num_new_refs = start_split.prefixSum(); 
                 
         if(!(num_new_refs <= 4 * num_split))        
@@ -778,22 +777,17 @@ public class Build extends GridAbstracts{
     
     public void build_grid(Tri[] prims, int num_prims, Grid grid, float top_density, float snd_density)
     {
-        // Allocate a bounding box for each primitive + one for the global bounding box
-        BBox[] bboxes = new BBox[num_prims + 1];
+        // Allocate a bounding box for each primitive + one for the global bounding box       
+        ObjectList<BBox> bboxes = new ObjectList(num_prims + 1, () -> new BBox());
        
-        compute_bboxes(prims, bboxes, num_prims);
-       
-        BBox grid_bb = Arrays.stream(bboxes, 0, num_prims).reduce(new BBox(), (a, b) ->{
-            a.extend(b); return a;});
-        
-        
+        compute_bboxes(prims, bboxes, num_prims);                
+        BBox grid_bb = bboxes.reduce(0, num_prims, new BBox(),  (a, b) ->a.copy().extend(b));
+               
         Vec2i dims = compute_grid_dims(grid_bb, num_prims, top_density);
         // Round to the next multiple of 2 on each dimension (in order to align the memory)
         dims.x = (dims.x % 2) != 0 ? dims.x + 1 : dims.x;
         dims.y = (dims.y % 2) != 0 ? dims.y + 1 : dims.y;
-        
-        System.out.println(dims);
-                
+                        
         // Slightly enlarge the bounding box of the grid
         Vec2f extents = grid_bb.extents();
         grid_bb.min = grid_bb.min.sub(extents.mul(0.001f));
@@ -802,18 +796,18 @@ public class Build extends GridAbstracts{
         this.grid_bbox = grid_bb;
         this.grid_dims = dims;
         
-        IntegerList log_dims = new IntegerList(new int[dims.x * dims.y + 1]);
-        int[] grid_shift = new int[1];
-        ArrayList<Level> levels = new ArrayList();
+        IntegerList log_dims = new IntegerList();
+        int[] gridd_shift = new int[1];
+        ObjectList<Level> levels = new ObjectList();
 
         // Build top level
-        first_build_iter(snd_density, prims, num_prims, bboxes, grid_bb, dims, log_dims, grid_shift, levels);
+        first_build_iter(snd_density, prims, num_prims, bboxes, grid_bb, dims, log_dims, gridd_shift, levels);
         
-        int iter = 1;
+        int iter = 1; //build iterations
         while(this.build_iter(prims, num_prims, dims, log_dims, levels))
             iter++;
-        
-        concat_levels(levels, grid);
+        System.out.println(iter);
+      ///  concat_levels(levels, grid);
         
         
        // engine.setMCellInfo(MCellInfo.getCells(engine, cells, this.grid_bbox, dims, this.grid_shift));

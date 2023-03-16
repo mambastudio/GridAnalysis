@@ -10,6 +10,7 @@ import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
+import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -46,24 +47,40 @@ public abstract class ObjectListAbstract<T, O extends ObjectListAbstract<T, O>> 
     public abstract void resize(int size);
     public abstract void resize(int size, Supplier<T> supply);
     
+    public void prefix(BinaryOperator<T> op){ prefix(0, size, op);}
+    public abstract void prefix(int fromIndex, int toIndex, BinaryOperator<T> op);
+    
+    public  T reduce(T identity, BinaryOperator<T> op) {return reduce(0, size(), identity, op);}
+    public abstract T reduce(int fromIndex, int toIndex, T identity, BinaryOperator<T> op);
+    
     public boolean isEmpty()
     {
         return size < 1;
     }
     
     public abstract void swap(ObjectListAbstract<T, O> list);
-    public abstract int find(int first, int end, T value);       
+    public abstract int find(int first, int end, T value);    
+    
+    public void copyTo(O list){copyTo(0, size(), list);}
+    public void copyTo(int fromIndex, int toIndex, O list)
+    {
+        rangeCheckBound(fromIndex, toIndex, size()); 
+        compatibleCheck(fromIndex, toIndex, list);
+        System.arraycopy(array, fromIndex, list.array, fromIndex, size());
+    }
+    
     
     public ListIterator<T> listIterator(final int index) {
         rangeCheckForAdd(index);
         return new ListItr(index);
     }
     
+    
     @Override
     public Iterator<T> iterator() {
         return new Itr();
     }
-    
+        
     @Override
     public abstract String toString();
     
@@ -119,6 +136,18 @@ public abstract class ObjectListAbstract<T, O extends ObjectListAbstract<T, O>> 
         return (minCapacity > MAX_ARRAY_SIZE) ?
             Integer.MAX_VALUE :
             MAX_ARRAY_SIZE;
+    }
+    
+    protected void compatibleCheck(O list)
+    {
+        if(list.size() != size())
+            throw new UnsupportedOperationException("list not compatible");
+    }
+    
+    protected void compatibleCheck(int fromIndex, int toIndex, O list)
+    {
+        if(list.size() != toIndex - fromIndex)
+            throw new UnsupportedOperationException("list not compatible");
     }
     
     private class Itr implements Iterator<T> {
