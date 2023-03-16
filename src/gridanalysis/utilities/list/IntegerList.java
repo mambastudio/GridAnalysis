@@ -141,16 +141,6 @@ public class IntegerList extends IntListAbstract<IntegerList> {
     }
 
     @Override
-    public int end() {
-        return size();
-    }
-
-    @Override
-    public int back() {
-        return get(end() - 1);
-    }
-
-    @Override
     public void add(int index, int value) {
         rangeCheckForAdd(index);
         ensureCapacity(size + 1);  //add and remove have to modify the modcount
@@ -194,7 +184,7 @@ public class IntegerList extends IntListAbstract<IntegerList> {
     }
     
     @Override
-    protected int[] trimCopy(int fromIndex, int toIndex)
+    public int[] trimCopy(int fromIndex, int toIndex)
     {
         rangeCheckBound(fromIndex, fromIndex, size);
         return Arrays.copyOfRange(trim(), fromIndex, toIndex);
@@ -210,11 +200,6 @@ public class IntegerList extends IntListAbstract<IntegerList> {
     @Override
     public String toString() {
         return Arrays.toString(trimCopy());
-    }
-
-    @Override
-    public void clear() {
-        remove(0, size);
     }
 
     @Override
@@ -342,11 +327,9 @@ public class IntegerList extends IntListAbstract<IntegerList> {
     @Override
     public void sort_pairs(int fromIndex, int toIndex, IntegerList values, BiPredicate<Integer, Integer> op)
     {
-        this.compatibleCheck(fromIndex, toIndex, values);
+        values.compatibleCheck(fromIndex, toIndex);
         final int expectedModCount = modCount;
-        int inner_expectedModCount = -1;
-        if(values != null)
-            inner_expectedModCount = values.modCount;
+        int inner_expectedModCount = values.modCount;
         
         int radix  = 2;
         int until = until(toIndex - fromIndex);
@@ -375,8 +358,7 @@ public class IntegerList extends IntListAbstract<IntegerList> {
                         if(op.test(get(PosStart + fromIndex), get(PosEnd + fromIndex)))
                         {
                             swapElement(PosStart + fromIndex, PosEnd + fromIndex);
-                            if(values != null)
-                                values.swapElement(PosStart + fromIndex, PosEnd + fromIndex);
+                            values.swapElement(PosStart + fromIndex, PosEnd + fromIndex);
                         }
                     });
             if(xout > 1)
@@ -403,8 +385,7 @@ public class IntegerList extends IntListAbstract<IntegerList> {
                             if(op.test(get(PosStart + fromIndex), get(PosEnd + fromIndex)))
                             {
                                 swapElement(PosStart + fromIndex, PosEnd + fromIndex);
-                                if(values != null)
-                                    values.swapElement(PosStart + fromIndex, PosEnd + fromIndex);
+                                values.swapElement(PosStart + fromIndex, PosEnd + fromIndex);
                             }
                         });
                 }
@@ -415,14 +396,11 @@ public class IntegerList extends IntListAbstract<IntegerList> {
           throw new ConcurrentModificationException();
         }
         modCount++;
-        
-        if(values != null)
-        {
-            if (values.modCount != inner_expectedModCount) {
-                throw new ConcurrentModificationException();
-            }
-            values.modCount++;
+                
+        if (values.modCount != inner_expectedModCount) {
+            throw new ConcurrentModificationException();
         }
+        values.modCount++;        
     }
     
     public static void sort_pairs(IntegerList keys_in, IntegerList values_in, IntegerList keys_out, IntegerList values_out) 
@@ -519,6 +497,21 @@ public class IntegerList extends IntListAbstract<IntegerList> {
         System.arraycopy(array, fromIndex, array, fromIndex + steps, (toIndex - fromIndex) - steps);
         Arrays.fill(array, fromIndex, fromIndex + steps, 0);
     }
+
+    @Override
+    public void set(int index, IntegerList list) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public IntegerList getSubListFrom(int fromIndex) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public int rootOffset() {
+        return 0;
+    }
     
     private class IntegerSubList extends IntegerList
     {      
@@ -608,7 +601,7 @@ public class IntegerList extends IntListAbstract<IntegerList> {
         }
         
         @Override
-        protected int[] trimCopy(int fromIndex, int toIndex)
+        public int[] trimCopy(int fromIndex, int toIndex)
         {
             checkForComodification();
             return parent.trimCopy(offset + fromIndex, offset + toIndex);
@@ -699,18 +692,6 @@ public class IntegerList extends IntListAbstract<IntegerList> {
         public int size() {
             checkForComodification();
             return size;
-        }
-
-        @Override
-        public int end() {
-            checkForComodification();
-            return size();
-        }
-
-        @Override
-        public int back() {
-            checkForComodification();
-            return get(end() - 1);
         }
         
         @Override
