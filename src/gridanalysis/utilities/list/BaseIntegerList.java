@@ -19,8 +19,23 @@ public interface BaseIntegerList<BaseIntList extends BaseIntegerList>
     public int get(int index);
     
     public void set(int index, int value);    
-    public void set(int index, int[] value);    
-    public void set(int index, BaseIntList list);    
+    public void set(int index, int[] value);  
+    
+    public void set(BaseIntList list);        
+    public void set(int index, BaseIntList list);  
+    
+    default BaseIntList copyTo(BaseIntList list)
+    {
+        //range checks will be done in the implementation of set
+        list.set(this); 
+        return list;
+    }
+    
+    default BaseIntList copyTo(int n, BaseIntList list)
+    {
+        list.set(0, this.trimCopy(0, n));
+        return list;
+    }
     
     public void increment(int index);
     public void decrement(int index);

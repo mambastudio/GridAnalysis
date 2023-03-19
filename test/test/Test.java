@@ -11,7 +11,6 @@ import gridanalysis.utilities.list.ObjectList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -172,11 +171,14 @@ public class Test {
     private static void test11()
     {
         IntegerList list = new IntegerList(new int[]{8, 6, 7, 5, 3, 0, 9});
-        list.resize(20);
+       
         System.out.println(list);
         
-        IntegerList keys = list.getSubList(1, 8);
+        IntegerList keys = list.getSubList(0, 7);
         IntegerList values = new IntegerList(new int[]{0, 1, 2, 3, 4, 5, 6});
+        
+        System.out.println(keys);
+        System.out.println(values);
         
         keys.sort_pairs(values);
         
@@ -209,7 +211,7 @@ public class Test {
         IntegerList list_1 = list1.getSubListFrom(5);
         IntegerList list2 = new IntegerList(3, 2);
         System.out.println(list2);
-        list1.set( list2);       
+        list_1.set(2, list2);       
         System.out.println(list1);
     }
 }

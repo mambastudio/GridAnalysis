@@ -24,6 +24,7 @@ public abstract class IntListAbstract<BaseIntList extends BaseIntegerList> imple
     protected int size;  
     protected int modCount = 0;
         
+    @Override
     public final void set(BaseIntList list){set(0, list);}        
     public final int end(){return size();}  
     public final int back(){return get(size()-1);}     
@@ -42,14 +43,14 @@ public abstract class IntListAbstract<BaseIntList extends BaseIntegerList> imple
     
     public void sort(){sort(0, size(), (a, b) -> a > b);}
     public void sort(BiPredicate<Integer, Integer> op){sort(0, size(), op);}
-    public void sort(int fromIndex, int toIndex, BiPredicate<Integer, Integer> op){sort_pairs(fromIndex, toIndex, null, op);}
+    protected void sort(int fromIndex, int toIndex, BiPredicate<Integer, Integer> op){sort_pairs(fromIndex, toIndex, null, op);}
     
     public void sort_pairs(BaseIntList values){sort_pairs(0, size(), values, (a, b) -> a > b);}
-    public abstract void sort_pairs(int fromIndex, int toIndex, BaseIntList values, BiPredicate<Integer, Integer> op);
+    protected abstract void sort_pairs(int fromIndex, int toIndex, BaseIntList values, BiPredicate<Integer, Integer> op);
     
     public int partition_stable(BaseIntList output, BaseIntList flags){return partition_stable(0, size(), output, flags);}    
     public int partition_stable(int n, BaseIntList output, BaseIntList flags){return partition_stable(0, n, output, flags);}    
-    public abstract int partition_stable(int fromIndex, int toIndex, BaseIntList output, BaseIntList flags); //output, flags sizes should be equal or larger than (toIndex - fromIndex)
+    protected abstract int partition_stable(int fromIndex, int toIndex, BaseIntList output, BaseIntList flags); //output, flags sizes should be equal or larger than (toIndex - fromIndex)
         
     public BaseIntList transform(IntFunction<Integer> function){return transform(0, size(), function);}
     public abstract BaseIntList transform(int fromIndex, int toIndex, IntFunction<Integer> function);
@@ -164,7 +165,7 @@ public abstract class IntListAbstract<BaseIntList extends BaseIntegerList> imple
     
     protected final void compatibleCheck(int fromIndex, int toIndex)
     {
-        rangeAboveZero(fromIndex);
+        rangeAboveZero(toIndex);
         if(size() != toIndex - fromIndex)
             throw new UnsupportedOperationException("list not compatible");
     }

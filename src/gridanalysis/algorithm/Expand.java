@@ -13,8 +13,8 @@ import gridanalysis.gridclasses.Entry;
 import gridanalysis.gridclasses.Grid;
 import gridanalysis.gridclasses.Tri;
 import gridanalysis.jfx.MEngine;
-import gridanalysis.utilities.IntArray;
-import gridanalysis.utilities.ObjHolder;
+import gridanalysis.utilities.list.IntegerList;
+import gridanalysis.utilities.list.ObjectList;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -45,7 +45,7 @@ public class Expand extends GridAbstracts{
     }
     
     /// Determines if the given range of references is a subset of the other
-    public boolean is_subset(IntArray p0, int c0, IntArray p1, int c1) {
+    public boolean is_subset(IntegerList p0, int c0, IntegerList p1, int c1) {
         if (c1 > c0) return false;
         if (c1 == 0) return true;
 
@@ -87,7 +87,7 @@ public class Expand extends GridAbstracts{
     public int find_overlap(
                                 int axis, boolean dir, boolean subset_only,
                                 Entry[] entries,
-                                IntArray refs,
+                                IntegerList refs,
                                 Tri[] prims,
                                 Cell[] cells,
                                 Cell cell,
@@ -115,8 +115,8 @@ public class Expand extends GridAbstracts{
             d = dir ? min(d, max_d) : max(d, max_d);
 
             if (subset_only) {
-                if (!is_subset(refs.splitSubArrayFrom(cell.begin), cell.end - cell.begin,
-                               refs.splitSubArrayFrom(next.begin), next.end - next.begin)) {
+                if (!is_subset(refs.getSubListFrom(cell.begin), cell.end - cell.begin,
+                               refs.getSubListFrom(next.begin), next.end - next.begin)) {
                     d = 0;
                     break;
                 }
@@ -173,11 +173,11 @@ public class Expand extends GridAbstracts{
     public void overlap_step(    
                                 int axis,
                                 Entry[]     entries,
-                                IntArray       refs,
+                                IntegerList       refs,
                                 Tri[] prims,
                                 Cell[]      cells,
                                 Cell[]      new_cells,
-                                IntArray       cell_flags,
+                                IntegerList       cell_flags,
                                 int num_cells) {
         
         for(int id = 0; id<num_cells; id++)
@@ -208,7 +208,7 @@ public class Expand extends GridAbstracts{
         }
     }
         
-    public void expansion_iter(Grid grid, Tri[] prims, ObjHolder<Cell[]> new_cells, IntArray cell_flags) {
+    public void expansion_iter(Grid grid, Tri[] prims, ObjectList<Cell[]> new_cells, IntegerList cell_flags) {
         overlap_step(0, grid.entries, grid.ref_ids, prims, grid.cells.get(), new_cells.get(), cell_flags, grid.num_cells);
         new_cells.swap(grid.cells);
                 
@@ -220,7 +220,7 @@ public class Expand extends GridAbstracts{
         if (iters == 0) return;
 
         Cell[] new_cells  = new Cell[grid.num_cells];
-        IntArray cell_flags = new IntArray(new int[grid.num_cells]);
+        IntegerList cell_flags = new IntegerList(new int[grid.num_cells]);
 
         cell_flags.fillOne(grid.num_cells);
         Vec2f extents = grid.bbox.extents();
