@@ -15,6 +15,7 @@ import gridanalysis.gridclasses.Level;
 import gridanalysis.gridclasses.Range;
 import gridanalysis.gridclasses.Tri;
 import gridanalysis.jfx.MEngine;
+import gridanalysis.jfx.shape.MCellInfo;
 import gridanalysis.utilities.list.IntegerList;
 import gridanalysis.utilities.list.ObjectList;
 import static java.lang.Math.cbrt;
@@ -254,24 +255,30 @@ public class Build extends GridAbstracts{
 
             cell_ids.set(id, start_cell.get(cell_ids.get(id)));
         }
+        
+        
     }
     
     /// Sets the cell ranges once the references are sorted by cell
     public void compute_cell_ranges(IntegerList cell_ids, Cell[] cells, int num_refs) {
+        
         for(int id = 0; id<num_refs; id++)
         {
             if (id >= num_refs) return;
-
+            
             int cell_id = cell_ids.get(id + 0);
             if (id >= num_refs - 1) {
-                cells[cell_id].end = id + 1;
+                cells[cell_id].end = id + 1; 
                 return;
             }
             int next_id = cell_ids.get(id + 1);
+            
+            
 
             if (cell_id != next_id) {
                 cells[cell_id].end   = id + 1;
                 cells[next_id].begin = id + 1;
+                
             }
         }
     }
@@ -673,12 +680,16 @@ public class Build extends GridAbstracts{
         level.entries   = new_entries;         
         level.num_cells = num_new_cells;     
         
+        
+        
         levels.add(level);
+        
+        
                 
         return true;
     }
     
-    public void concat_levels(ArrayList<Level> levels, Grid grid) {
+    public void concat_levels(ObjectList<Level> levels, Grid grid) {
         int num_levels = levels.size();
         
         // Start with references
@@ -692,8 +703,9 @@ public class Build extends GridAbstracts{
         // Copy primitive references as-is
         IntegerList ref_ids  = new IntegerList(new int[total_refs]);
         IntegerList cell_ids = new IntegerList(new int[total_refs]);
-        for (int i = 0, off = 0; i < num_levels; off += levels.get(i).num_kept, i++) {            
-            System.arraycopy(levels.get(i).ref_ids.array(), 0, ref_ids.array(), off, levels.get(i).num_kept);
+        for (int i = 0, off = 0; i < num_levels; off += levels.get(i).num_kept, i++) {   
+            levels.get(i).ref_ids.copyTo(levels.get(i).num_kept, ref_ids.getSubListFrom(off));
+            //System.arraycopy(levels.get(i).ref_ids.array(), 0, ref_ids.array(), off, levels.get(i).num_kept);
         }
         
         // Copy the cell indices with an offset       
@@ -706,6 +718,8 @@ public class Build extends GridAbstracts{
             levels.get(i).ref_ids = null;
         }
         
+        
+        
         // Mark the cells at the leaves of the structure as kept
         IntegerList kept_cells = new IntegerList(new int[total_cells + 1]);
         
@@ -717,8 +731,9 @@ public class Build extends GridAbstracts{
         
         // Compute the insertion position of each cell
         IntegerList start_cell = new IntegerList(new int[total_cells + 1]);  
-        int new_total_cells = IntegerList.exclusiveScan(kept_cells, total_cells+1, start_cell); 
-        
+        kept_cells.copyTo(start_cell).shiftRight(1);
+        int new_total_cells = start_cell.prefixSum();
+                
         // Allocate new cells, and copy only the cells that are kept
         Cell[] cells = new Cell[new_total_cells];
         for (int i = 0, cell_off = 0; i < num_levels; cell_off += levels.get(i).num_cells, i++) {
@@ -747,13 +762,14 @@ public class Build extends GridAbstracts{
         // Sort the references by cell (re-use old slots whenever possible)
         IntegerList tmp_ref_ids  = new IntegerList(new int[total_refs]);
         IntegerList tmp_cell_ids = new IntegerList(new int[total_refs]);
-        IntegerList new_ref_ids = new IntegerList(tmp_ref_ids.array());
-        IntegerList new_cell_ids = new IntegerList(tmp_cell_ids.array());        
+        IntegerList new_ref_ids = tmp_ref_ids;
+        IntegerList new_cell_ids = tmp_cell_ids;        
         IntegerList.sort_pairs(cell_ids, ref_ids, new_cell_ids, new_ref_ids);
+                
         if (!ref_ids.equals(new_ref_ids)) 
             ref_ids.swap(tmp_ref_ids);           
         if (!cell_ids.equals(new_cell_ids)) 
-            cell_ids.swap(tmp_cell_ids);    
+            cell_ids.swap(tmp_cell_ids);  
         
         // Compute the ranges of references for each cell
         compute_cell_ranges(cell_ids, cells, total_refs);
@@ -761,12 +777,11 @@ public class Build extends GridAbstracts{
         
         grid.entries = entries;
         grid.ref_ids = ref_ids;
-        grid.cells   = new ObjHolder(cells);
+        grid.cells   = new ObjectList(cells);
         grid.shift   = levels.size() - 1;
         grid.num_cells   = new_total_cells;
         grid.num_entries = total_cells;
         grid.num_refs    = total_refs;
-        
         
         grid.offsets = new IntegerList(new int[levels.size()]);
         for (int i = 0, off = 0; i < levels.size(); i++) {
@@ -807,13 +822,12 @@ public class Build extends GridAbstracts{
         while(this.build_iter(prims, num_prims, dims, log_dims, levels))
             iter++;
         System.out.println(iter);
-      ///  concat_levels(levels, grid);
-        
-        
-       // engine.setMCellInfo(MCellInfo.getCells(engine, cells, this.grid_bbox, dims, this.grid_shift));
-                        
+        concat_levels(levels, grid);
+                   
         grid.bbox = grid_bb;
         grid.dims = dims;
+        
+        engine.setMCellInfo(MCellInfo.getCells(engine, grid, this.grid_bbox, dims, this.grid_shift));
     }
 
 }

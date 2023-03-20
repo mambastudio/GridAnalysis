@@ -20,4 +20,18 @@ public class Level {
     public Cell[]   cells;                ///< Array of cells
     public Entry[]  entries;             ///< Array of voxel map entries
     public int      num_cells;              ///< Number of cells
+    
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder();
+        
+        builder.append("Level ").append("\n");
+        builder.append("  num of references: ").append(num_refs).append("\n");
+        builder.append("  num of cells:      ").append(num_cells).append("\n");
+        if(entries != null)
+            builder.append("  num of entries:    ").append(entries.length).append("\n");
+        
+        return builder.toString();
+    }
 }

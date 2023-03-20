@@ -9,6 +9,8 @@ import gridanalysis.coordinates.Vec2f;
 import gridanalysis.coordinates.Vec2i;
 import gridanalysis.gridclasses.BBox;
 import gridanalysis.gridclasses.Cell;
+import gridanalysis.gridclasses.Entry;
+import gridanalysis.gridclasses.Grid;
 import gridanalysis.irreg.BBox2;
 import gridanalysis.irreg.Cell2;
 import gridanalysis.jfx.MEngine;
@@ -130,7 +132,9 @@ public class MCellInfo {
             //System.out.println("grid bound "+grid_bound.extents());
             //System.out.println("cell_min "+cellMin);
             
-            cells.add(new MCellInfo(engine.getGraphicsContext(), cellBound));
+            MCellInfo info = new MCellInfo(engine.getGraphicsContext(), cellBound);
+            info.object = cell.end;
+            cells.add(info);
         }        
         return cells;
     }
@@ -139,7 +143,7 @@ public class MCellInfo {
     public static ArrayList<MCellInfo> getCells(MEngine engine, Cell[] cellArray, IntegerList array_ids, BBox grid_bound,  Vec2i dims, int shift)
     {
         ArrayList<MCellInfo> cells = new ArrayList();
-        int i = 0;
+        
         for (Cell cell : cellArray) {
            
             Vec2f cellExtents = Utility.getCellSize(dims.leftShift(shift), grid_bound);
@@ -150,9 +154,30 @@ public class MCellInfo {
             BBox cellBound = new BBox(cellMin, cellMax);
             
             MCellInfo info = new MCellInfo(engine.getGraphicsContext(), cellBound);
-            info.object = array_ids.get(i);
+            info.object = cell.end - cell.begin;
             
-            cells.add(info);
+            cells.add(info);            
+        }        
+        return cells;
+    }
+    
+    public static ArrayList<MCellInfo> getCells(MEngine engine, Grid grid, BBox grid_bound, Vec2i dims, int shift)
+    {
+        ArrayList<MCellInfo> cells = new ArrayList();
+        int i = 0;
+        for (Cell cell : grid.cells) {
+           
+            Vec2f cellExtents = Utility.getCellSize(dims.leftShift(shift), grid_bound);
+            
+            Vec2f cellMin = new Vec2f(cell.min).mul(cellExtents).add(grid_bound.min);
+            Vec2f cellMax = new Vec2f(cell.max).mul(cellExtents).add(grid_bound.min);
+            
+            BBox cellBound = new BBox(cellMin, cellMax);
+            
+            MCellInfo info = new MCellInfo(engine.getGraphicsContext(), cellBound);
+            info.object = grid.getEntry(cell).log_dim;
+            
+            cells.add(info);  
             i++;
         }        
         return cells;

@@ -27,4 +27,10 @@ public class Grid {
     public int num_refs;                   ///< Number of primitive references
     public int shift;                      ///< Amount of bits to shift to get from the deepest level to the top-level
     public IntegerList offsets;               ///< Offset to each level of the voxel map octree
+    
+    public Entry getEntry(Cell cell)
+    {
+        Vec2i voxel = new Vec2i(cell.min.x, cell.min.y); 
+        return entries[(voxel.x >> shift) + dims.x * (voxel.y >> shift)];
+    }
 }

@@ -7,7 +7,6 @@ package gridanalysis.algorithm;
 
 import gridanalysis.coordinates.Vec2i;
 import gridanalysis.gridclasses.Entry;
-import gridanalysis.utilities.Utility;
 
 /**
  *
