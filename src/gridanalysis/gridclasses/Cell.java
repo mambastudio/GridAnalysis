@@ -23,15 +23,15 @@ public class Cell {
     public Cell() {}
     public Cell(Vec2i min, int begin, Vec2i max, int end)        
     {
-        this.min = min;
+        this.min = min.copy();
         this.begin = begin;
-        this.max = max;
+        this.max = max.copy();
         this.end = end;
     }
     
     @Override
     public final String toString() {
-        return String.format("(min %1s, max %1s, begin %1s, end %1s)", min, max, begin, end);
+        return String.format("(min %1s, max %1s, begin %5d, end %5d)", min, max, begin, end);
     }
     
     public Cell copy()

@@ -36,13 +36,14 @@ public class MEngine implements EngineAbstract{
     
     Grid grid = new Grid();
     float top_density = 0.12f;
-    float snd_density = 1.00f;
+    float snd_density = 0.1f;
     float alpha = 0.995f;
     int exp_iters = 3;
     
     @Override
     public void draw()
     {
+        ctx.clearRect(0, 0, 5000, 5000);
         ctx.save();
         transform.transformGraphicsContext(ctx);
         mtriangles.forEach(mtri -> {
@@ -68,10 +69,8 @@ public class MEngine implements EngineAbstract{
         Build build = new Build(this);
         build.build_grid((Tri[]) tris, triangles.size(), grid, top_density, snd_density);
         
-       // System.out.println(grid.cells);
-        
-       // Merge merge = new Merge(this);
-      //  merge.merge_grid(grid, alpha);
+        Merge merge = new Merge(this);
+        merge.merge_grid(grid, alpha);
         
         //Expand expand = new Expand(this);
         //expand.expand_grid(grid, tris, exp_iters);

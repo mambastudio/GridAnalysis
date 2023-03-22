@@ -166,22 +166,25 @@ public class MCellInfo {
         ArrayList<MCellInfo> cells = new ArrayList();
         int i = 0;
         for (Cell cell : grid.cells) {
-           
-            Vec2f cellExtents = Utility.getCellSize(dims.leftShift(shift), grid_bound);
-            
-            Vec2f cellMin = new Vec2f(cell.min).mul(cellExtents).add(grid_bound.min);
-            Vec2f cellMax = new Vec2f(cell.max).mul(cellExtents).add(grid_bound.min);
-            
-            BBox cellBound = new BBox(cellMin, cellMax);
-            
-            MCellInfo info = new MCellInfo(engine.getGraphicsContext(), cellBound);
-            info.object = grid.getEntry(cell).log_dim;
-            
-            cells.add(info);  
+            if(cell != null)
+            {
+                Vec2f cellExtents = Utility.getCellSize(dims.leftShift(shift), grid_bound);
+
+                Vec2f cellMin = new Vec2f(cell.min).mul(cellExtents).add(grid_bound.min);
+                Vec2f cellMax = new Vec2f(cell.max).mul(cellExtents).add(grid_bound.min);
+
+                BBox cellBound = new BBox(cellMin, cellMax);
+
+                MCellInfo info = new MCellInfo(engine.getGraphicsContext(), cellBound);
+                info.object = grid.lookup_entry(cell);
+
+                cells.add(info);  
             i++;
+            }
         }        
         return cells;
     }
+    
        
     public static ArrayList<MCellInfo> getCells(MEngine engine, Cell[] cellArray, Object[] array_ids, BBox grid_bound,  Vec2i dims, int shift)
     {

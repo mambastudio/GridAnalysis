@@ -28,9 +28,21 @@ public class Grid {
     public int shift;                      ///< Amount of bits to shift to get from the deepest level to the top-level
     public IntegerList offsets;               ///< Offset to each level of the voxel map octree
     
-    public Entry getEntry(Cell cell)
+    public int lookup_entry(Cell cell)
     {
-        Vec2i voxel = new Vec2i(cell.min.x, cell.min.y); 
-        return entries[(voxel.x >> shift) + dims.x * (voxel.y >> shift)];
+        Vec2i voxel = new Vec2i(cell.min);
+        Entry entry = entries[(voxel.x >> shift) + dims.x * (voxel.y >> shift)];
+        int log_dim = entry.log_dim, d = log_dim;
+        while (log_dim != 0) {
+            int begin = entry.begin;
+            int mask = (1 << log_dim) - 1;
+
+            //int k = (voxel >> int(shift - d)) & mask;
+            Vec2i k = voxel.rightShift(shift -d).and(mask);
+            entry = entries[begin + k.x + (k.y  << log_dim)];
+            log_dim = entry.log_dim;
+            d += log_dim;
+        }
+        return entry.begin;
     }
 }

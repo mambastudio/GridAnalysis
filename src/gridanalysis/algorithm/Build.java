@@ -611,7 +611,7 @@ public class Build extends GridAbstracts{
         IntegerList tmp_cell_ids = tmp_ref_ids.getSubListFrom(num_refs); 
         int num_sel_refs  = ref_ids.partition_stable(num_refs, tmp_ref_ids, kept_flags); 
         int num_sel_cells = cell_ids.partition_stable(num_refs, tmp_cell_ids, kept_flags);
-            System.out.println("kubafu");    
+         
         if(num_sel_refs != num_sel_cells)
             throw new UnsupportedOperationException("num_sel_refs is not equal to num_sel_cells");
         
@@ -821,13 +821,13 @@ public class Build extends GridAbstracts{
         int iter = 1; //build iterations
         while(this.build_iter(prims, num_prims, dims, log_dims, levels))
             iter++;
-        System.out.println(iter);
+        System.out.println("iteration " +iter);
         concat_levels(levels, grid);
                    
         grid.bbox = grid_bb;
         grid.dims = dims;
         
-        engine.setMCellInfo(MCellInfo.getCells(engine, grid, this.grid_bbox, dims, this.grid_shift));
+        
     }
 
 }

@@ -160,7 +160,7 @@ public abstract class IntListAbstract<BaseIntList extends BaseIntegerList> imple
     protected final void compatibleCheck(BaseIntList list)
     {
         if(list.size() != size())
-            throw new UnsupportedOperationException("list not compatible");
+            throw new UnsupportedOperationException("list not compatible, the size of list is " +size+ " and size of other is " +list.size());
     }
     
     protected final void compatibleCheck(int fromIndex, int toIndex)
