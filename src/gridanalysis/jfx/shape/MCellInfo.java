@@ -164,8 +164,9 @@ public class MCellInfo {
     public static ArrayList<MCellInfo> getCells(MEngine engine, Grid grid, BBox grid_bound, Vec2i dims, int shift)
     {
         ArrayList<MCellInfo> cells = new ArrayList();
-        int i = 0;
-        for (Cell cell : grid.cells) {
+        
+        for (int i = 0; i<grid.num_cells; i++) {
+            Cell cell = grid.cells.get(i);
             if(cell != null)
             {
                 Vec2f cellExtents = Utility.getCellSize(dims.leftShift(shift), grid_bound);
@@ -176,10 +177,11 @@ public class MCellInfo {
                 BBox cellBound = new BBox(cellMin, cellMax);
 
                 MCellInfo info = new MCellInfo(engine.getGraphicsContext(), cellBound);
+                
                 info.object = grid.lookup_entry(cell);
 
                 cells.add(info);  
-            i++;
+           
             }
         }        
         return cells;

@@ -24,7 +24,7 @@ import static java.util.stream.Collectors.partitioningBy;
 public class Test {
     public static void main(String... args)
     {
-        test11();
+        test14();
        
         
     }
@@ -213,5 +213,12 @@ public class Test {
         System.out.println(list2);
         list_1.set(2, list2);       
         System.out.println(list1);
+    }
+    
+    public static void test14()
+    {
+        IntegerList list = new IntegerList(new int[]{8, 6, 7, 5, 3, 0, 9});        
+        list.getSubListFrom(3).shiftRight(1);
+        System.out.println(list);
     }
 }

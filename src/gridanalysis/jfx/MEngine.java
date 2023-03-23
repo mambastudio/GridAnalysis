@@ -36,7 +36,7 @@ public class MEngine implements EngineAbstract{
     
     Grid grid = new Grid();
     float top_density = 0.12f;
-    float snd_density = 0.1f;
+    float snd_density = 3.0f;
     float alpha = 0.995f;
     int exp_iters = 3;
     

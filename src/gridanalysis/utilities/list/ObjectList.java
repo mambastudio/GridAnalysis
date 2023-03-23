@@ -315,6 +315,7 @@ public class ObjectList<T> extends ObjectListAbstract<T, ObjectList<T>> {
     @Override
     public void swap(ObjectListAbstract<T, ObjectList<T>> list)
     {
+        
         T[] temp = toArray();
         
         clear();

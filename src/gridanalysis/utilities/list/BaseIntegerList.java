@@ -48,9 +48,9 @@ public interface BaseIntegerList<BaseIntList extends BaseIntegerList>
     
     public int size();   
     
-    //traverse up the list hierarchy of parents to root to get the actual offset from the main array
+    //traverse up the list hierarchy of parents to root to get the actual offset relative to the main array
     public int rootOffset();    
-    //traverse up the list hierarchy of parents to root to get the main array
+    //traverse up the list hierarchy of parents to root to get the main array, but trim it to actual size
     public int[] trim();  
     
     public int[] trimCopy();
@@ -60,6 +60,15 @@ public interface BaseIntegerList<BaseIntList extends BaseIntegerList>
     public void resize(int size, int value);
     
     public void swapElement(int index1, int index2);
+    /*
+    RULES
+    -------
+     - Sublist of different sizes cannot swap (this will result in modifying sizes of arrays). 
+     - If one is not sublist and the other is, swap can happen (but in copy mode) as long as sizes are same.
+     - Root list with native backed array can swap, even if the sizes are not equal
+        - If arrays are not equal, the sublists need to know they are invalid
+        - If arrays are equal, no need to inform the sublists
+    */
     public void swap(BaseIntList list);
     
     default boolean isSubList() {return false;}

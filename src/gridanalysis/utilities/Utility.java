@@ -44,7 +44,7 @@ public class Utility {
     public static ArrayList<Tri> generateTwoTriangles(int nTriangles, Vec2f min, Vec2f max)
     {
         ArrayList<Tri> triangles = new ArrayList();
-        float x = 200;
+        float x = 00;
         
         triangles.add(new Tri(new Vec2f(370.77f + x, 330.81f), new Vec2f(316.49f + x, 137.53f), new Vec2f(392.41f + x, 180.43f)));
         triangles.add(new Tri(new Vec2f(74.20f, 85.51f), new Vec2f(77.92f, 321.43f), new Vec2f(218.57f, 6.09f)));

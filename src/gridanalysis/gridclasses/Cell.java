@@ -29,6 +29,11 @@ public class Cell {
         this.end = end;
     }
     
+    public boolean hasReference()
+    {
+        return (end - begin) > 0;
+    }
+    
     @Override
     public final String toString() {
         return String.format("(min %1s, max %1s, begin %5d, end %5d)", min, max, begin, end);

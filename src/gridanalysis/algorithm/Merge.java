@@ -16,7 +16,6 @@ import gridanalysis.jfx.shape.MCellInfo;
 import gridanalysis.utilities.list.IntegerList;
 import gridanalysis.utilities.list.ObjectList;
 import static java.lang.Math.max;
-import java.util.Arrays;
 
 /**
  *
@@ -127,8 +126,6 @@ public class Merge extends GridAbstracts{
                 next_id = lookup_entry(entries, grid_shift, grid_dims.rightShift(grid_shift), next_pos);
                 Cell cell2 = cells.get(next_id).copy();
                 
-                
-
                 if (aligned(axis,cell1, cell2)) {
                     Vec2f e1 = cell_size.mul(new Vec2f(cell1.max.sub(cell1.min)));
                     Vec2f e2 = cell_size.mul(new Vec2f(cell2.max.sub(cell2.min)));
@@ -322,18 +319,20 @@ public class Merge extends GridAbstracts{
         IntegerList refs        = grid.ref_ids;
         Entry[] entries         = grid.entries;
         
-        bufs.prevs.fill(0, num_cells, -1);
+        bufs.prevs.fill(0, num_cells, -1); //be careful here. The original code shows fillOne, which is counterintuitive
         
+        bufs.ref_scan.fill(0);
+        bufs.ref_counts.fill(0);
         compute_merge_counts(axis, entries, cells, refs, bufs.merge_counts, bufs.nexts, bufs.prevs, empty_mask, num_cells);     
         compute_cell_flags(bufs.nexts, bufs.prevs, bufs.cell_flags, num_cells);  
         compute_ref_counts(bufs.merge_counts, bufs.cell_flags, bufs.ref_counts, num_cells); 
-        
-        bufs.ref_counts.copyTo(bufs.ref_scan).shiftRight(1);
+                
+        bufs.ref_counts.copyTo(bufs.ref_scan).shiftRight(1); 
         bufs.cell_flags.copyTo(bufs.cell_scan).shiftRight(1);
         
-        int num_new_refs  = bufs.ref_scan.prefixSum(0, num_cells + 1);
+        int num_new_refs  = bufs.ref_scan.prefixSum(0, num_cells + 1); 
         int num_new_cells = bufs.cell_scan.prefixSum(0, num_cells + 1);
-        
+                
         merge(  axis,entries, cells, refs,
                 bufs.cell_scan, bufs.ref_scan,
                 bufs.merge_counts, bufs.new_cell_ids,
@@ -342,6 +341,8 @@ public class Merge extends GridAbstracts{
         
         remap_entries(entries, bufs.new_cell_ids, num_entries);
                 
+       // cells.clear();
+        //cells.set(0, new_cells.toArray());
         new_cells.swap(cells);
         new_refs.swap(refs);
         
@@ -354,10 +355,9 @@ public class Merge extends GridAbstracts{
     
     /// Performs the neighbor merging optimization (merging cells according to the SAH).
     public void merge_grid(Grid grid, float alpha)
-    {
-        
+    {        
         MergeBuffers bufs = new MergeBuffers();
-        
+                
         ObjectList<Cell> new_cells = new ObjectList(new Cell[grid.num_cells]);        
         IntegerList new_refs  = new IntegerList(new int[grid.num_refs]);
         
@@ -386,17 +386,14 @@ public class Merge extends GridAbstracts{
             int prev_num_cells = 0, iter = 0;
             do {
                 prev_num_cells = grid.num_cells;
-                int mask = iter > 3 ? 0 : (1 << (iter + 1)) - 1;
+                int mask = iter > 3 ? 0 : (1 << (iter + 1)) - 1;                
                 merge_iteration(0, grid, new_cells, new_refs, mask, bufs);
-                merge_iteration(1, grid, new_cells, new_refs, mask, bufs); 
-                
-                
-                iter++;
-                break;
+                merge_iteration(1, grid, new_cells, new_refs, mask, bufs);       
+                iter++;              
             } while (grid.num_cells < alpha * prev_num_cells);            
         }
-
-        
+       
+       
         engine.setMCellInfo(MCellInfo.getCells(engine, grid, grid.bbox, grid.dims, this.grid_shift));
     }
 }

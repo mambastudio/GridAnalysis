@@ -251,7 +251,7 @@ public class IntegerList extends IntListAbstract<IntegerList> {
           throw new ConcurrentModificationException();
         }
         modCount++;
-        return back();
+        return get(toIndex-1);
     }
     
     @Override
