@@ -13,18 +13,14 @@ import gridanalysis.gridclasses.Entry;
  * @author user
  */
 public abstract class GridAbstracts {
-    public int __ffs(int value)
-    {
-        int pos = 1;
-        while ((value & 1) == 0 && value != 0) {
-            value >>= 1;
-            pos++;
-        }
-        return (value == 0) ? 0 : pos;
+    public int __ffs(int value)            
+    {      
+        //https://en.wikipedia.org/wiki/Find_first_set
+        return value == 0 ? 0 : Integer.numberOfTrailingZeros(value) + 1;
     }
     
     public int __popc(int mask) {
-        return Integer.bitCount(mask);
+        return Integer.bitCount(mask); 
     }
     
     /// Returns a voxel map entry with the given dimension and starting index

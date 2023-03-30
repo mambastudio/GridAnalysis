@@ -100,8 +100,8 @@ public class Optimise_Overlap {
                 Cell2 next_cell = cells.get(entry);
                 int next_count = next_cell.end - next_cell.begin;
 
-                if (is_subset(refs.getSublistFrom(cell.begin), count,
-                              refs.getSublistFrom(next_cell.begin), next_count)) {
+                if (is_subset(refs.getSubListFrom(cell.begin), count,
+                              refs.getSubListFrom(next_cell.begin), next_count)) {
                     dmin = Math.max(dmin, next_cell.min[axis] - cell.min[axis]);
                 } else {
                     dmin = 0;                    
@@ -127,8 +127,8 @@ public class Optimise_Overlap {
                 Cell2 next_cell = cells.get(entry);
                 int next_count = next_cell.end - next_cell.begin;
                 //System.out.println(i < cell.max[axis] && dmax > 0);        
-                if (is_subset(refs.getSublistFrom(cell.begin), count,
-                          refs.getSublistFrom(next_cell.begin), next_count)) {
+                if (is_subset(refs.getSubListFrom(cell.begin), count,
+                          refs.getSubListFrom(next_cell.begin), next_count)) {
                     dmax = Math.min(dmax, next_cell.max[axis] - cell.max[axis]);
                 } else {
                     dmax = 0;                   

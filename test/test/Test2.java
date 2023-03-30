@@ -19,6 +19,7 @@ public class Test2 {
         IntegerList list = new IntegerList(new int[]{1, 1, 1, 1, 1});
         System.out.println(list);
         System.out.println(list.prefixSum());
+        
     }
     
 }

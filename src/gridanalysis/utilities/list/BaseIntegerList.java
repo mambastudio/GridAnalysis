@@ -60,6 +60,7 @@ public interface BaseIntegerList<BaseIntList extends BaseIntegerList>
     public void resize(int size, int value);
     
     public void swapElement(int index1, int index2);
+    
     /*
     RULES
     -------

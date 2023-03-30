@@ -24,9 +24,12 @@ public class Utility {
         for(int i = 0; i<nTriangles; i++)
         {
             Tri tri = generate_random_triangle(min, max);   
-            System.out.println(tri);
-            triangles.add(tri);
+            //System.out.println(tri);
+            //triangles.add(tri);
         }
+        
+        triangles.add(new Tri(new Vec2f(401.03f, 170.69f), new Vec2f(430.96f, 10.98f), new Vec2f(5.63f, 33.08f)));
+        triangles.add(new Tri(new Vec2f(417.81f, 299.59f), new Vec2f(385.65f, 185.33f), new Vec2f(488.00f, 468.06f)));
         
         return triangles;
     }
@@ -54,7 +57,7 @@ public class Utility {
     
     public static ArrayList<MTriangle> generateTriangles(GraphicsContext context, ArrayList<Tri> tris, int nTriangles, Vec2f min, Vec2f max)
     {
-        ArrayList<Tri> triangles = generateTwoTriangles(nTriangles, min, max);
+        ArrayList<Tri> triangles = generateTriangles(nTriangles, min, max);
         tris.addAll(triangles);
         
         ArrayList<MTriangle> mtriangles = new ArrayList();

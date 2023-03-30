@@ -11,8 +11,6 @@ import gridanalysis.algorithm.Merge;
 import gridanalysis.coordinates.Vec2f;
 import gridanalysis.gridclasses.Grid;
 import gridanalysis.gridclasses.Tri;
-import gridanalysis.irreg.Float2;
-import gridanalysis.irreg.Tri2;
 import gridanalysis.jfx.math.MTransform;
 import gridanalysis.jfx.shape.MCellInfo;
 import gridanalysis.jfx.shape.MRectangle;
@@ -36,7 +34,7 @@ public class MEngine implements EngineAbstract{
     
     Grid grid = new Grid();
     float top_density = 0.12f;
-    float snd_density = 3.0f;
+    float snd_density = 3.9f;
     float alpha = 0.995f;
     int exp_iters = 3;
     
@@ -72,10 +70,7 @@ public class MEngine implements EngineAbstract{
         Merge merge = new Merge(this);
         merge.merge_grid(grid, alpha);
         
-        //Expand expand = new Expand(this);
-        //expand.expand_grid(grid, tris, exp_iters);
-        
-        
+        //flatten
         
     }    
     

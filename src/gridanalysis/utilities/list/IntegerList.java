@@ -284,13 +284,39 @@ public class IntegerList extends IntListAbstract<IntegerList> {
         return count;        
     }
         
+    //don't override in sublist
     @Override
     public void swap(IntegerList list)
     {
-        compatibleCheck(list);
-        int[] temp = trimCopy();
-        set(0, list);
-        list.set(0, temp);        
+        if(!this.isSubList() && !list.isSubList()) //both are root list
+        {            
+            if(this.size() == list.size()) //equal size
+            {
+                int[] temp = array;
+                this.array = list.array;
+                list.array = temp;
+            }
+            else //not equal in size, notify children it has been modified
+            {
+                final int expectedModCount = modCount;
+
+                int[] temp = array;
+                this.array = list.array;
+                list.array = temp;
+               
+                if (modCount != expectedModCount) {
+                    throw new ConcurrentModificationException();
+                }
+                modCount++;
+            }                
+        }
+        else //both or one is sublist (that's why we don't override in the sublist)
+        {            
+            compatibleCheck(list);
+            int[] temp = trimCopy();
+            set(0, list);
+            list.set(0, temp);        
+        }
     }
     
     @Override
@@ -586,7 +612,7 @@ public class IntegerList extends IntListAbstract<IntegerList> {
             checkForComodification();
             parent.swapElement(offset + index1, offset + index2);            
         }
-        
+               
         @Override
         public int[] trim() {              
             checkForComodification();
@@ -756,6 +782,12 @@ public class IntegerList extends IntListAbstract<IntegerList> {
         @Override
         public int rootOffset() {
             return offset + parent.rootOffset();
+        }
+        
+        @Override
+        public boolean isSubList()
+        {
+            return true;
         }
     }
 }

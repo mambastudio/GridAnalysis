@@ -13,7 +13,10 @@ public class Entry {
     public int log_dim;    ///< Logarithm of the dimensions of the entry (0 for leaves)
     public int begin;      ///< Next entry index (cell index for leaves)
     
-    public Entry(){}
+    public Entry(){
+        log_dim = 0;
+        begin = 0;
+    }
     
     public Entry(int log_dim, int begin)
     {

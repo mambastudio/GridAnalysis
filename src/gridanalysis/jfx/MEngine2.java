@@ -15,7 +15,6 @@ import gridanalysis.irreg.GridInfo;
 import gridanalysis.utilities.list.IntegerList;
 import gridanalysis.irreg.Merge2;
 import gridanalysis.irreg.Optimise_Overlap;
-import gridanalysis.irreg.Optimise_Overlap2;
 import gridanalysis.irreg.Ref;
 import gridanalysis.irreg.Tri2;
 import static gridanalysis.irreg.Voxel_Map.lookup_entry;
@@ -79,8 +78,11 @@ public class MEngine2 implements EngineAbstract{
         
         float x = 0;
         Tri2 tris[] = new Tri2[2];
-        tris[0] = new Tri2(new Float2(370.77f + x, 330.81f), new Float2(316.49f +x, 137.53f), new Float2(392.41f + x, 180.43f));
-        tris[1] = new Tri2(new Float2(74.20f, 85.51f), new Float2(77.92f, 321.43f), new Float2(218.57f, 6.09f));
+        //tris[0] = new Tri2(new Float2(370.77f + x, 330.81f), new Float2(316.49f +x, 137.53f), new Float2(392.41f + x, 180.43f));
+        //tris[1] = new Tri2(new Float2(74.20f, 85.51f), new Float2(77.92f, 321.43f), new Float2(218.57f, 6.09f));
+        
+        tris[0] = new Tri2(new Float2(401.03f, 170.69f), new Float2(430.96f, 10.98f), new Float2(5.63f, 33.08f));
+        tris[1] = new Tri2(new Float2(417.81f, 299.59f), new Float2(385.65f, 185.33f), new Float2(488.00f, 468.06f));
         
         mtriangles = new ObjectList();
         mtriangles.add(new MTriangle(ctx, tris[0]));
