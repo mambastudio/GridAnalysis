@@ -5,6 +5,9 @@
  */
 package gridanalysis.gridclasses;
 
+import gridanalysis.coordinates.Vec2i;
+import gridanalysis.coordinates.Vec4i;
+
 /**
  *
  * @author user
@@ -24,10 +27,26 @@ public class Entry {
         this.begin = begin;
     }
     
+    public Vec4i asVec4i()
+    {
+        return new Vec4i(log_dim, begin);
+    }
+    
+    public Vec2i asVec2i()
+    {
+        return new Vec2i(log_dim, begin);
+    }
+    
+    public Entry copy()
+    {
+        return new Entry(log_dim, begin);
+    }
+    
     @Override
     public String toString()
     {
-        return "log_dim " +log_dim+ "\n"
-             + " begin " +begin;
+        //return "log_dim " +log_dim+ "\n"
+        //     + " begin " +begin;
+        return "" +log_dim;
     }
 }

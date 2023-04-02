@@ -7,6 +7,7 @@ package gridanalysis.jfx;
 
 import gridanalysis.algorithm.Build;
 import gridanalysis.algorithm.EngineAbstract;
+import gridanalysis.algorithm.Flatten;
 import gridanalysis.algorithm.Merge;
 import gridanalysis.coordinates.Vec2f;
 import gridanalysis.gridclasses.Grid;
@@ -34,7 +35,7 @@ public class MEngine implements EngineAbstract{
     
     Grid grid = new Grid();
     float top_density = 0.12f;
-    float snd_density = 3.9f;
+    float snd_density = 3.0f;
     float alpha = 0.995f;
     int exp_iters = 3;
     
@@ -69,6 +70,9 @@ public class MEngine implements EngineAbstract{
         
         Merge merge = new Merge(this);
         merge.merge_grid(grid, alpha);
+        
+        Flatten flatten = new Flatten(this);
+        flatten.flatten_grid(grid);
         
         //flatten
         

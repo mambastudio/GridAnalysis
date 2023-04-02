@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import javafx.geometry.VPos;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 
 /**
@@ -211,6 +212,7 @@ public class MCellInfo {
     
     public void drawText(String text)
     {
+        ctx.setFont(Font.font(10));
         ctx.setTextAlign(TextAlignment.CENTER);
         ctx.setTextBaseline(VPos.CENTER);
         ctx.setFill(Color.RED);

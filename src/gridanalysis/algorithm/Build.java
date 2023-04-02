@@ -15,7 +15,6 @@ import gridanalysis.gridclasses.Level;
 import gridanalysis.gridclasses.Range;
 import gridanalysis.gridclasses.Tri;
 import gridanalysis.jfx.MEngine;
-import gridanalysis.jfx.shape.MCellInfo;
 import gridanalysis.utilities.list.IntegerList;
 import gridanalysis.utilities.list.ObjectList;
 import static java.lang.Math.cbrt;
@@ -60,7 +59,7 @@ public class Build extends GridAbstracts{
         float ratio = (float) cbrt(density * num_prims / volume);
         return Vec2i.max(new Vec2i(1), new Vec2i(
                 (int)(extents.x * ratio),
-                (int)(extents.y * ratio)));
+                (int)(extents.y * ratio)));        
     }
     
     public void compute_bboxes(
@@ -101,6 +100,7 @@ public class Build extends GridAbstracts{
             if (id >= num_top_cells) return;            
             log_dims.set(id, max(0, log_dims.get(id) - 1));            
         }
+        
     }
     
     /// Mark references that are kept so that they can be moved to the beginning of the array
@@ -141,8 +141,7 @@ public class Build extends GridAbstracts{
             IntegerList refs_per_cell,
             IntegerList log_dims,
             float snd_density,
-            int num_cells) {
-        
+            int num_cells) {       
         for(int id = 0; id<num_cells; id++)
         {         
             if (id >= num_cells) return;
@@ -151,13 +150,14 @@ public class Build extends GridAbstracts{
             BBox bbox = new BBox(new Vec2f(), extents);
             
             Vec2i dims = compute_grid_dims(bbox, refs_per_cell.get(id), snd_density);
-           // System.out.println(id+ " " +dims);
             int max_dim = max(dims.x, dims.y);
-            int log_dim = 31 - Integer.numberOfLeadingZeros(max_dim); //log2
-            log_dim = (1 << log_dim) < max_dim ? log_dim + 1 : log_dim;
-            log_dims.set(id, log_dim);            
-        }
-        System.out.println(log_dims);
+            int log_dim = log2nlz(max_dim); //log2
+            log_dim = (1 << log_dim) < max_dim ? log_dim + 1 : log_dim;            
+            log_dims.set(id, log_dim);       
+            
+        }    
+        
+        
     }
     
     /// Update the entries for the one level before the current one
@@ -174,7 +174,7 @@ public class Build extends GridAbstracts{
 
             // If the cell is subdivided, write the first sub-cell index into the current entry
             entry.begin = entry.log_dim != 0 ? start : id;
-            entries[id] = entry;
+            //entries[id] = entry;
         }
     }
     
@@ -214,7 +214,7 @@ public class Build extends GridAbstracts{
         {
             if (id >= num_cells) return;
 
-            Cell cell = cells[id];
+            Cell cell = cells[id].copy();
             int start = start_cell.get(cell_off + id + 0);
             int end   = start_cell.get(cell_off + id + 1);
             if (start < end) 
@@ -354,6 +354,7 @@ public class Build extends GridAbstracts{
             Entry entry = entries[id];
             int log_dim = entry.log_dim;
             if (log_dim == 0) continue;
+            
 
             int start = entry.begin;
             Cell cell = cells[id].copy();
@@ -363,16 +364,18 @@ public class Build extends GridAbstracts{
             
             for (int i = 0; i < 4; i++) {
                 int x = min_x + (i & 1) * inc;
-                int y = min_y + (i >> 1) * inc;
+                int y = min_y + ((i >> 1) & 1) * inc;
+                 
+                cell.min = new Vec2i(x, y);
+                cell.max = new Vec2i(x + inc, y + inc);
+                cell.begin = 0;
+                cell.end   = 0;
+                new_cells[start + i] = cell.copy();    
                 
-                Cell cell1 = new Cell();
-                cell1.min = new Vec2i(x, y);
-                cell1.max = new Vec2i(x + inc, y + inc);
-                cell1.begin = 0;
-                cell1.end   = 0;
-                new_cells[start + i] = cell1;                
             }
         }
+        
+        
     }
     
     /// Count the (sub-)dimensions of each cell, based on the array of references
@@ -382,6 +385,7 @@ public class Build extends GridAbstracts{
             IntegerList log_dims,
             Entry[] entries,
             int num_refs) {
+        
         for(int id = 0; id<num_refs; id++)
         {            
             if (id >= num_refs) return;
@@ -416,7 +420,7 @@ public class Build extends GridAbstracts{
             }
             
             int ref  =  ref_ids.get(id);
-            Cell cell = cells[cell_id];              
+            Cell cell = cells[cell_id].copy();              
             Tri prim = prims[ref];
 
             Vec2f cell_min = grid_bbox.min.add(cell_size.mul(new Vec2f(cell.min)));
@@ -427,6 +431,10 @@ public class Build extends GridAbstracts{
 
             // Optimization: Test against half spaces first
             BBox ref_bb = prim.bbox();
+            // Slightly enlarge the bounding box of the grid
+            Vec2f extents = ref_bb.extents();
+            ref_bb.min = ref_bb.min.sub(extents.mul(0.001f));
+            ref_bb.max = ref_bb.max.add(extents.mul(0.001f));
             if (ref_bb.min.x > cell_max.x ||
                 ref_bb.max.x < cell_min.x) mask  = 0;
             if (ref_bb.min.x >   middle.x) mask &= 0xAA; //10101010
@@ -472,7 +480,7 @@ public class Build extends GridAbstracts{
             
             //Not in the code
             if(cell_id < 0)
-                continue;
+               continue;
             
             int ref = ref_ids.get(id); 
             int begin = entries[cell_id].begin;
@@ -482,10 +490,15 @@ public class Build extends GridAbstracts{
                 int child_id = __ffs(mask) - 1;
                 mask &= ~(1 << child_id);
                 new_ref_ids.set(start, ref); 
-                new_cell_ids.set(start, begin + child_id);
+                if(new_cell_ids.size() > 15)
+                    new_cell_ids.set(start, begin + child_id);
+                else
+                    new_cell_ids.set(start, child_id);
                 start++;
             }
         }
+        
+        
     }
     
     /// Filter out references that do not intersect the cell they are in
@@ -528,11 +541,12 @@ public class Build extends GridAbstracts{
         IntegerList start_emit        = new IntegerList(new int[num_prims + 1]);
         IntegerList new_ref_counts    = new IntegerList(new int[num_prims + 1]);
         IntegerList refs_per_cell     = new IntegerList(new int[num_top_cells]);
-        log_dims.resize(num_top_cells + 1);
         
+        log_dims.resize(num_top_cells + 1);
+                
         count_new_refs(bboxes, new_ref_counts, num_prims);  //new references generated based on how many cells each ref overlaps      
         new_ref_counts.copyTo(start_emit).shiftRight(1); //copy to and shift to the right
-        int num_new_refs = start_emit.prefixSum(1, start_emit.size()); 
+        int num_new_refs = start_emit.prefixSum(0, num_prims + 1); 
         
         // We are creating cells and their references of top level
         IntegerList new_ref_ids  = new IntegerList(new int[2 * num_new_refs]); 
@@ -544,9 +558,10 @@ public class Build extends GridAbstracts{
         
         // Compute an independent resolution in each of the top-level cells
         compute_log_dims(refs_per_cell, log_dims, snd_density, num_top_cells);
-        
+                
         // Find the max sub-level resolution
         grid_shift[0] = log_dims.reduce(0, (a, b) -> Math.max(a, b));
+        
                                
         this.cell_size = grid_bb.extents().div(new Vec2f(dims.leftShift(grid_shift[0])));
         this.grid_shift = grid_shift[0];
@@ -594,7 +609,7 @@ public class Build extends GridAbstracts{
         int cur_level  = levels.size();
         
         IntegerList kept_flags = new IntegerList(new int[num_refs + 1]);
-                
+        
         // Find out which cell will be split based on whether it is empty or not and the max depth
         compute_dims(cell_ids, cells, log_dims, entries, num_refs); 
         update_log_dims(log_dims, num_top_cells);        
@@ -603,17 +618,12 @@ public class Build extends GridAbstracts{
         // Store the sub-cells starting index in the entries
         IntegerList start_cell = new IntegerList(new int[num_cells + 1]);        
         for(int i = 0; i<num_cells+1; i++)
-            start_cell.set(i, entries[i].log_dim == 0 ? 0 : 4);    
+            start_cell.set(i, entries[i].log_dim == 0 ? 0 : 4);                    
         start_cell.shiftRight(1);
         int num_new_cells = start_cell.prefixSum(0, num_cells + 1);
-        
-        
-
+                    
         update_entries(start_cell, entries, num_cells);   
-        
-        System.out.println(" " +num_new_cells);
-        System.out.println(entries.length);
-                
+                        
         // Partition the set of cells into the sets of those which will be split and those which won't
         IntegerList tmp_ref_ids  = new IntegerList(new int[num_refs * 2]);
         IntegerList tmp_cell_ids = tmp_ref_ids.getSubListFrom(num_refs); 
@@ -643,24 +653,27 @@ public class Build extends GridAbstracts{
         IntegerList split_masks = new IntegerList(new int[num_split + 1]);
         IntegerList start_split = new IntegerList(new int[num_split + 1]);
         
+        /// Compute a mask for each reference which determines which sub-cell is intersected
         compute_split_masks(
                 cell_ids.getSubListFrom(num_kept), 
                 ref_ids.getSubListFrom(num_kept), 
                 prims, cells, 
                 split_masks, 
                 num_split);
+        
+        
                         
         // Store the sub-cells starting index in the entries     
         split_masks.transform(0, num_split + 1, start_split, i -> __popc(i));       
-        start_split.shiftRight(1);
+        start_split.shiftRight(1);        
         int num_new_refs = start_split.prefixSum(0, num_split + 1); 
-                
+        
         if(!(num_new_refs <= 4 * num_split))        
             throw new UnsupportedOperationException("num_new_refs: " +num_new_refs+ " should be <= " +4*num_split);
                 
         IntegerList new_ref_ids = new IntegerList(new int[num_new_refs * 2]);
         IntegerList new_cell_ids = new_ref_ids.getSubListFrom(num_new_refs);
-        
+                
         split_refs(
                 cell_ids.getSubListFrom(num_kept), 
                 ref_ids.getSubListFrom(num_kept), 
@@ -671,7 +684,9 @@ public class Build extends GridAbstracts{
                 new_ref_ids, 
                 num_split);
         
-        
+        System.out.println("cells id:     " +new_cell_ids);
+        System.out.println("no. cells: " +num_new_cells);
+        System.out.println(num_split);
         
         // Emission of the new cells
         Cell[] new_cells   = new Cell[num_new_cells + 0];
@@ -680,7 +695,7 @@ public class Build extends GridAbstracts{
         
         for(int i = 0; i<num_new_cells + 1; i++)
             new_entries[i] = new Entry();
-        
+                
         Level level = new Level();
         level.ref_ids   = new_ref_ids;         
         level.cell_ids  = new_cell_ids;        
@@ -813,6 +828,8 @@ public class Build extends GridAbstracts{
         // Round to the next multiple of 2 on each dimension (in order to align the memory)
         dims.x = (dims.x % 2) != 0 ? dims.x + 1 : dims.x;
         dims.y = (dims.y % 2) != 0 ? dims.y + 1 : dims.y;
+        
+        
                         
         // Slightly enlarge the bounding box of the grid
         Vec2f extents = grid_bb.extents();

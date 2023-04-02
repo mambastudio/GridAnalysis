@@ -23,6 +23,17 @@ public abstract class GridAbstracts {
         return Integer.bitCount(mask); 
     }
     
+    public int __clz(int k)
+    {          
+        return Integer.numberOfLeadingZeros(k);
+    }
+    
+    public int log2nlz(int bits)
+    {
+        return bits == 0 ? 0 : 31 - Integer.numberOfLeadingZeros(bits);
+    }
+    
+    
     /// Returns a voxel map entry with the given dimension and starting index
     public Entry make_entry(int log_dim, int begin) {
         Entry e = new Entry(log_dim, begin);
