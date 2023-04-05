@@ -25,11 +25,11 @@ public class Utility {
         {
             Tri tri = generate_random_triangle(min, max);   
             //System.out.println(tri);
-            //triangles.add(tri);
+            triangles.add(tri);
         }
         
-        triangles.add(new Tri(new Vec2f(401.03f, 170.69f), new Vec2f(430.96f, 10.98f), new Vec2f(5.63f, 33.08f)));
-        triangles.add(new Tri(new Vec2f(417.81f, 299.59f), new Vec2f(385.65f, 185.33f), new Vec2f(488.00f, 468.06f)));
+        //triangles.add(new Tri(new Vec2f(401.03f, 170.69f), new Vec2f(430.96f, 10.98f), new Vec2f(5.63f, 33.08f)));
+        //triangles.add(new Tri(new Vec2f(417.81f, 299.59f), new Vec2f(385.65f, 185.33f), new Vec2f(488.00f, 468.06f)));
         
         return triangles;
     }
@@ -47,7 +47,7 @@ public class Utility {
     public static ArrayList<Tri> generateTwoTriangles(int nTriangles, Vec2f min, Vec2f max)
     {
         ArrayList<Tri> triangles = new ArrayList();
-        float x = 00;
+        float x = 100;
         
         triangles.add(new Tri(new Vec2f(370.77f + x, 330.81f), new Vec2f(316.49f + x, 137.53f), new Vec2f(392.41f + x, 180.43f)));
         triangles.add(new Tri(new Vec2f(74.20f, 85.51f), new Vec2f(77.92f, 321.43f), new Vec2f(218.57f, 6.09f)));

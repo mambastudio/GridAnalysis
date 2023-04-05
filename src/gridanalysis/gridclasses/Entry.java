@@ -47,6 +47,6 @@ public class Entry {
     {
         //return "log_dim " +log_dim+ "\n"
         //     + " begin " +begin;
-        return "" +log_dim;
+        return "" +begin;
     }
 }

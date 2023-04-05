@@ -24,7 +24,19 @@ public class Flatten {
         this.engine = engine;
     }
     
-    /// Collapses sub-entries that map to the same cell/sub-sub-entry
+    private Vec4i getVec4i(Entry e1)
+    {
+        return new Vec4i(e1.log_dim, e1.begin);
+    }
+    
+    public Entry asEntry(Vec4i ptr) {
+        Entry entry     = new Entry();
+        entry.log_dim   = ptr.x;
+        entry.begin     = ptr.y;
+        return entry;
+    }
+    
+    /// Collapses sub-entries that map to the same cell/sub-sub-entry (Thanks ChatGPT)
     public void collapse_entries(Entry[] entries, int first, int num_entries) {
         for(int id = 0; id < num_entries; id++)
         {            
@@ -32,15 +44,14 @@ public class Flatten {
 
             Entry entry = entries[first + id];
             if (entry.log_dim != 0) {
-                Vec2i ptr0 = entries[entry.begin].asVec2i();
-                
-                if (ptr0.x == ptr0.y) {
-                    Vec2i ptr1 = entries[entry.begin + 2].asVec2i();
-                    if (ptr0.x == ptr1.x &&
-                        ptr1.x == ptr1.y) {
-                        entries[first + id] = new Entry(ptr0.x, ptr1.y);
+                Vec4i[] ptr = new Vec4i[] {getVec4i(entries[entry.begin]), getVec4i(entries[entry.begin + 1])};
+                Vec4i ptr0 = ptr[0];
+                if (ptr0.x == ptr0.y && ptr0.x == ptr0.z && ptr0.x == ptr0.w) {
+                    Vec4i ptr1 = ptr[1];
+                    if (ptr0.x == ptr1.x && ptr1.x == ptr1.y && ptr1.x == ptr1.z && ptr1.x == ptr1.w) {
+                        entries[first + id] = asEntry(ptr0);
                     }
-                }
+                }                
             }
         }
     }

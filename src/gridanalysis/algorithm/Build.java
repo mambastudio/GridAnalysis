@@ -15,6 +15,7 @@ import gridanalysis.gridclasses.Level;
 import gridanalysis.gridclasses.Range;
 import gridanalysis.gridclasses.Tri;
 import gridanalysis.jfx.MEngine;
+import gridanalysis.jfx.shape.MCellInfo;
 import gridanalysis.utilities.list.IntegerList;
 import gridanalysis.utilities.list.ObjectList;
 import static java.lang.Math.cbrt;
@@ -463,6 +464,7 @@ public class Build extends GridAbstracts{
     }
     
     /// Split references according to the given array of split masks
+    // THIS FUNCTION HAS TWO ISSUES AS SHOWN BELOW.
     public void split_refs(
                     IntegerList cell_ids,
                     IntegerList ref_ids,
@@ -472,6 +474,7 @@ public class Build extends GridAbstracts{
                     IntegerList new_cell_ids,
                     IntegerList new_ref_ids,
                     int num_split) { 
+        
         for(int id = 0; id<num_split; id++)
         {
             if (id >= num_split) return;
@@ -490,14 +493,12 @@ public class Build extends GridAbstracts{
                 int child_id = __ffs(mask) - 1;
                 mask &= ~(1 << child_id);
                 new_ref_ids.set(start, ref); 
-                if(new_cell_ids.size() > 15)
-                    new_cell_ids.set(start, begin + child_id);
-                else
-                    new_cell_ids.set(start, child_id);
+                if(new_ref_ids.size() > begin) //not in the code
+                    new_cell_ids.set(start, begin + child_id);  
+               
                 start++;
             }
         }
-        
         
     }
     
@@ -684,9 +685,6 @@ public class Build extends GridAbstracts{
                 new_ref_ids, 
                 num_split);
         
-        System.out.println("cells id:     " +new_cell_ids);
-        System.out.println("no. cells: " +num_new_cells);
-        System.out.println(num_split);
         
         // Emission of the new cells
         Cell[] new_cells   = new Cell[num_new_cells + 0];

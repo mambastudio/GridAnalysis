@@ -28,6 +28,8 @@ public class Grid {
     public int shift;                      ///< Amount of bits to shift to get from the deepest level to the top-level
     public IntegerList offsets;               ///< Offset to each level of the voxel map octree
     
+    
+    //get cell index
     public int lookup_entry(Cell cell)
     {
         Vec2i voxel = new Vec2i(cell.min);
