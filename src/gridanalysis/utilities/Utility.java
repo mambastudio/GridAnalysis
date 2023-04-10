@@ -28,6 +28,9 @@ public class Utility {
             triangles.add(tri);
         }
         
+        //triangles.add(new Tri(new Vec2f(211.79f, 183.65f), new Vec2f(71.00f, 496.78f), new Vec2f(8.36f, 144.94f)));
+        //triangles.add(new Tri(new Vec2f(388.88f, 116.95f), new Vec2f(172.85f, 77.25f), new Vec2f(7.38f, 28.90f)));
+        
         //triangles.add(new Tri(new Vec2f(401.03f, 170.69f), new Vec2f(430.96f, 10.98f), new Vec2f(5.63f, 33.08f)));
         //triangles.add(new Tri(new Vec2f(417.81f, 299.59f), new Vec2f(385.65f, 185.33f), new Vec2f(488.00f, 468.06f)));
         

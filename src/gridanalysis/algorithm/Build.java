@@ -464,7 +464,6 @@ public class Build extends GridAbstracts{
     }
     
     /// Split references according to the given array of split masks
-    // THIS FUNCTION HAS TWO ISSUES AS SHOWN BELOW.
     public void split_refs(
                     IntegerList cell_ids,
                     IntegerList ref_ids,
@@ -492,10 +491,8 @@ public class Build extends GridAbstracts{
             while (mask != 0) {
                 int child_id = __ffs(mask) - 1;
                 mask &= ~(1 << child_id);
-                new_ref_ids.set(start, ref); 
-                if(new_ref_ids.size() > begin) //not in the code
-                    new_cell_ids.set(start, begin + child_id);  
-               
+                new_ref_ids.set(start, ref);                
+                new_cell_ids.set(start, begin + child_id);                 
                 start++;
             }
         }
@@ -669,28 +666,36 @@ public class Build extends GridAbstracts{
         start_split.shiftRight(1);        
         int num_new_refs = start_split.prefixSum(0, num_split + 1); 
         
+      
+        
         if(!(num_new_refs <= 4 * num_split))        
             throw new UnsupportedOperationException("num_new_refs: " +num_new_refs+ " should be <= " +4*num_split);
                 
         IntegerList new_ref_ids = new IntegerList(new int[num_new_refs * 2]);
         IntegerList new_cell_ids = new_ref_ids.getSubListFrom(num_new_refs);
-                
-        split_refs(
-                cell_ids.getSubListFrom(num_kept), 
-                ref_ids.getSubListFrom(num_kept), 
-                entries, 
-                split_masks, 
-                start_split, 
-                new_cell_ids, 
-                new_ref_ids, 
-                num_split);
+        
+        //not in original code, num_new_refs should always be bigger than previous level
+        boolean skip = false;
+        if(!levels.isEmpty() && num_new_refs < levels.back().num_refs)
+            skip = true;
+        //if(!skip) is not in original code
+        if(!skip)
+            split_refs(
+                    cell_ids.getSubListFrom(num_kept), 
+                    ref_ids.getSubListFrom(num_kept), 
+                    entries, 
+                    split_masks, 
+                    start_split, 
+                    new_cell_ids, 
+                    new_ref_ids, 
+                    num_split);
         
         
         // Emission of the new cells
         Cell[] new_cells   = new Cell[num_new_cells + 0];
         Entry[] new_entries = new Entry[num_new_cells + 1];
         emit_new_cells(entries, cells, new_cells, num_cells);
-        
+                
         for(int i = 0; i<num_new_cells + 1; i++)
             new_entries[i] = new Entry();
                 

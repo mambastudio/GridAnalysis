@@ -312,6 +312,10 @@ public class IntegerList extends IntListAbstract<IntegerList> {
         }
         else //both or one is sublist (that's why we don't override in the sublist)
         {            
+            //if both are empty, no point to swap
+            if(list.size() == 0 && this.size() == 0)
+                return;
+            
             compatibleCheck(list);
             int[] temp = trimCopy();
             set(0, list);
@@ -463,13 +467,14 @@ public class IntegerList extends IntListAbstract<IntegerList> {
 
     @Override
     public void transform(int fromIndex, int toIndex, IntegerList output, IntFunction<Integer> function) {
-        rangeCheckBound(fromIndex, toIndex, size);     
-        compatibleCheck(output);
+        rangeCheckBound(fromIndex, toIndex, size);    //check if fromIndex and toIndex are in range of this list 
+        sizeRangeCheck(fromIndex, toIndex, output.size()); //check if output size is larger than range fromIndex to toIndex
         final int expectedModCount = modCount;
+        
         IntStream.range(fromIndex, toIndex)
                 .parallel()
-                .forEach(i->{
-                    output.array[i] = function.apply(get(i));
+                .forEach(i->{                    
+                    output.set(i - fromIndex, function.apply(get(i))); //output usually starts at zero, hence subtract by fromIndex
                 });
         if (modCount != expectedModCount) {
           throw new ConcurrentModificationException();

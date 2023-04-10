@@ -30,21 +30,24 @@ public class Grid {
     
     
     //get cell index
-    public int lookup_entry(Cell cell)
+    public int lookup_entry_cell(Cell cell)
     {
         Vec2i voxel = new Vec2i(cell.min);
-        Entry entry = entries[(voxel.x >> shift) + dims.x * (voxel.y >> shift)];
+        //Entry entry = entries[(voxel.x >> shift) + dims.x * (voxel.y >> shift)];
+        Vec2i dimss = dims.rightShift(shift);
+        Entry entry = entries[(voxel.x >> shift) + dimss.x * (voxel.y >> shift)];
         int log_dim = entry.log_dim, d = log_dim;
+        
         while (log_dim != 0) {
             int begin = entry.begin;
             int mask = (1 << log_dim) - 1;
-
             //int k = (voxel >> int(shift - d)) & mask;
-            Vec2i k = voxel.rightShift(shift -d).and(mask);
-            entry = entries[begin + k.x + (k.y  << log_dim)];
+            Vec2i k = voxel.rightShift(shift -d).and(mask);            
+            entry = entries[begin + k.x + (k.y  << log_dim)]; 
             log_dim = entry.log_dim;
-            d += log_dim;
+            d += log_dim;            
         }
+        
         return entry.begin;
     }
 }

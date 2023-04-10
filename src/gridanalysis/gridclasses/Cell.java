@@ -36,7 +36,8 @@ public class Cell {
     
     @Override
     public final String toString() {
-        return String.format("(min %1s, max %1s, begin %5d, end %5d)", min, max, begin, end);
+        //return String.format("(min %1s, max %1s, begin %5d, end %5d)", min, max, begin, end);
+        return Boolean.toString(hasReference());
     }
     
     public Cell copy()

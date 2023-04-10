@@ -394,6 +394,6 @@ public class Merge extends GridAbstracts{
         }
        
        
-        engine.setMCellInfo(MCellInfo.getCells(engine, grid, grid.bbox, grid.dims, this.grid_shift));
+        //engine.setMCellInfo(MCellInfo.getCells(engine, grid, grid.bbox, grid.dims, this.grid_shift));
     }
 }

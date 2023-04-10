@@ -24,7 +24,7 @@ import static java.util.stream.Collectors.partitioningBy;
 public class Test {
     public static void main(String... args)
     {
-        test14();
+        test10();
        
         
     }
@@ -153,19 +153,19 @@ public class Test {
     
     private static void test10()
     {
-        int size = 20;
-        //int size_half = size/2;
         
-        IntegerList list = new IntegerList(new Random().ints(size, 0, 100).toArray());       
-        IntegerList flags = list.transform(i-> i < 50 ? 1 : 0);
+        IntegerList list = new IntegerList(new int[]{3, 3, 3, 3, 3, 3, 3, 3, 3, 3}); 
+        //IntegerList flags = new IntegerList(new int[5]);
+        //list.transform(5, 9, flags, i-> i == 3 ? 1 : 0);
         
+        //System.out.println(list);
+        //System.out.println(flags);
+        
+        IntegerList sublist = list.getSubList(0, 5);
+        sublist.transform(sublist, i -> i == 3 ? 1 : 0);        
         System.out.println(list);
-        System.out.println(flags);
-        
-        IntegerList output = new IntegerList(new int[21]);
-        
-        list.partition_stable(10, output, flags);
-        System.out.println(output);
+        sublist.shiftRight(1);
+        System.out.println(list);
     }
 
     private static void test11()

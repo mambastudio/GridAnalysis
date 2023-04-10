@@ -17,6 +17,7 @@ import gridanalysis.jfx.MEngine;
 import gridanalysis.utilities.Utility;
 import gridanalysis.utilities.list.IntegerList;
 import java.util.ArrayList;
+import java.util.Arrays;
 import javafx.geometry.VPos;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -167,8 +168,7 @@ public class MCellInfo {
         ArrayList<MCellInfo> cells = new ArrayList();
         
         for (int i = 0; i<grid.num_cells; i++) {
-            Cell cell = grid.cells.get(i);
-            if(cell != null)
+            Cell cell = grid.cells.get(i);           
             {
                 Vec2f cellExtents = Utility.getCellSize(dims.leftShift(shift), grid_bound);
 
@@ -179,7 +179,8 @@ public class MCellInfo {
 
                 MCellInfo info = new MCellInfo(engine.getGraphicsContext(), cellBound);
                 
-                info.object = grid.lookup_entry(cell);
+                
+                info.object = grid.lookup_entry_cell(cell);
 
                 cells.add(info);  
            
@@ -219,5 +220,22 @@ public class MCellInfo {
         ctx.fillText(text,
             x + w / 2,
             y + h / 2);
+    }
+    
+    public static int lookup_entry(Entry[] entries, int shift, Vec2i dims, Vec2i voxel) {
+        
+        Entry entry = entries[(voxel.x >> shift) + dims.x * (voxel.y >> shift)];
+        int log_dim = entry.log_dim, d = log_dim;
+        while (log_dim != 0) {
+            int begin = entry.begin;
+            int mask = (1 << log_dim) - 1;
+
+            //int k = (voxel >> int(shift - d)) & mask;
+            Vec2i k = voxel.rightShift(shift -d).and(mask);
+            entry = entries[begin + k.x + (k.y  << log_dim)];
+            log_dim = entry.log_dim;
+            d += log_dim;
+        }
+        return entry.begin;
     }
 }

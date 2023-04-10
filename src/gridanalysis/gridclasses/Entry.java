@@ -13,6 +13,9 @@ import gridanalysis.coordinates.Vec4i;
  * @author user
  */
 public class Entry {
+    public static final int LOG_DIM_BITS = 2;
+    public static final int BEGIN_BITS = 32 - LOG_DIM_BITS;
+    
     public int log_dim;    ///< Logarithm of the dimensions of the entry (0 for leaves)
     public int begin;      ///< Next entry index (cell index for leaves)
     
@@ -45,7 +48,7 @@ public class Entry {
     @Override
     public String toString()
     {
-        //return "log_dim " +log_dim+ "\n"
+        //return "log_dim " +log_dim+ " "
         //     + " begin " +begin;
         return "" +begin;
     }

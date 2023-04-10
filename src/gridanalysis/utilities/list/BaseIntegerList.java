@@ -26,6 +26,8 @@ public interface BaseIntegerList<BaseIntList extends BaseIntegerList>
     
     default BaseIntList copyTo(BaseIntList list)
     {
+        if(this.size() == 0)
+            return list;
         //range checks will be done in the implementation of set
         list.set(this); 
         return list;
@@ -33,6 +35,8 @@ public interface BaseIntegerList<BaseIntList extends BaseIntegerList>
     
     default BaseIntList copyTo(int n, BaseIntList list)
     {
+        if(this.size() == 0)
+            return list;
         list.set(0, this.trimCopy(0, n));
         return list;
     }

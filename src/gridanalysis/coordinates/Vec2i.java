@@ -17,9 +17,12 @@ public class Vec2i {
     public Vec2i(int xy){this.x = xy; this.y = xy;}
     public Vec2i(int x, int y){this.x = x; this.y = y;}
     public Vec2i(Vec2i v){this.x = v.x; this.y = v.y;}
+    public Vec2i(Vec2f xy){this.x = (int) xy.x; this.y = (int) xy.y;}
     
     public static Vec2i min( Vec2i a,  Vec2i b){ return new Vec2i(Math.min(a.x, b.x), Math.min(a.y, b.y));}
     public static Vec2i max( Vec2i a,  Vec2i b) { return new Vec2i(Math.max(a.x, b.x), Math.max(a.y, b.y)); }
+    
+    public static Vec2i clamp(Vec2i a, Vec2i b, Vec2i c){return new Vec2i(Math.min(Math.max(a.x, b.x), c.x), Math.min(Math.max(a.y, b.y), c.y));}
     
     public Vec2i mul(Vec2i a){return new Vec2i(x * a.x, y * a.y); }
     public Vec2i mul(int a){return new Vec2i(x * a, y * a); }
