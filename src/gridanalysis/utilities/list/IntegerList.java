@@ -332,20 +332,7 @@ public class IntegerList extends IntListAbstract<IntegerList> {
         array[index1] = get(index2);
         array[index2] = temp;        
     }
-    
-    @Override
-    public int find(int first, int end, int value)
-    {
-        int flags_it = -1;
-        for (int i = 0; i < size(); i++) {
-            if (get(i) == value) {
-                flags_it = i;
-                break;
-            }
-        }
-        return flags_it;
-    }
-    
+            
     //Parallel Butterfly Sorting Algorithm on GPU by Bilal et al    
     @Override
     protected void sort_pairs(int fromIndex, int toIndex, IntegerList values, BiPredicate<Integer, Integer> op)

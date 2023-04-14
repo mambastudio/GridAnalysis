@@ -57,10 +57,7 @@ public abstract class IntListAbstract<BaseIntList extends BaseIntegerList> imple
     
     public void transform(BaseIntList output, IntFunction<Integer> function){transform(0, size(), output, function);}
     public abstract void transform(int fromIndex, int toIndex, BaseIntList output, IntFunction<Integer> function);
-        
-    public int find(int value){return find(0, size(), value);}; //O(n) to be removed?
-    public abstract int find(int first, int end, int value);    
-    
+            
     public void fill(int value){fill(0, size(), value);}
     public abstract void fill(int fromIndex, int toIndex, int value);    
     
@@ -70,7 +67,7 @@ public abstract class IntListAbstract<BaseIntList extends BaseIntegerList> imple
     @Override
     public abstract String toString();
     
-    //CHECK IF TO BE DELETED. This is somehow similar but not exact to rangeCheckBound(int fromIndex, int toIndex, int size)
+    //this only checks if size of fromIndex to toIndex is within range irrespective of where fromIndex starts (don't confuse with rangeCheckBound)
     protected final void sizeRangeCheck(int fromIndex, int toIndex, int size)
     {
         if((toIndex - fromIndex) > size)

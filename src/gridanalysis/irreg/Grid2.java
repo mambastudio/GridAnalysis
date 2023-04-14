@@ -165,9 +165,21 @@ public class Grid2 {
         }
         return pos;
     }
+        
+    public static int find(IntegerList list, int first, int end, int value)
+    {
+        int flags_it = -1;
+        for (int i = 0; i < list.size(); i++) {
+            if (list.get(i) == value) {
+                flags_it = i;
+                break;
+            }
+        }
+        return flags_it;
+    }
     
     public static void remove_invalid_references(IntegerList flags, ObjectList<Ref> refs, int first_ref) {              
-        int flags_it = flags.find(0, flags.end(), 0);
+        int flags_it = find(flags, 0, flags.end(), 0);
         if (flags_it > 0 && flags_it != flags.end()) {
             
             int refs_it = first_ref + flags_it;            

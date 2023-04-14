@@ -5,7 +5,6 @@
  */
 package gridanalysis.algorithm;
 
-import gridanalysis.coordinates.Vec2i;
 import gridanalysis.coordinates.Vec4i;
 import gridanalysis.gridclasses.Entry;
 import gridanalysis.gridclasses.Grid;
@@ -15,7 +14,6 @@ import gridanalysis.utilities.BitUtility;
 import gridanalysis.utilities.list.IntegerList;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import java.util.Arrays;
 
 /**
  *
