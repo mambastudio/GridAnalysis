@@ -7,32 +7,46 @@ package gridanalysis.algorithm;
 
 import gridanalysis.gridclasses.Grid;
 import gridanalysis.gridclasses.Tri;
+import gridanalysis.jfx.MEngine;
 
 /**
  *
  * @author user
  */
-public interface HagridConstruction {
-    /// Builds an initial irregular grid.
-    /// The building process starts by creating a uniform grid of density 'top_density',
-    /// and then proceeds to compute an independent resolution in each of its cells
-    /// (using the second-level density 'snd_density').
-    /// In each cell, an octree depth is computed from these independent resolutions
-    /// and the primitive references are split until every cell has reached its maximum depth.
-    /// The voxel map follows the octree structure.
-    public void build_grid(Tri[] tris, int num_tris, Grid grid, float top_density, float snd_density);
+public class HagridConstruction implements GridConstruction{
+    private final MEngine engine;
+    public HagridConstruction(MEngine engine)
+    {
+        this.engine = engine;
+    }
+    
+    public Grid initialiseGrid(Tri[] tris)
+    {
+        Hagrid hagrid = new Hagrid();
+        
+        build_grid(hagrid, tris);
+        merge_grid(hagrid);
+        flatten_grid(hagrid);
+        
+        return hagrid.getIrregularGrid();
+    }
 
-    /// Performs the neighbor merging optimization (merging cells according to the SAH).
-    public void merge_grid(Grid grid, float alpha);
+    @Override
+    public void build_grid(Hagrid hagrid, Tri[] tris) {
+        Build build = new Build(engine, hagrid);
+        build.build_grid(tris, tris.length);
+    }
 
-    /// Flattens the voxel map to speed up queries.
-    /// Once this optimization is performed, the voxel map no longer follows an octree structure.
-    /// Each inner node of the voxel map now may have up to 1 << (3 * (1 << Entry::LOG_DIM_BITS - 1)) children.
-    public void flatten_grid(Grid grid);
+    @Override
+    public void merge_grid(Hagrid hagrid) {
+        Merge build = new Merge(engine, hagrid);
+        build.merge_grid();
+    }
 
-    /// Performs the cell expansion optimization (expands cells over neighbors that share the same set of primitives).
-    public void expand_grid(Grid grid, Tri[] tris, int iters);
-
-    /// Tries to compress the grid by using sentinels in the reference array and using 16-bit cell dimensions. Returns true on success, otherwise false.
-    public boolean compress_grid(Grid grid);
+    @Override
+    public void flatten_grid(Hagrid hagrid) {
+        Flatten flatten = new Flatten(engine, hagrid);
+        flatten.flatten_grid();
+    }
+    
 }

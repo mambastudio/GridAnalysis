@@ -54,7 +54,7 @@ public class Tri {
     }
     
     public static boolean plane_overlap_box(Vec2f n, float d, Vec2f min, Vec2f max)
-    {
+    {              
         Vec2f first = new Vec2f(
                         n.x > 0 ? min.x : max.x,
                         n.y > 0 ? min.y : max.y);
@@ -65,8 +65,10 @@ public class Tri {
         
         float d0 = Vec2f.dot(n, first) - d;
         float d1 = Vec2f.dot(n, last)  - d;
-        
+       
+               
         return d1 * d0 <= 0.0f;
+        
     }
     
     public static boolean axis_test_z( Vec2f half_size,

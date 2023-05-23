@@ -5,10 +5,8 @@
  */
 package gridanalysis.jfx;
 
-import gridanalysis.algorithm.Build;
 import gridanalysis.algorithm.EngineAbstract;
-import gridanalysis.algorithm.Flatten;
-import gridanalysis.algorithm.Merge;
+import gridanalysis.algorithm.HagridConstruction;
 import gridanalysis.coordinates.Vec2f;
 import gridanalysis.gridclasses.Grid;
 import gridanalysis.gridclasses.Tri;
@@ -32,12 +30,8 @@ public class MEngine implements EngineAbstract{
     ArrayList<Tri> triangles;
     
     ArrayList<MCellInfo> cellInfo = new ArrayList();
-    
-    Grid grid = new Grid();
-    float top_density = 0.12f;
-    float snd_density = 3.2f;
-    float alpha = 0.995f;
-    int exp_iters = 3;
+    Grid grid;
+    //Hagrid hagrid = new Hagrid();
     
     @Override
     public void draw()
@@ -64,19 +58,9 @@ public class MEngine implements EngineAbstract{
         
         Tri[] tris = new Tri[triangles.size()];
         triangles.toArray(tris);
-        
-        Build build = new Build(this);
-        build.build_grid((Tri[]) tris, triangles.size(), grid, top_density, snd_density);
-        
-        Merge merge = new Merge(this);
-        merge.merge_grid(grid, alpha);
-        
-        Flatten flatten = new Flatten(this);
-        flatten.flatten_grid(grid);
-        
-        
-        
-        //flatten
+       
+        HagridConstruction hagridConstruction = new HagridConstruction(this);
+        grid = hagridConstruction.initialiseGrid(tris);      
         
     }    
     

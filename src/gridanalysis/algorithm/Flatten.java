@@ -7,7 +7,6 @@ package gridanalysis.algorithm;
 
 import gridanalysis.coordinates.Vec4i;
 import gridanalysis.gridclasses.Entry;
-import gridanalysis.gridclasses.Grid;
 import gridanalysis.jfx.MEngine;
 import gridanalysis.jfx.shape.MCellInfo;
 import gridanalysis.utilities.BitUtility;
@@ -22,11 +21,14 @@ import static java.lang.Math.min;
 public class Flatten extends GridAbstracts{
     private final MEngine engine;
     
+    private final Hagrid hagrid;
+    
     int flat_levels = (1 << Entry.LOG_DIM_BITS) - 1;
     
-    public Flatten(MEngine engine)
+    public Flatten(MEngine engine, Hagrid hagrid)
     {
         this.engine = engine;
+        this.hagrid = hagrid;
     }
     
     private Vec4i getVec4i(Entry e1, Entry e2, Entry e3, Entry e4)
@@ -160,27 +162,27 @@ public class Flatten extends GridAbstracts{
         }
     }
     
-    public void flatten_grid(Grid grid) {
-        IntegerList depths = new IntegerList(new int[grid.num_entries + 1]);  
+    public void flatten_grid() {
+        IntegerList depths = new IntegerList(new int[hagrid.getIrregularGrid().num_entries + 1]);  
         // Flatten the voxel map
-        for (int i = grid.shift; i >= 0; i--) {
-            int first = i > 0 ? grid.offsets.get(i - 1) : 0;
-            int last  = grid.offsets.get(i);
+        for (int i = hagrid.getIrregularGrid().shift; i >= 0; i--) {
+            int first = i > 0 ? hagrid.getIrregularGrid().offsets.get(i - 1) : 0;
+            int last  = hagrid.getIrregularGrid().offsets.get(i);
             int num_entries = last - first; //num of entries in this level
             
             // Collapse voxel map entries when possible
-            collapse_entries(grid.entries, first, num_entries);
-            compute_depths(grid.entries, depths, first, num_entries);
+            collapse_entries(hagrid.getIrregularGrid().entries, first, num_entries);
+            compute_depths(hagrid.getIrregularGrid().entries, depths, first, num_entries);
         }
         
         // Compute the insertion position of each flattened level, and the total new number of entries
-        IntegerList start_entries = new IntegerList(new int[grid.num_entries + 1]);
-        IntegerList level_offsets = new IntegerList(new int[grid.shift]);        
-        int total_entries = grid.offsets.get(0);
+        IntegerList start_entries = new IntegerList(new int[hagrid.getIrregularGrid().num_entries + 1]);
+        IntegerList level_offsets = new IntegerList(new int[hagrid.getIrregularGrid().shift]);        
+        int total_entries = hagrid.getIrregularGrid().offsets.get(0);
         
-        for (int i = 0; i < grid.shift; i += flat_levels) {
-            int first = i > 0 ? grid.offsets.get(i - 1) : 0;
-            int last  = grid.offsets.get(i);
+        for (int i = 0; i < hagrid.getIrregularGrid().shift; i += flat_levels) {
+            int first = i > 0 ? hagrid.getIrregularGrid().offsets.get(i - 1) : 0;
+            int last  = hagrid.getIrregularGrid().offsets.get(i);
             int num_entries = last - first;
             
             depths.getSubList(first, last + 1).transform(0, num_entries + 1, start_entries.getSubList(first, last + 1), d -> d > 0 ? 1 << (min(d, flat_levels) * 2) : 0);
@@ -196,20 +198,20 @@ public class Flatten extends GridAbstracts{
         Entry[] new_entries = new Entry[total_entries];        
         IntegerList new_offsets = new IntegerList();
         
-        System.out.println(grid.entries.length);
+        System.out.println(hagrid.getIrregularGrid().entries.length);
         System.out.println(new_entries.length);
         
-        copy_top_level(grid.entries, start_entries, depths, new_entries, grid.offsets.get(0));
+        copy_top_level(hagrid.getIrregularGrid().entries, start_entries, depths, new_entries, hagrid.getIrregularGrid().offsets.get(0));
         
         
-        for (int i = 0; i < grid.shift; i += flat_levels) {
-            int first = i > 0 ? grid.offsets.get(i - 1) : 0;
-            int last  = grid.offsets.get(i);
+        for (int i = 0; i < hagrid.getIrregularGrid().shift; i += flat_levels) {
+            int first = i > 0 ? hagrid.getIrregularGrid().offsets.get(i - 1) : 0;
+            int last  = hagrid.getIrregularGrid().offsets.get(i);
             int num_entries = last - first;
                         
-            int next_offset = i + flat_levels < grid.shift ? level_offsets.get(i + flat_levels) : 0;
+            int next_offset = i + flat_levels < hagrid.getIrregularGrid().shift ? level_offsets.get(i + flat_levels) : 0;
             
-            flatten_level(  grid.entries,
+            flatten_level(  hagrid.getIrregularGrid().entries,
                             start_entries,
                             depths,
                             new_entries,
@@ -223,13 +225,13 @@ public class Flatten extends GridAbstracts{
         
         new_offsets.add(total_entries);
                 
-        grid.entries = new_entries; //std::swap(new_entries, grid.entries);
-        grid.offsets = new_offsets; //std::swap(new_offsets, grid.offsets);
+        hagrid.getIrregularGrid().entries = new_entries; //std::swap(new_entries, grid.entries);
+        hagrid.getIrregularGrid().offsets = new_offsets; //std::swap(new_offsets, grid.offsets);
         
-        grid.num_entries = total_entries;
+        hagrid.getIrregularGrid().num_entries = total_entries;
         
        
-        engine.setMCellInfo(MCellInfo.getCells(engine, grid, grid.bbox, grid.dims, grid.shift));
+        engine.setMCellInfo(MCellInfo.getCells(engine, hagrid.getIrregularGrid(), hagrid.getIrregularGrid().bbox, hagrid.getIrregularGrid().dims, hagrid.getIrregularGrid().shift));
     }
     
 }
