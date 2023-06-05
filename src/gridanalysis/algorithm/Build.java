@@ -170,7 +170,7 @@ public class Build extends GridAbstracts{
 
             // If the cell is subdivided, write the first sub-cell index into the current entry
             entry.begin = entry.log_dim != 0 ? start : id;
-            //entries[id] = entry;
+            entries[id] = entry;
         }
     }
     
@@ -270,8 +270,6 @@ public class Build extends GridAbstracts{
             }
             int next_id = cell_ids.get(id + 1);
             
-            
-
             if (cell_id != next_id) {
                 cells[cell_id].end   = id + 1;
                 cells[next_id].begin = id + 1;
@@ -279,6 +277,8 @@ public class Build extends GridAbstracts{
             }
         }
     }
+    
+    
        
     /// Emit the new references by inserting existing ones into the sub-levels
     public void emit_new_refs(
@@ -405,6 +405,8 @@ public class Build extends GridAbstracts{
                                     IntegerList split_masks,
                                     int num_split) { 
         
+        
+        
         for(int id = 0; id<num_split; id++)
         {            
             if (id >= num_split) return;
@@ -426,11 +428,7 @@ public class Build extends GridAbstracts{
             int mask = 0xF;
 
             // Optimization: Test against half spaces first
-            BBox ref_bb = prim.bbox();
-            // Slightly enlarge the bounding box of the grid
-            Vec2f extents = ref_bb.extents();
-            ref_bb.min = ref_bb.min.sub(extents.mul(0.001f));
-            ref_bb.max = ref_bb.max.add(extents.mul(0.001f));
+            BBox ref_bb = prim.bbox();            
             if (ref_bb.min.x > cell_max.x ||
                 ref_bb.max.x < cell_min.x) mask  = 0;
             if (ref_bb.min.x >   middle.x) mask &= 0xAA; //10101010
@@ -521,6 +519,9 @@ public class Build extends GridAbstracts{
                 ref_ids.set(id, -1);                
             }                
         }
+        
+        System.out.println(ref_ids);
+        System.out.println(num_refs);
     }
     
     public void first_build_iter(
@@ -699,12 +700,8 @@ public class Build extends GridAbstracts{
         level.entries   = new_entries;         
         level.num_cells = num_new_cells;     
         
-        
-        
         levels.add(level);
         
-        
-                
         return true;
     }
     
