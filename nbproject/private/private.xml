@@ -22,6 +22,7 @@
             <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/Build.java</file>
             <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/GridAbstracts.java</file>
             <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/gridclasses/BBox.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/Merge.java</file>
         </group>
         <group>
             <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/gridclasses/Cell.java</file>
@@ -32,11 +33,7 @@
             <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/Merge.java</file>
         </group>
         <group>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/gridclasses/Cell.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/coordinates/Vec2i.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/Build.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/GridAbstracts.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/gridclasses/BBox.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/gridclasses/MergeBuffers.java</file>
             <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/Merge.java</file>
         </group>
     </open-files>
