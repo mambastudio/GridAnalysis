@@ -31,6 +31,8 @@ public class MEngine implements EngineAbstract{
     
     ArrayList<MCellInfo> cellInfo = new ArrayList();
     Grid grid;
+    
+    MouseActivity mouseActivity;
     //Hagrid hagrid = new Hagrid();
     
     @Override
@@ -84,5 +86,10 @@ public class MEngine implements EngineAbstract{
         this.cellInfo.clear();
         for(ArrayList<MCellInfo> cellInfoList : cellInfoArray)
             this.cellInfo.addAll(cellInfoList);
+    }
+
+    @Override
+    public void setMouseActivity(MouseActivity mouseActivity) {
+        this.mouseActivity = mouseActivity;
     }
 }

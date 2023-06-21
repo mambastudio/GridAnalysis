@@ -189,5 +189,10 @@ public class MEngine2 implements EngineAbstract{
         for(ArrayList<MCellInfo> cellInfoArrayList : cellInfoArray)
             this.cellInfoList.addAll(cellInfoArrayList);
     }
+
+    @Override
+    public void setMouseActivity(MouseActivity mouseActivity) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
     
 }

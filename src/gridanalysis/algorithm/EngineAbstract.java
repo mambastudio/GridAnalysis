@@ -5,6 +5,7 @@
  */
 package gridanalysis.algorithm;
 
+import gridanalysis.jfx.MouseActivity;
 import gridanalysis.jfx.shape.MCellInfo;
 import java.util.ArrayList;
 import javafx.scene.canvas.GraphicsContext;
@@ -21,4 +22,5 @@ public interface EngineAbstract {
     public GraphicsContext getGraphicsContext();
     
     public void setMCellInfo(ArrayList<MCellInfo>... cellInfoArray);    
+    public void setMouseActivity(MouseActivity mouseActivity);
 }

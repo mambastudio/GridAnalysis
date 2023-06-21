@@ -8,32 +8,38 @@
             <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/Build.java</file>
             <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/GridAbstracts.java</file>
             <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/gridclasses/BBox.java</file>
-        </group>
-        <group>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/gridclasses/Cell.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/coordinates/Vec2i.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/Build.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/GridAbstracts.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/gridclasses/BBox.java</file>
-        </group>
-        <group>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/gridclasses/Cell.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/coordinates/Vec2i.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/Build.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/GridAbstracts.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/gridclasses/BBox.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/Merge.java</file>
-        </group>
-        <group>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/gridclasses/Cell.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/coordinates/Vec2i.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/Build.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/GridAbstracts.java</file>
-            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/gridclasses/BBox.java</file>
             <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/Merge.java</file>
         </group>
         <group>
             <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/gridclasses/MergeBuffers.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/Merge.java</file>
+        </group>
+        <group>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/coordinates/Vec2i.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/GridAbstracts.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/gridclasses/MergeBuffers.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/Merge.java</file>
+        </group>
+        <group>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/coordinates/Vec2i.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/GridAbstracts.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/gridclasses/MergeBuffers.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/Merge.java</file>
+        </group>
+        <group>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/jfx/MEngine2.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/gridclasses/Grid.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/gridclasses/Entry.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/coordinates/Vec4i.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/coordinates/Vec2f.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/EngineAbstract.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/Flatten.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/jfx/MouseActivity.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/utilities/list/IntegerList.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/jfx/MEngine.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/GridAbstracts.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/jfx/MCanvas.java</file>
+            <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/GridAnalysis.java</file>
             <file>file:/C:/Users/user/Documents/GitHub/GridAnalysis/src/gridanalysis/algorithm/Merge.java</file>
         </group>
     </open-files>

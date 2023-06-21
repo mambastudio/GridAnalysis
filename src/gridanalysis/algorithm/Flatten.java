@@ -23,7 +23,7 @@ public class Flatten extends GridAbstracts{
     
     private final Hagrid hagrid;
     
-    int flat_levels = (1 << Entry.LOG_DIM_BITS) - 1;
+    int flat_levels = (1 << Entry.LOG_DIM_BITS) - 1; //11
     
     public Flatten(MEngine engine, Hagrid hagrid)
     {
@@ -31,6 +31,7 @@ public class Flatten extends GridAbstracts{
         this.hagrid = hagrid;
     }
     
+    //compress entries to int4 in this case Vec4i
     private Vec4i getVec4i(Entry e1, Entry e2, Entry e3, Entry e4)
     {
         int value1 = 0;
@@ -66,7 +67,7 @@ public class Flatten extends GridAbstracts{
             if (id >= num_entries) return;
 
             Entry entry = entries[first + id];
-            if (entry.log_dim != 0) {
+            if (entry.log_dim != 0) { //not a leaf
                 Vec4i ptr = getVec4i(entries[entry.begin], entries[entry.begin + 1], entries[entry.begin + 2], entries[entry.begin + 3]);
                 if (ptr.x == ptr.y &&
                     ptr.x == ptr.z &&
@@ -198,6 +199,7 @@ public class Flatten extends GridAbstracts{
         Entry[] new_entries = new Entry[total_entries];        
         IntegerList new_offsets = new IntegerList();
         
+        //check compression
         System.out.println(hagrid.getIrregularGrid().entries.length);
         System.out.println(new_entries.length);
         
