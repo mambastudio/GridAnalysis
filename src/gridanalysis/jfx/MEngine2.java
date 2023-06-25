@@ -47,6 +47,7 @@ public class MEngine2 implements EngineAbstract{
     float snd_density = 1.4f;
     float alpha = 0.995f;
     
+    MouseActivity mouseActivity;
     
     int exp_iters = 3;
 
@@ -192,7 +193,12 @@ public class MEngine2 implements EngineAbstract{
 
     @Override
     public void setMouseActivity(MouseActivity mouseActivity) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        this.mouseActivity = mouseActivity;
+    }
+
+    @Override
+    public void test() {
+        System.out.println("no test");
     }
     
 }

@@ -23,6 +23,8 @@
  */
 package gridanalysis.jfx;
 
+import gridanalysis.jfx.math.MTransform;
+import gridanalysis.jfx.math.MTransformGeneric;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Point2D;
@@ -84,6 +86,18 @@ public class MouseActivity {
     public float getYFloatPoint()
     {
         return (float) pressed.getY();
+    }
+    
+    public float getXFloatPoint(MTransformGeneric transform)
+    {
+        Point2D point = transform.transform(pressed);
+        return (float) point.getX();
+    }
+    
+    public float getYFloatPoint(MTransformGeneric transform)
+    {
+        Point2D point = transform.transform(pressed);
+        return (float) point.getY();
     }
     
     @Override

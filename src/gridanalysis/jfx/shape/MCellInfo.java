@@ -5,6 +5,7 @@
  */
 package gridanalysis.jfx.shape;
 
+import gridanalysis.algorithm.GridAbstracts;
 import gridanalysis.coordinates.Vec2f;
 import gridanalysis.coordinates.Vec2i;
 import gridanalysis.gridclasses.BBox;
@@ -179,8 +180,8 @@ public class MCellInfo {
 
                 MCellInfo info = new MCellInfo(engine.getGraphicsContext(), cellBound);
                 
-                
-                info.object = grid.lookup_entry_cell(cell);
+                Entry entry = grid.entries[(cell.min.x >> grid.grid_shift()) + cell.min.x * (cell.min.y >> grid.grid_shift())];
+                info.object = GridAbstracts.lookup_entry(grid.entries, grid.grid_shift(), grid.grid_dims().rightShift(grid.grid_shift()), cell.min);// grid.lookup_entry_cell(cell);
 
                 cells.add(info);  
            

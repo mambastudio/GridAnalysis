@@ -15,6 +15,7 @@ import gridanalysis.gridclasses.Level;
 import gridanalysis.gridclasses.Range;
 import gridanalysis.gridclasses.Tri;
 import gridanalysis.jfx.MEngine;
+import gridanalysis.jfx.shape.MCellInfo;
 import gridanalysis.utilities.list.IntegerList;
 import gridanalysis.utilities.list.ObjectList;
 import static java.lang.Math.cbrt;
@@ -520,8 +521,6 @@ public class Build extends GridAbstracts{
             }                
         }
         
-        System.out.println(ref_ids);
-        System.out.println(num_refs);
     }
     
     public void first_build_iter(
@@ -636,7 +635,7 @@ public class Build extends GridAbstracts{
         levels.back().cell_ids = cell_ids;
         levels.back().num_kept = num_kept;
         
-        if (num_new_cells == 0) {
+        if (num_new_cells == 0) {            
             // Exit here because no new reference will be emitted            
             return false;
         }
@@ -671,7 +670,14 @@ public class Build extends GridAbstracts{
         if(!levels.isEmpty() && num_new_refs < levels.back().num_refs)
             skip = true;
         //if(!skip) is not in original code
-        if(!skip)
+       // if(!skip)
+        {
+            if(!levels.isEmpty())
+            {
+                System.out.println("new refs: " +num_new_cells);
+                System.out.println("old refs: " +levels.back().num_cells);
+            }
+            
             split_refs(
                     cell_ids.getSubListFrom(num_kept), 
                     ref_ids.getSubListFrom(num_kept), 
@@ -681,6 +687,7 @@ public class Build extends GridAbstracts{
                     new_cell_ids, 
                     new_ref_ids, 
                     num_split);
+        }
         
         
         // Emission of the new cells
@@ -848,7 +855,8 @@ public class Build extends GridAbstracts{
         hagrid.getIrregularGrid().bbox = grid_bb;
         hagrid.getIrregularGrid().dims = dims;
         
-        //engine.setMCellInfo(MCellInfo.getCells(engine, grid, grid.bbox, grid.dims, this.grid_shift));
+        engine.setMCellInfo(MCellInfo.getCells(engine, hagrid.getIrregularGrid(), hagrid.getIrregularGrid().bbox, hagrid.getIrregularGrid().dims, hagrid.getIrregularGrid().shift));
+        
     }
 
 }

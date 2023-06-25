@@ -23,4 +23,6 @@ public interface EngineAbstract {
     
     public void setMCellInfo(ArrayList<MCellInfo>... cellInfoArray);    
     public void setMouseActivity(MouseActivity mouseActivity);
+    
+    public void test();
 }

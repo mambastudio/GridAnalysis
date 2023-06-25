@@ -34,6 +34,11 @@ public class Cell {
         return (end - begin) > 0;
     }
     
+    public Vec2i extents()
+    {
+        return max.sub(min);
+    }
+    
     @Override
     public final String toString() {
         //return String.format("(min %1s, max %1s, begin %5d, end %5d)", min, max, begin, end);

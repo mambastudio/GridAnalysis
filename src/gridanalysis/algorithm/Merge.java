@@ -12,6 +12,7 @@ import gridanalysis.gridclasses.Entry;
 import gridanalysis.gridclasses.Grid;
 import gridanalysis.gridclasses.MergeBuffers;
 import gridanalysis.jfx.MEngine;
+import gridanalysis.jfx.shape.MCellInfo;
 import gridanalysis.utilities.list.IntegerList;
 import gridanalysis.utilities.list.ObjectList;
 import static java.lang.Math.max;
@@ -391,6 +392,6 @@ public class Merge extends GridAbstracts{
         }
        
        
-        //engine.setMCellInfo(MCellInfo.getCells(engine, grid, grid.bbox, grid.dims, this.grid_shift));
+        //engine.setMCellInfo(MCellInfo.getCells(engine, hagrid.getIrregularGrid(), hagrid.getIrregularGrid().bbox, hagrid.getIrregularGrid().dims, hagrid.getIrregularGrid().shift));
     }
 }

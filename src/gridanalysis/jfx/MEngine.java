@@ -6,8 +6,11 @@
 package gridanalysis.jfx;
 
 import gridanalysis.algorithm.EngineAbstract;
+import gridanalysis.algorithm.GridAbstracts;
 import gridanalysis.algorithm.HagridConstruction;
 import gridanalysis.coordinates.Vec2f;
+import gridanalysis.coordinates.Vec2i;
+import gridanalysis.gridclasses.Cell;
 import gridanalysis.gridclasses.Grid;
 import gridanalysis.gridclasses.Tri;
 import gridanalysis.jfx.math.MTransform;
@@ -63,7 +66,7 @@ public class MEngine implements EngineAbstract{
        
         HagridConstruction hagridConstruction = new HagridConstruction(this);
         grid = hagridConstruction.initialiseGrid(tris);      
-        
+        System.out.println("grid size: " +grid.bbox);
     }    
     
     @Override
@@ -91,5 +94,37 @@ public class MEngine implements EngineAbstract{
     @Override
     public void setMouseActivity(MouseActivity mouseActivity) {
         this.mouseActivity = mouseActivity;
+    }
+
+    @Override
+    public void test() {
+        Vec2f mousePoint = new Vec2f(
+                mouseActivity.getXFloatPoint(transform.inverseTransform()), 
+                mouseActivity.getYFloatPoint(transform.inverseTransform()));
+        
+        Vec2i   grid_dims   = grid.dims.leftShift(grid.shift);
+        int     grid_shift  = grid.shift;
+        
+        if(grid.bbox.is_inside(mousePoint))
+        {
+            Vec2f comp_voxel = compute_voxel(mousePoint);    
+            Vec2i voxel = Vec2i.clamp(new Vec2i(comp_voxel), new Vec2i(), grid_dims.sub(1));
+            int entry = GridAbstracts.lookup_entry(grid.entries, grid_shift, grid_dims.rightShift(grid_shift), voxel);
+            Cell cell = grid.cells.get(entry);
+            
+            System.out.println(entry);
+            System.out.println("cell has reference: " +cell.hasReference());
+            //System.out.println(cell.extents());
+            
+        }
+    }
+    
+    private Vec2f compute_voxel(Vec2f point)
+    {
+        Vec2f extents = grid.bbox.extents();
+        Vec2i dims = grid.dims.leftShift(grid.shift);
+        Vec2f grid_inv  = new Vec2f(dims).div(extents);
+        
+        return point.sub(grid.bbox.min).mul(grid_inv);
     }
 }

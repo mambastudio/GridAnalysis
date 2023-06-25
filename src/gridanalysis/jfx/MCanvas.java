@@ -51,7 +51,7 @@ public class MCanvas extends Region{
     public void mousePressed(MouseEvent e)
     {     
         mouseActivity.setPoint(new Point2D(e.getX(), e.getY()));  
-        System.out.println(mouseActivity);
+        engine.test();
     }
     
     public void mouseDragged(MouseEvent e)

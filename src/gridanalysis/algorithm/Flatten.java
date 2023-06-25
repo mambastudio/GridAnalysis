@@ -187,8 +187,7 @@ public class Flatten extends GridAbstracts{
             int num_entries = last - first;
             
             depths.getSubList(first, last + 1).transform(0, num_entries + 1, start_entries.getSubList(first, last + 1), d -> d > 0 ? 1 << (min(d, flat_levels) * 2) : 0);
-            start_entries.getSubList(first, last + 1).shiftRight(1);
-            
+            start_entries.getSubList(first, last + 1).shiftRight(1);            
             int num_new_entries = start_entries.getSubList(first, last + 1).prefixSum();
             
             level_offsets.set(i, total_entries);

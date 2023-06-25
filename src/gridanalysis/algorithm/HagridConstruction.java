@@ -39,14 +39,14 @@ public class HagridConstruction implements GridConstruction{
 
     @Override
     public void merge_grid(Hagrid hagrid) {
-        Merge build = new Merge(engine, hagrid);
-        build.merge_grid();
+        //Merge build = new Merge(engine, hagrid);
+        //build.merge_grid();
     }
 
     @Override
     public void flatten_grid(Hagrid hagrid) {
-        Flatten flatten = new Flatten(engine, hagrid);
-        flatten.flatten_grid();
+        //Flatten flatten = new Flatten(engine, hagrid);
+        //flatten.flatten_grid();
     }
     
 }
