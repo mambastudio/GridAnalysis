@@ -60,7 +60,7 @@ public class MEngine implements EngineAbstract{
     {        
         this.ctx = context;
         this.triangles = new ArrayList();
-        mtriangles = Utility.generateTriangles(ctx, triangles, 2, new Vec2f(0, 0), new Vec2f(500, 500));
+        mtriangles = Utility.generateTriangles(ctx, triangles, 100, new Vec2f(0, 0), new Vec2f(5000, 5000));
         
         Tri[] tris = new Tri[triangles.size()];
         triangles.toArray(tris);
