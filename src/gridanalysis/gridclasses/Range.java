@@ -17,9 +17,9 @@ public class Range {
                  int hx, int hy)      
     {
         this.lx = lx;
-        this.ly = ly;
+        this.ly = ly;       
         this.hx = hx;
-        this.hy = hy;
+        this.hy = hy;        
     }
     public int size() { return (hx - lx + 1) * (hy - ly + 1); }
 }

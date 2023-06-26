@@ -52,6 +52,6 @@ public class Vec2f {
     
     @Override
     public final String toString() {
-        return String.format("(%.2f, %.2f)", x, y);
+        return String.format("(%.2ff, %.2ff)", x, y);
     }
 }

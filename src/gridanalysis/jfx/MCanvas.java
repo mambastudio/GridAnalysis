@@ -6,8 +6,10 @@
 package gridanalysis.jfx;
 
 import gridanalysis.algorithm.EngineAbstract;
+import javafx.geometry.Point2D;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
 
 /**
@@ -15,8 +17,10 @@ import javafx.scene.layout.Region;
  * @author user
  */
 public class MCanvas extends Region{
+    private final MouseActivity mouseActivity = new MouseActivity();
     private final Canvas canvas;
     private EngineAbstract engine;
+    
     
     public MCanvas()
     {
@@ -39,6 +43,20 @@ public class MCanvas extends Region{
             if(engine != null)
                 engine.draw();
         });
+        
+        canvas.setOnMouseDragged(this::mouseDragged);
+        canvas.setOnMousePressed(this::mousePressed);
+    }
+    
+    public void mousePressed(MouseEvent e)
+    {     
+        mouseActivity.setPoint(new Point2D(e.getX(), e.getY()));  
+        engine.test();
+    }
+    
+    public void mouseDragged(MouseEvent e)
+    {                
+        mouseActivity.setPoint(new Point2D(e.getX(), e.getY()));        
     }
     
     public GraphicsContext getGraphicsContext2D() {
@@ -48,5 +66,6 @@ public class MCanvas extends Region{
     public void setEngine(EngineAbstract engine)
     {
         this.engine = engine;
+        this.engine.setMouseActivity(mouseActivity);
     }
 }

@@ -47,6 +47,7 @@ public class MEngine2 implements EngineAbstract{
     float snd_density = 1.4f;
     float alpha = 0.995f;
     
+    MouseActivity mouseActivity;
     
     int exp_iters = 3;
 
@@ -188,6 +189,16 @@ public class MEngine2 implements EngineAbstract{
         this.cellInfoList.clear();
         for(ArrayList<MCellInfo> cellInfoArrayList : cellInfoArray)
             this.cellInfoList.addAll(cellInfoArrayList);
+    }
+
+    @Override
+    public void setMouseActivity(MouseActivity mouseActivity) {
+        this.mouseActivity = mouseActivity;
+    }
+
+    @Override
+    public void test() {
+        System.out.println("no test");
     }
     
 }

@@ -21,23 +21,19 @@ import gridanalysis.utilities.list.ObjectList;
 import static java.lang.Math.cbrt;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import java.util.Arrays;
 
 /**
  *
  * @author user
  */
 public class Build extends GridAbstracts{
-    MEngine engine;
-    
-    Vec2i grid_dims;
-    BBox  grid_bbox;
-    Vec2f cell_size;
-    int   grid_shift;
-    
-    public Build(MEngine engine)
+    MEngine engine;    
+    Hagrid hagrid;
+   
+    public Build(MEngine engine, Hagrid hagrid)
     {
         this.engine = engine;
+        this.hagrid = hagrid;
     }
     
     /// Computes the range of cells that intersect the given box
@@ -84,14 +80,14 @@ public class Build extends GridAbstracts{
             if (id >= num_prims) return;
             
             BBox ref_bb = bboxes.get(id);//load_bbox(bboxes + id);
-            Range range  = compute_range(grid_dims, grid_bbox, ref_bb);
+            Range range  = compute_range(hagrid.grid_dims, hagrid.grid_bbox, ref_bb);
             counts.set(id, Math.max(0, range.size()));               
         }    
     }
     
     /// Given a position on the virtual grid, return the corresponding top-level cell index
     public int top_level_cell(Vec2i pos) {
-        return (pos.x >> grid_shift) + grid_dims.x * ((pos.y >> grid_shift));
+        return (pos.x >> hagrid.grid_shift) + hagrid.grid_dims.x * ((pos.y >> hagrid.grid_shift));
     }
         
     /// Update the logarithm of the sub-level resolution for top-level cells (after a new subdivision level)
@@ -147,7 +143,7 @@ public class Build extends GridAbstracts{
         {         
             if (id >= num_cells) return;
 
-            Vec2f extents = grid_bbox.extents().div(new Vec2f(grid_dims));
+            Vec2f extents = hagrid.grid_bbox.extents().div(new Vec2f(hagrid.grid_dims));
             BBox bbox = new BBox(new Vec2f(), extents);
             
             Vec2i dims = compute_grid_dims(bbox, refs_per_cell.get(id), snd_density);
@@ -175,7 +171,7 @@ public class Build extends GridAbstracts{
 
             // If the cell is subdivided, write the first sub-cell index into the current entry
             entry.begin = entry.log_dim != 0 ? start : id;
-            //entries[id] = entry;
+            entries[id] = entry;
         }
     }
     
@@ -275,8 +271,6 @@ public class Build extends GridAbstracts{
             }
             int next_id = cell_ids.get(id + 1);
             
-            
-
             if (cell_id != next_id) {
                 cells[cell_id].end   = id + 1;
                 cells[next_id].begin = id + 1;
@@ -284,6 +278,8 @@ public class Build extends GridAbstracts{
             }
         }
     }
+    
+    
        
     /// Emit the new references by inserting existing ones into the sub-levels
     public void emit_new_refs(
@@ -301,7 +297,7 @@ public class Build extends GridAbstracts{
             if (start < end) 
             {
                 BBox ref_bb = bboxes.get(id);
-                range  = compute_range(grid_dims, grid_bbox, ref_bb);
+                range  = compute_range(hagrid.grid_dims, hagrid.grid_bbox, ref_bb);
                              
                 int x = range.lx;
                 int y = range.ly;               
@@ -309,7 +305,7 @@ public class Build extends GridAbstracts{
                 while (cur < end) 
                 {                    
                     new_ref_ids.set(cur, id);
-                    new_cell_ids.set(cur, x + grid_dims.x * y);
+                    new_cell_ids.set(cur, x + hagrid.grid_dims.x * y);
                     cur++; 
                     x++;
                     if (x > range.hx) { x = range.lx; y++; }
@@ -325,12 +321,12 @@ public class Build extends GridAbstracts{
         {            
             if (id >= num_cells) return;
 
-            int x = id % grid_dims.x;
-            int y = (id / grid_dims.x) % grid_dims.y;
-            int inc = 1 << grid_shift;
+            int x = id % hagrid.grid_dims.x;
+            int y = (id / hagrid.grid_dims.x) % hagrid.grid_dims.y;
+            int inc = 1 << hagrid.grid_shift;
             
-            x <<= grid_shift;
-            y <<= grid_shift;           
+            x <<= hagrid.grid_shift;
+            y <<= hagrid.grid_shift;           
 
             Cell cell = new Cell();
             cell.min = new Vec2i(x, y);
@@ -410,6 +406,8 @@ public class Build extends GridAbstracts{
                                     IntegerList split_masks,
                                     int num_split) { 
         
+        
+        
         for(int id = 0; id<num_split; id++)
         {            
             if (id >= num_split) return;
@@ -424,18 +422,14 @@ public class Build extends GridAbstracts{
             Cell cell = cells[cell_id].copy();              
             Tri prim = prims[ref];
 
-            Vec2f cell_min = grid_bbox.min.add(cell_size.mul(new Vec2f(cell.min)));
-            Vec2f cell_max = grid_bbox.min.add(cell_size.mul(new Vec2f(cell.max)));
+            Vec2f cell_min = hagrid.grid_bbox.min.add(hagrid.cell_size.mul(new Vec2f(cell.min)));
+            Vec2f cell_max = hagrid.grid_bbox.min.add(hagrid.cell_size.mul(new Vec2f(cell.max)));
             Vec2f middle = (cell_min.add(cell_max)).mul(0.5f);
 
             int mask = 0xF;
 
             // Optimization: Test against half spaces first
-            BBox ref_bb = prim.bbox();
-            // Slightly enlarge the bounding box of the grid
-            Vec2f extents = ref_bb.extents();
-            ref_bb.min = ref_bb.min.sub(extents.mul(0.001f));
-            ref_bb.max = ref_bb.max.add(extents.mul(0.001f));
+            BBox ref_bb = prim.bbox();            
             if (ref_bb.min.x > cell_max.x ||
                 ref_bb.max.x < cell_min.x) mask  = 0;
             if (ref_bb.min.x >   middle.x) mask &= 0xAA; //10101010
@@ -517,8 +511,8 @@ public class Build extends GridAbstracts{
             Tri prim = prims[ref_ids.get(id)];
             
             BBox bbox = new BBox(
-                    grid_bbox.min.add(new Vec2f(cell.min).mul(cell_size)),
-                    grid_bbox.min.add(new Vec2f(cell.max).mul(cell_size)));     
+                    hagrid.grid_bbox.min.add(new Vec2f(cell.min).mul(hagrid.cell_size)),
+                    hagrid.grid_bbox.min.add(new Vec2f(cell.max).mul(hagrid.cell_size)));     
             
             boolean intersect = Tri.intersect_prim_cell(prim, bbox);
             if (!intersect) {
@@ -526,6 +520,7 @@ public class Build extends GridAbstracts{
                 ref_ids.set(id, -1);                
             }                
         }
+        
     }
     
     public void first_build_iter(
@@ -561,8 +556,8 @@ public class Build extends GridAbstracts{
         grid_shift[0] = log_dims.reduce(0, (a, b) -> Math.max(a, b));
         
                                
-        this.cell_size = grid_bb.extents().div(new Vec2f(dims.leftShift(grid_shift[0])));
-        this.grid_shift = grid_shift[0];
+        this.hagrid.cell_size = grid_bb.extents().div(new Vec2f(dims.leftShift(grid_shift[0])));
+        this.hagrid.grid_shift = grid_shift[0];
                 
         //Emission of the new cells
         Cell[] new_cells   = new Cell[num_top_cells + 0];
@@ -640,7 +635,7 @@ public class Build extends GridAbstracts{
         levels.back().cell_ids = cell_ids;
         levels.back().num_kept = num_kept;
         
-        if (num_new_cells == 0) {
+        if (num_new_cells == 0) {            
             // Exit here because no new reference will be emitted            
             return false;
         }
@@ -658,16 +653,12 @@ public class Build extends GridAbstracts{
                 prims, cells, 
                 split_masks, 
                 num_split);
-        
-        
                         
         // Store the sub-cells starting index in the entries     
         split_masks.transform(0, num_split + 1, start_split, i -> __popc(i));       
         start_split.shiftRight(1);        
-        int num_new_refs = start_split.prefixSum(0, num_split + 1); 
-        
+        int num_new_refs = start_split.prefixSum(0, num_split + 1);         
       
-        
         if(!(num_new_refs <= 4 * num_split))        
             throw new UnsupportedOperationException("num_new_refs: " +num_new_refs+ " should be <= " +4*num_split);
                 
@@ -679,7 +670,14 @@ public class Build extends GridAbstracts{
         if(!levels.isEmpty() && num_new_refs < levels.back().num_refs)
             skip = true;
         //if(!skip) is not in original code
-        if(!skip)
+       // if(!skip)
+        {
+            if(!levels.isEmpty())
+            {
+                System.out.println("new refs: " +num_new_cells);
+                System.out.println("old refs: " +levels.back().num_cells);
+            }
+            
             split_refs(
                     cell_ids.getSubListFrom(num_kept), 
                     ref_ids.getSubListFrom(num_kept), 
@@ -689,6 +687,7 @@ public class Build extends GridAbstracts{
                     new_cell_ids, 
                     new_ref_ids, 
                     num_split);
+        }
         
         
         // Emission of the new cells
@@ -708,12 +707,8 @@ public class Build extends GridAbstracts{
         level.entries   = new_entries;         
         level.num_cells = num_new_cells;     
         
-        
-        
         levels.add(level);
         
-        
-                
         return true;
     }
     
@@ -818,7 +813,7 @@ public class Build extends GridAbstracts{
         }        
     }
     
-    public void build_grid(Tri[] prims, int num_prims, Grid grid, float top_density, float snd_density)
+    public void build_grid(Tri[] prims, int num_prims)
     {
         // Allocate a bounding box for each primitive + one for the global bounding box       
         ObjectList<BBox> bboxes = new ObjectList(num_prims + 1, () -> new BBox());
@@ -827,7 +822,7 @@ public class Build extends GridAbstracts{
         BBox grid_bb = bboxes.reduce(0, num_prims, new BBox(),  (a, b) ->a.copy().extend(b));
         
        
-        Vec2i dims = compute_grid_dims(grid_bb, num_prims, top_density);
+        Vec2i dims = compute_grid_dims(grid_bb, num_prims, hagrid.top_density);
         // Round to the next multiple of 2 on each dimension (in order to align the memory)
         dims.x = (dims.x % 2) != 0 ? dims.x + 1 : dims.x;
         dims.y = (dims.y % 2) != 0 ? dims.y + 1 : dims.y;
@@ -839,31 +834,29 @@ public class Build extends GridAbstracts{
         grid_bb.min = grid_bb.min.sub(extents.mul(0.001f));
         grid_bb.max = grid_bb.max.add(extents.mul(0.001f));
         
-        this.grid_bbox = grid_bb;
-        this.grid_dims = dims;
+        this.hagrid.grid_bbox = grid_bb;
+        this.hagrid.grid_dims = dims;
         
         IntegerList log_dims = new IntegerList();
         int[] gridd_shift = new int[1];
         ObjectList<Level> levels = new ObjectList();
 
         // Build top level
-        first_build_iter(snd_density, prims, num_prims, bboxes, grid_bb, dims, log_dims, gridd_shift, levels);
+        first_build_iter(hagrid.snd_density, prims, num_prims, bboxes, grid_bb, dims, log_dims, gridd_shift, levels);
         
         int iter = 1; //build iterations
-        while(this.build_iter(prims, num_prims, dims, log_dims, levels, iter))
-        {           
-           
+        while(this.build_iter(prims, num_prims, dims, log_dims, levels, iter))          
             iter++;
-            
-        }
+          
         System.out.println("iteration " +iter);
         
-        concat_levels(levels, grid);
+        concat_levels(levels, hagrid.getIrregularGrid());
                    
-        grid.bbox = grid_bb;
-        grid.dims = dims;
+        hagrid.getIrregularGrid().bbox = grid_bb;
+        hagrid.getIrregularGrid().dims = dims;
         
-        //engine.setMCellInfo(MCellInfo.getCells(engine, grid, grid.bbox, grid.dims, this.grid_shift));
+        engine.setMCellInfo(MCellInfo.getCells(engine, hagrid.getIrregularGrid(), hagrid.getIrregularGrid().bbox, hagrid.getIrregularGrid().dims, hagrid.getIrregularGrid().shift));
+        
     }
 
 }

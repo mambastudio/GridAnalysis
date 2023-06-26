@@ -40,7 +40,7 @@ public abstract class GridAbstracts {
         return e;
     }
     
-    public int lookup_entry(Entry[] entries, int shift, Vec2i dims, Vec2i voxel) {
+    public static int lookup_entry(Entry[] entries, int shift, Vec2i dims, Vec2i voxel) {
         
         Entry entry = entries[(voxel.x >> shift) + dims.x * (voxel.y >> shift)];
         int log_dim = entry.log_dim, d = log_dim;

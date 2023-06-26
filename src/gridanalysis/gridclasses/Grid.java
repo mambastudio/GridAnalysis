@@ -5,6 +5,7 @@
  */
 package gridanalysis.gridclasses;
 
+import gridanalysis.coordinates.Vec2f;
 import gridanalysis.coordinates.Vec2i;
 import gridanalysis.utilities.list.IntegerList;
 import gridanalysis.utilities.list.ObjectList;
@@ -27,27 +28,11 @@ public class Grid {
     public int num_refs;                   ///< Number of primitive references
     public int shift;                      ///< Amount of bits to shift to get from the deepest level to the top-level
     public IntegerList offsets;               ///< Offset to each level of the voxel map octree
-    
-    
-    //get cell index
-    public int lookup_entry_cell(Cell cell)
-    {
-        Vec2i voxel = new Vec2i(cell.min);
-        //Entry entry = entries[(voxel.x >> shift) + dims.x * (voxel.y >> shift)];
-        Vec2i dimss = dims.rightShift(shift);
-        Entry entry = entries[(voxel.x >> shift) + dimss.x * (voxel.y >> shift)];
-        int log_dim = entry.log_dim, d = log_dim;
-        
-        while (log_dim != 0) {
-            int begin = entry.begin;
-            int mask = (1 << log_dim) - 1;
-            //int k = (voxel >> int(shift - d)) & mask;
-            Vec2i k = voxel.rightShift(shift -d).and(mask);            
-            entry = entries[begin + k.x + (k.y  << log_dim)]; 
-            log_dim = entry.log_dim;
-            d += log_dim;            
-        }
-        
-        return entry.begin;
-    }
+       
+    public Vec2f grid_inv()     {return new Vec2f(dims).div(bbox.extents());}   
+    public Vec2f cell_size()    {return bbox.extents().div(new Vec2f(dims));}
+    public Vec2i grid_dims()    {return dims.leftShift(shift);}
+    public int grid_shift()     {return shift;}
+    public Vec2f grid_min()     {return bbox.min.copy();}
+    public Vec2f grid_max()     {return bbox.max.copy();}
 }

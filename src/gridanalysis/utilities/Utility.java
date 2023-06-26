@@ -24,7 +24,7 @@ public class Utility {
         for(int i = 0; i<nTriangles; i++)
         {
             Tri tri = generate_random_triangle(min, max);   
-            //System.out.println(tri);
+            System.out.println(tri);
             triangles.add(tri);
         }
         
@@ -58,9 +58,21 @@ public class Utility {
         return triangles;
     }
     
+    public static ArrayList<Tri> generateDefinedTriangles(int nTriangles, Vec2f min, Vec2f max)
+    {
+        ArrayList<Tri> triangles = new ArrayList();
+        float x = 100;
+        
+        //triangles.add(new Tri(new Vec2f(484.21f, 343.04f), new Vec2f(272.36f, 388.51f), new Vec2f(252.07f, 459.40f)));
+        //triangles.add(new Tri(new Vec2f(297.17f, 348.41f), new Vec2f(92.83f, 262.06f), new Vec2f(387.04f, 233.84f)));
+        triangles.add(new Tri(new Vec2f(76.76f, 74.55f), new Vec2f(203.25f, 21.29f), new Vec2f(85.96f, 362.30f)));
+        triangles.add(new Tri(new Vec2f(242.88f, 238.59f), new Vec2f(101.71f, 436.95f), new Vec2f(431.02f, 165.62f)));
+        return triangles;
+    }
+    
     public static ArrayList<MTriangle> generateTriangles(GraphicsContext context, ArrayList<Tri> tris, int nTriangles, Vec2f min, Vec2f max)
     {
-        ArrayList<Tri> triangles = generateTriangles(nTriangles, min, max);
+        ArrayList<Tri> triangles = generateDefinedTriangles(nTriangles, min, max);
         tris.addAll(triangles);
         
         ArrayList<MTriangle> mtriangles = new ArrayList();
