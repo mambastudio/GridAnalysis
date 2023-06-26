@@ -53,10 +53,10 @@ public class Build extends GridAbstracts{
     public Vec2i compute_grid_dims(BBox bb, int num_prims, float density) {
         Vec2f extents = bb.extents();
         float volume = extents.x * extents.y;
-        float ratio = (float) cbrt(density * num_prims / volume);
+        double ratio = cbrt(density * (double)num_prims / volume);
         return Vec2i.max(new Vec2i(1), new Vec2i(
-                (int)(extents.x * ratio),
-                (int)(extents.y * ratio)));        
+                extents.x * ratio,
+                extents.y * ratio));        
     }
     
     public void compute_bboxes(
@@ -144,16 +144,16 @@ public class Build extends GridAbstracts{
             if (id >= num_cells) return;
 
             Vec2f extents = hagrid.grid_bbox.extents().div(new Vec2f(hagrid.grid_dims));
-            BBox bbox = new BBox(new Vec2f(), extents);
-            
-            Vec2i dims = compute_grid_dims(bbox, refs_per_cell.get(id), snd_density);
+            BBox bbox = new BBox(new Vec2f(), extents);            
+            Vec2i dims = compute_grid_dims(bbox, refs_per_cell.get(id), snd_density);            
             int max_dim = max(dims.x, dims.y);
-            int log_dim = log2nlz(max_dim); //log2
+            int log_dim = 31 - __clz(max_dim); //log2
             log_dim = (1 << log_dim) < max_dim ? log_dim + 1 : log_dim;            
             log_dims.set(id, log_dim);       
             
         }    
-        
+        System.out.println(refs_per_cell);
+        System.out.println(log_dims);
         
     }
     
@@ -266,13 +266,13 @@ public class Build extends GridAbstracts{
             
             int cell_id = cell_ids.get(id + 0);
             if (id >= num_refs - 1) {
-                cells[cell_id].end = id + 1; 
+                cells[cell_id].end = id + 1; //System.out.println(num_refs);
                 return;
             }
             int next_id = cell_ids.get(id + 1);
             
             if (cell_id != next_id) {
-                cells[cell_id].end   = id + 1;
+                cells[cell_id].end   = id + 1; 
                 cells[next_id].begin = id + 1;
                 
             }
@@ -840,10 +840,10 @@ public class Build extends GridAbstracts{
         IntegerList log_dims = new IntegerList();
         int[] gridd_shift = new int[1];
         ObjectList<Level> levels = new ObjectList();
-
+        
         // Build top level
         first_build_iter(hagrid.snd_density, prims, num_prims, bboxes, grid_bb, dims, log_dims, gridd_shift, levels);
-        
+                
         int iter = 1; //build iterations
         while(this.build_iter(prims, num_prims, dims, log_dims, levels, iter))          
             iter++;

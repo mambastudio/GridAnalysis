@@ -181,7 +181,7 @@ public class MCellInfo {
                 MCellInfo info = new MCellInfo(engine.getGraphicsContext(), cellBound);
                 
                 Entry entry = grid.entries[(cell.min.x >> grid.grid_shift()) + cell.min.x * (cell.min.y >> grid.grid_shift())];
-                info.object = GridAbstracts.lookup_entry(grid.entries, grid.grid_shift(), grid.grid_dims().rightShift(grid.grid_shift()), cell.min);// grid.lookup_entry_cell(cell);
+                info.object = cell.end - cell.begin; ///GridAbstracts.lookup_entry(grid.entries, grid.grid_shift(), grid.grid_dims().rightShift(grid.grid_shift()), cell.min);// grid.lookup_entry_cell(cell);
 
                 cells.add(info);  
            

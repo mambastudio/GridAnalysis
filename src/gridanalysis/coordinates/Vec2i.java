@@ -16,6 +16,8 @@ public class Vec2i {
     public Vec2i(){}
     public Vec2i(int xy){this.x = xy; this.y = xy;}
     public Vec2i(int x, int y){this.x = x; this.y = y;}
+    public Vec2i(float x, float y){this((int)x, (int)y);}
+    public Vec2i(double x, double y){this((int)x, (int)y);}
     public Vec2i(Vec2i v){this.x = v.x; this.y = v.y;}
     public Vec2i(Vec2f xy){this.x = (int) xy.x; this.y = (int) xy.y;}
     
