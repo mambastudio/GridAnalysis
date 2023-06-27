@@ -16,7 +16,7 @@ import gridanalysis.gridclasses.Grid;
  */
 public class Hagrid{
     public float top_density = 0.12f;
-    public float snd_density = 0.2f;
+    public float snd_density = 6.9f;
     public float alpha = 0.995f;
     public int exp_iters = 3;
     

@@ -72,7 +72,7 @@ public class Utility {
     
     public static ArrayList<MTriangle> generateTriangles(GraphicsContext context, ArrayList<Tri> tris, int nTriangles, Vec2f min, Vec2f max)
     {
-        ArrayList<Tri> triangles = generateDefinedTriangles(nTriangles, min, max);
+        ArrayList<Tri> triangles = generateTriangles(nTriangles, min, max);
         tris.addAll(triangles);
         
         ArrayList<MTriangle> mtriangles = new ArrayList();

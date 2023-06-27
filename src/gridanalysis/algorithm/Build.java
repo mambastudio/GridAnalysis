@@ -53,7 +53,7 @@ public class Build extends GridAbstracts{
     public Vec2i compute_grid_dims(BBox bb, int num_prims, float density) {
         Vec2f extents = bb.extents();
         float volume = extents.x * extents.y;
-        double ratio = cbrt(density * (double)num_prims / volume);
+        float ratio = (float) cbrt(density * num_prims / volume);
         return Vec2i.max(new Vec2i(1), new Vec2i(
                 extents.x * ratio,
                 extents.y * ratio));        
@@ -139,6 +139,7 @@ public class Build extends GridAbstracts{
             IntegerList log_dims,
             float snd_density,
             int num_cells) {       
+        
         for(int id = 0; id<num_cells; id++)
         {         
             if (id >= num_cells) return;
@@ -147,14 +148,11 @@ public class Build extends GridAbstracts{
             BBox bbox = new BBox(new Vec2f(), extents);            
             Vec2i dims = compute_grid_dims(bbox, refs_per_cell.get(id), snd_density);            
             int max_dim = max(dims.x, dims.y);
-            int log_dim = 31 - __clz(max_dim); //log2
+            int log_dim = log2nlz(max_dim); //log2
             log_dim = (1 << log_dim) < max_dim ? log_dim + 1 : log_dim;            
             log_dims.set(id, log_dim);       
             
         }    
-        System.out.println(refs_per_cell);
-        System.out.println(log_dims);
-        
     }
     
     /// Update the entries for the one level before the current one
@@ -627,8 +625,17 @@ public class Build extends GridAbstracts{
             throw new UnsupportedOperationException("num_sel_refs is not equal to num_sel_cells");
         
         //Swap
+        /*
+            Here ref_ids and cell_ids share same array, hence doing double swap below 
+            might corrupt data and information when arbitrary densities are used.
+        
+            This is noted in the build iter with defined density for the subcells in
+            the grid with jumbled ids.
+
+            Therefore, only swap once in ref_ids to eliminate the error.
+        */
         tmp_ref_ids.swap(ref_ids);
-        tmp_cell_ids.swap(cell_ids);
+        //tmp_cell_ids.swap(cell_ids); //remove this
                 
         int num_kept = num_sel_refs;
         levels.back().ref_ids  = ref_ids;
@@ -655,7 +662,7 @@ public class Build extends GridAbstracts{
                 num_split);
                         
         // Store the sub-cells starting index in the entries     
-        split_masks.transform(0, num_split + 1, start_split, i -> __popc(i));       
+        split_masks.transform(0, num_split + 1, start_split, i -> __popc(i));    
         start_split.shiftRight(1);        
         int num_new_refs = start_split.prefixSum(0, num_split + 1);         
       
@@ -664,32 +671,18 @@ public class Build extends GridAbstracts{
                 
         IntegerList new_ref_ids = new IntegerList(new int[num_new_refs * 2]);
         IntegerList new_cell_ids = new_ref_ids.getSubListFrom(num_new_refs);
+                    
+        split_refs(
+                cell_ids.getSubListFrom(num_kept), 
+                ref_ids.getSubListFrom(num_kept), 
+                entries, 
+                split_masks, 
+                start_split, 
+                new_cell_ids, 
+                new_ref_ids, 
+                num_split);
         
-        //not in original code, num_new_refs should always be bigger than previous level
-        boolean skip = false;
-        if(!levels.isEmpty() && num_new_refs < levels.back().num_refs)
-            skip = true;
-        //if(!skip) is not in original code
-       // if(!skip)
-        {
-            if(!levels.isEmpty())
-            {
-                System.out.println("new refs: " +num_new_cells);
-                System.out.println("old refs: " +levels.back().num_cells);
-            }
-            
-            split_refs(
-                    cell_ids.getSubListFrom(num_kept), 
-                    ref_ids.getSubListFrom(num_kept), 
-                    entries, 
-                    split_masks, 
-                    start_split, 
-                    new_cell_ids, 
-                    new_ref_ids, 
-                    num_split);
-        }
-        
-        
+              
         // Emission of the new cells
         Cell[] new_cells   = new Cell[num_new_cells + 0];
         Entry[] new_entries = new Entry[num_new_cells + 1];
@@ -855,7 +848,7 @@ public class Build extends GridAbstracts{
         hagrid.getIrregularGrid().bbox = grid_bb;
         hagrid.getIrregularGrid().dims = dims;
         
-        engine.setMCellInfo(MCellInfo.getCells(engine, hagrid.getIrregularGrid(), hagrid.getIrregularGrid().bbox, hagrid.getIrregularGrid().dims, hagrid.getIrregularGrid().shift));
+        //engine.setMCellInfo(MCellInfo.getCells(engine, hagrid.getIrregularGrid(), hagrid.getIrregularGrid().bbox, hagrid.getIrregularGrid().dims, hagrid.getIrregularGrid().shift));
         
     }
 

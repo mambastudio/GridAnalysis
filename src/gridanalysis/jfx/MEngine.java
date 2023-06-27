@@ -102,8 +102,8 @@ public class MEngine implements EngineAbstract{
                 mouseActivity.getXFloatPoint(transform.inverseTransform()), 
                 mouseActivity.getYFloatPoint(transform.inverseTransform()));
         
-        Vec2i   grid_dims   = grid.dims.leftShift(grid.shift);
-        int     grid_shift  = grid.shift;
+        Vec2i   grid_dims   = grid.grid_dims();
+        int     grid_shift  = grid.grid_shift();
         
         if(grid.bbox.is_inside(mousePoint))
         {
