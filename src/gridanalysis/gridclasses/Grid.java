@@ -29,10 +29,13 @@ public class Grid {
     public int shift;                      ///< Amount of bits to shift to get from the deepest level to the top-level
     public IntegerList offsets;               ///< Offset to each level of the voxel map octree
        
-    public Vec2f grid_inv()     {return new Vec2f(dims).div(bbox.extents());}   
-    public Vec2f cell_size()    {return bbox.extents().div(new Vec2f(dims));}
+    public Vec2f grid_inv()     {return new Vec2f(grid_dims()).div(bbox.extents());}   
+    public Vec2f cell_size()    {return bbox.extents().div(new Vec2f(grid_dims()));}
     public Vec2i grid_dims()    {return dims.leftShift(shift);}
     public int grid_shift()     {return shift;}
     public Vec2f grid_min()     {return bbox.min.copy();}
     public Vec2f grid_max()     {return bbox.max.copy();}
+    public BBox cellbound(Cell cell) {return new BBox(
+                                                        bbox.min.add(cell_size().mul(new Vec2f(cell.min))), 
+                                                        bbox.min.add(cell_size().mul(new Vec2f(cell.max))));}
 }

@@ -170,21 +170,12 @@ public class MCellInfo {
         
         for (int i = 0; i<grid.num_cells; i++) {
             Cell cell = grid.cells.get(i);           
-            {
-                Vec2f cellExtents = Utility.getCellSize(dims.leftShift(shift), grid_bound);
-
-                Vec2f cellMin = new Vec2f(cell.min).mul(cellExtents).add(grid_bound.min);
-                Vec2f cellMax = new Vec2f(cell.max).mul(cellExtents).add(grid_bound.min);
-
-                BBox cellBound = new BBox(cellMin, cellMax);
-
-                MCellInfo info = new MCellInfo(engine.getGraphicsContext(), cellBound);
+            {                
+                BBox cellBound = grid.cellbound(cell);
+                MCellInfo info = new MCellInfo(engine.getGraphicsContext(), cellBound);          
                 
-                Entry entry = grid.entries[(cell.min.x >> grid.grid_shift()) + cell.min.x * (cell.min.y >> grid.grid_shift())];
-                info.object = cell.end - cell.begin; ///GridAbstracts.lookup_entry(grid.entries, grid.grid_shift(), grid.grid_dims().rightShift(grid.grid_shift()), cell.min);// grid.lookup_entry_cell(cell);
-
-                cells.add(info);  
-           
+                info.object = cell.end - cell.begin;
+                cells.add(info);             
             }
         }        
         return cells;
