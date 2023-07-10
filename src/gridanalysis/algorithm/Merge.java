@@ -129,7 +129,8 @@ public class Merge extends GridAbstracts{
                     Vec2f e2 = hagrid.cell_size.mul(new Vec2f(cell2.max.sub(cell2.min)));
                     float a1 = e1.x * e1.y;
                     float a2 = e2.x * e2.y;
-                    float a  = a1 + a2 - e1.get((axis + 1)%2) * e1.get((axis + 2)%2);
+                    //float a  = a1 + a2 - e1.get((axis + 1)%2) * e1.get((axis + 2)%2); for 3d
+                    float a  = a1 + a2 - e1.get((axis + 1)%2);
 
                     int n1 = cell1.end - cell1.begin;
                     int n2 = cell2.end - cell2.begin;
@@ -274,10 +275,13 @@ public class Merge extends GridAbstracts{
                    new_min = cell.min;
                    new_max = cell.max;
                    new_refs_end = new_refs_begin + (cell_end - cell_begin); 
+                   //if((new_refs_end - new_refs_begin)>2)
+                   //     System.out.println(new Vec2i(new_refs_end, new_refs_begin));
                 }
-
-                new_cells.set(new_id, new Cell(new_min, new_refs_begin,
-                                                    new_max, new_refs_end));
+                
+                
+                new_cells.set(new_id, new Cell( new_min, new_refs_begin,
+                                                new_max, new_refs_end));
             }
             
             boolean merge = next_begin < next_end;
@@ -285,15 +289,12 @@ public class Merge extends GridAbstracts{
             if(!merge)
             {
                 if(cell_begin < cell_end)
-                {
-                    int begin = cell_begin;
-                    int end = cell_end;
-                    int new_begin = new_refs_begin;
-                                        
-                    for (int i = begin, j = new_begin; i < end; i++, j++)
+                {                   
+                    int new_begin = new_refs_begin;                                        
+                    for (int i = cell_begin; i < cell_end; i++, new_begin++)
                     {                       
-                        new_refs.set(j, refs.get(i));                
-                    }
+                        new_refs.set(new_begin, refs.get(i));                
+                    }                    
                 }
             }
             else
@@ -302,6 +303,8 @@ public class Merge extends GridAbstracts{
                 merge_refs(refs.getSubListFrom(cell_begin), cell_end - cell_begin,
                            refs.getSubListFrom(next_begin), next_end - next_begin,
                            new_refs.getSubListFrom(new_refs_begin));
+                
+                
             }
             
         }

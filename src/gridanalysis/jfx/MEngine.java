@@ -18,6 +18,7 @@ import gridanalysis.jfx.shape.MCellInfo;
 import gridanalysis.jfx.shape.MRectangle;
 import gridanalysis.jfx.shape.MTriangle;
 import gridanalysis.utilities.Utility;
+import gridanalysis.utilities.list.IntegerList;
 import java.util.ArrayList;
 import javafx.scene.canvas.GraphicsContext;
 
@@ -114,6 +115,15 @@ public class MEngine implements EngineAbstract{
             
             System.out.println(entry);
             System.out.println("cell has reference: " +cell.hasReference());
+            if(cell.hasReference())
+            {
+                IntegerList list = new IntegerList();
+                for(int i = cell.begin; i<cell.end; i++)
+                {
+                    list.add(grid.ref_ids.get(i));
+                }
+                System.out.println(list);
+            }
             //System.out.println(cell.extents());
             
         }

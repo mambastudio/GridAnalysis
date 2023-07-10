@@ -43,6 +43,7 @@ public class GridAnalysis extends Application {
         primaryStage.setTitle("Hagrid");
         primaryStage.setScene(scene);
         primaryStage.show();        
+        System.out.println(Integer.toBinaryString(7));
     }
 
     /**

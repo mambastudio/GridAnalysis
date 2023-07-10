@@ -145,7 +145,8 @@ public class Build extends GridAbstracts{
             if (id >= num_cells) return;
 
             Vec2f extents = hagrid.grid_bbox.extents().div(new Vec2f(hagrid.grid_dims));
-            BBox bbox = new BBox(new Vec2f(), extents);            
+            BBox bbox = new BBox(new Vec2f(), extents);     
+            
             Vec2i dims = compute_grid_dims(bbox, refs_per_cell.get(id), snd_density);            
             int max_dim = max(dims.x, dims.y);
             int log_dim = log2nlz(max_dim); //log2
@@ -169,7 +170,7 @@ public class Build extends GridAbstracts{
 
             // If the cell is subdivided, write the first sub-cell index into the current entry
             entry.begin = entry.log_dim != 0 ? start : id;
-            entries[id] = entry;
+            
         }
     }
     
@@ -236,7 +237,7 @@ public class Build extends GridAbstracts{
                 // Points to another entry in the next level
                 entry.begin += next_level_off;
             }
-            new_entries[id + cell_off] = entry;
+            new_entries[id + cell_off] = entry.copy();
         }
     }
     
@@ -264,7 +265,7 @@ public class Build extends GridAbstracts{
             
             int cell_id = cell_ids.get(id + 0);
             if (id >= num_refs - 1) {
-                cells[cell_id].end = id + 1; //System.out.println(num_refs);
+                cells[cell_id].end = id + 1; //System.out.println(num_refs);                
                 return;
             }
             int next_id = cell_ids.get(id + 1);
@@ -273,7 +274,7 @@ public class Build extends GridAbstracts{
                 cells[cell_id].end   = id + 1; 
                 cells[next_id].begin = id + 1;
                 
-            }
+            }            
         }
     }
     
@@ -553,6 +554,7 @@ public class Build extends GridAbstracts{
         // Find the max sub-level resolution
         grid_shift[0] = log_dims.reduce(0, (a, b) -> Math.max(a, b));
         
+        System.out.println(log_dims);
                                
         this.hagrid.cell_size = grid_bb.extents().div(new Vec2f(dims.leftShift(grid_shift[0])));
         this.hagrid.grid_shift = grid_shift[0];
@@ -627,16 +629,15 @@ public class Build extends GridAbstracts{
         //Swap
         /*
             Here ref_ids and cell_ids share same array, hence doing double swap below 
-            might corrupt data and information when arbitrary densities are used.
+            might corrupt data when arbitrary densities are used.
         
-            This is noted in the build iter with defined density for the subcells in
-            the grid with jumbled ids.
+            This is observed in the build_iter loop whereby jumbled ids occur.
 
             Therefore, only swap once in ref_ids to eliminate the error.
         */
         tmp_ref_ids.swap(ref_ids);
-        //tmp_cell_ids.swap(cell_ids); //remove this
-                
+        //tmp_cell_ids.swap(cell_ids); //this is no called as per explanation.
+        
         int num_kept = num_sel_refs;
         levels.back().ref_ids  = ref_ids;
         levels.back().cell_ids = cell_ids;
