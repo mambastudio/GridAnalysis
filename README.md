@@ -36,6 +36,36 @@ optimization is successful when it returns the same nearest primitive and hit
 distance as unexpanded traversal while reducing traversal steps or primitive
 tests.
 
+### Compressed traversal representation
+
+Compression is a storage and memory-access optimization applied after the cell
+bounds are finalized. It does not alter voxel ownership, expanded exit bounds,
+or the expected hit result. The Java representation mirrors Hagrid's CUDA
+`SmallCell` shape:
+
+```java
+public record SmallCell(UShort2 min, UShort2 max, int begin) {}
+```
+
+`UShort2` stores raw Java `short` values and reads them with
+`Short.toUnsignedInt`, preserving the CUDA unsigned range of `0..65535`.
+Compression succeeds only when both virtual-grid dimensions fit in that range.
+
+Full cells use `[begin, end)` reference ranges. Compressed cells remove `end`
+and instead use a compact sentinel-terminated reference array:
+
+```text
+Full references:       cell 0 = [3, 7], cell 1 = empty, cell 2 = [9]
+Compressed references: [3, 7, -1, 9, -1]
+SmallCell.begin:        [0, -1, 3]
+```
+
+`Traversal` supports both representations. Compression should therefore return
+the same nearest hit, traversal path, and step count; its benefit is the smaller
+cell representation and sequential sentinel-based reference access. The
+`Hagrid.compression` construction option is disabled by default, while the
+laboratory exposes a **Compress** checkbox for direct comparison.
+
 ## Observed traversal results
 
 The interactive 2D scenario already demonstrates the purpose of the expansion
@@ -76,11 +106,13 @@ To open the dedicated low-resolution expansion and traversal laboratory:
 mvn javafx:run@expansion-debug
 ```
 
-The laboratory can enable each construction stage independently, edit the
-Hagrid density and expansion parameters, inspect cells and reference sets, and
-step a ray through the resulting grid. Drag the ray origin around the outer grid
-boundary and drag its target to change direction. Each traversal step reports
-the current voxel/cell, tested primitives, nearest hit, exit distance, and work.
+The laboratory can enable Merge, Flatten, Expand, aggressive partial expansion,
+and Compress independently where their pipeline dependencies permit. It can
+also edit Hagrid density and expansion parameters, inspect cells and reference
+sets, and step a ray through the resulting grid. Drag the ray origin around the
+outer grid boundary and drag its target to change direction. Each traversal
+step reports the current voxel/cell, tested primitives, nearest hit, exit
+distance, and work.
 The reusable `gridanalysis.algorithm.Traversal` class contains the actual 2D
 cell-walking algorithm; the JavaFX laboratory only controls and visualizes it.
 
@@ -106,12 +138,17 @@ cubically, so it has the same uniform-scale invariance in three dimensions.
 ## Tests
 
 Files under `src/test/java` are assertion-based programs with `main` methods,
-not JUnit tests. Maven compiles them during the `test` phase. The expansion
-harness can also be run directly after packaging:
+not JUnit tests. Maven compiles them during the `test` phase. The focused
+harnesses can also be run directly after packaging:
 
 ```shell
 java -ea -cp "target\classes;target\test-classes" gridanalysis.algorithm.ExpandTest
+java -ea -cp "target\classes;target\test-classes" gridanalysis.algorithm.BuildDensityTest
+java -ea -cp "target\classes;target\test-classes" gridanalysis.algorithm.CompressTest
 ```
+
+`CompressTest` checks unsigned coordinates above `32767`, empty-cell encoding,
+sentinel placement, and rejection of dimensions that exceed 16 bits.
 
 ## Interactive laboratory
 
