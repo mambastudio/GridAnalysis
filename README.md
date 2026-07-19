@@ -78,6 +78,8 @@ Hagrid density and expansion parameters, inspect cells and reference sets, and
 step a ray through the resulting grid. Drag the ray origin around the outer grid
 boundary and drag its target to change direction. Each traversal step reports
 the current voxel/cell, tested primitives, nearest hit, exit distance, and work.
+The reusable `gridanalysis.algorithm.Traversal` class contains the actual 2D
+cell-walking algorithm; the JavaFX laboratory only controls and visualizes it.
 
 ## Density model
 

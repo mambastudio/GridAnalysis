@@ -6,6 +6,7 @@ import gridanalysis.algorithm.Flatten;
 import gridanalysis.algorithm.GridAbstracts;
 import gridanalysis.algorithm.Hagrid;
 import gridanalysis.algorithm.Merge;
+import gridanalysis.algorithm.Traversal;
 import gridanalysis.coordinates.Vec2f;
 import gridanalysis.coordinates.Vec2i;
 import gridanalysis.gridclasses.BBox;
@@ -65,7 +66,7 @@ public final class ExpansionDebug extends Application {
     private int selectedCell = 1;
     private int iteration;
     private String lastStep = "Ownership map";
-    private RayTraversal traversal;
+    private Traversal traversal;
     private Vec2f rayOriginFraction = new Vec2f(0.0f, 0.38f);
     private Vec2f rayEndFraction = new Vec2f(1.0f, 0.63f);
     private int draggedRayHandle;
@@ -125,7 +126,7 @@ public final class ExpansionDebug extends Application {
         resetRay.setOnAction(event -> resetRay());
         traversalStep.setOnAction(event -> stepRay());
         canvas.setOnMousePressed(event -> {
-            Vec2f rayOrigin = traversal.origin;
+            Vec2f rayOrigin = traversal.origin();
             Vec2f endpoint = traversal.endPoint();
             double originDx = event.getX() - sxWorld(rayOrigin.x);
             double originDy = event.getY() - syWorld(rayOrigin.y);
@@ -190,20 +191,21 @@ public final class ExpansionDebug extends Application {
             iteration = 3;
         }
         selectedCell = Math.min(1, grid.num_cells - 1);
-        traversal = new RayTraversal();
+        traversal = createTraversal();
         lastStep = stageName();
         draw();
     }
 
     private void resetRay() {
-        traversal = new RayTraversal();
+        traversal = createTraversal();
         lastStep = "Ray located at grid entry";
         draw();
     }
 
     private void stepRay() {
         traversal.step();
-        lastStep = traversal.message;
+        if (traversal.currentCell() >= 0) selectedCell = traversal.currentCell();
+        lastStep = traversal.message();
         draw();
     }
 
@@ -302,8 +304,8 @@ public final class ExpansionDebug extends Application {
             double[] xs = {sxWorld(tri.p0().x), sxWorld(tri.p1().x), sxWorld(tri.p2().x)};
             double[] ys = {syWorld(tri.p0().y), syWorld(tri.p1().y), syWorld(tri.p2().y)};
             g.setFill(Color.color(colors[i].getRed(), colors[i].getGreen(), colors[i].getBlue(), 0.28));
-            g.setStroke(traversal.testedRefs.contains(i) ? Color.web("#f59e0b") : colors[i]);
-            g.setLineWidth(traversal.testedRefs.contains(i) ? 5 : 2);
+            g.setStroke(traversal.testedRefs().contains(i) ? Color.web("#f59e0b") : colors[i]);
+            g.setLineWidth(traversal.testedRefs().contains(i) ? 5 : 2);
             g.fillPolygon(xs, ys, 3);
             g.strokePolygon(xs, ys, 3);
             if (rayLabels.isSelected()) {
@@ -314,8 +316,8 @@ public final class ExpansionDebug extends Application {
     }
 
     private void drawSampleRay(GraphicsContext g) {
-        Vec2f start = traversal.origin;
-        Vec2f end = traversal.origin.add(traversal.direction.mul((float) traversal.maxT));
+        Vec2f start = traversal.origin();
+        Vec2f end = traversal.origin().add(traversal.direction().mul((float) traversal.maxT()));
         g.setStroke(Color.web("#dc2626"));
         g.setLineWidth(2.5);
         g.setLineDashes(10, 5);
@@ -326,7 +328,7 @@ public final class ExpansionDebug extends Application {
         g.setLineWidth(4);
         g.strokeLine(sxWorld(start.x), syWorld(start.y), sxWorld(current.x), syWorld(current.y));
         g.setFill(Color.web("#dc2626"));
-        for (Vec2f point : traversal.exits) {
+        for (Vec2f point : traversal.exits()) {
             g.fillOval(sxWorld(point.x) - 5, syWorld(point.y) - 5, 10, 10);
         }
         g.setFill(Color.web("#2563eb"));
@@ -334,7 +336,7 @@ public final class ExpansionDebug extends Application {
         g.setStroke(Color.WHITE);
         g.setLineWidth(2);
         g.strokeOval(sxWorld(start.x) - 8, syWorld(start.y) - 8, 16, 16);
-        g.setFill(traversal.hit ? Color.web("#16a34a") : Color.web("#dc2626"));
+        g.setFill(traversal.hit() ? Color.web("#16a34a") : Color.web("#dc2626"));
         g.fillOval(sxWorld(current.x) - 7, syWorld(current.y) - 7, 14, 14);
         g.setFill(Color.web("#dc2626"));
         g.fillRect(sxWorld(end.x) - 7, syWorld(end.y) - 7, 14, 14);
@@ -404,6 +406,24 @@ public final class ExpansionDebug extends Application {
         return hagrid.getIrregularGrid();
     }
 
+    private Traversal createTraversal() {
+        Vec2f extents = grid.bbox.extents();
+        Vec2f origin = new Vec2f(
+                grid.bbox.min.x + extents.x * rayOriginFraction.x,
+                grid.bbox.min.y + extents.y * rayOriginFraction.y);
+        Vec2f end = new Vec2f(
+                grid.bbox.min.x + extents.x * rayEndFraction.x,
+                grid.bbox.min.y + extents.y * rayEndFraction.y);
+        Cell[] exitBounds = ownership;
+        if (expandStage.isSelected()) {
+            exitBounds = new Cell[expansion.size()];
+            for (int i = 0; i < exitBounds.length; i++) {
+                exitBounds[i] = expansion.getCell(i).copy();
+            }
+        }
+        return new Traversal(grid, triangles, exitBounds, origin, end);
+    }
+
     private static Tri triangle(float scale,
             float x0, float y0, float x1, float y1, float x2, float y2) {
         return new Tri(
@@ -453,158 +473,6 @@ public final class ExpansionDebug extends Application {
         if (nearest == right) return new Vec2f(1.0f, value.y);
         if (nearest == bottom) return new Vec2f(value.x, 0.0f);
         return new Vec2f(value.x, 1.0f);
-    }
-
-    private final class RayTraversal {
-        final Vec2f origin;
-        final Vec2f direction;
-        final double maxT;
-        final java.util.ArrayList<Vec2f> exits = new java.util.ArrayList<>();
-        double t;
-        boolean done;
-        boolean hit;
-        int traversalIteration;
-        int totalWork;
-        int currentCell = -1;
-        Vec2i voxel;
-        double lastExitT = Double.NaN;
-        double bestHitT = Double.POSITIVE_INFINITY;
-        int bestHitRef = -1;
-        final java.util.Set<Integer> testedRefs = new java.util.LinkedHashSet<>();
-        String message = "Ray ready";
-
-        RayTraversal() {
-            Vec2f ext = grid.bbox.extents();
-            origin = new Vec2f(
-                    grid.bbox.min.x + ext.x * rayOriginFraction.x,
-                    grid.bbox.min.y + ext.y * rayOriginFraction.y);
-            Vec2f end = new Vec2f(
-                    grid.bbox.min.x + ext.x * rayEndFraction.x,
-                    grid.bbox.min.y + ext.y * rayEndFraction.y);
-            direction = end.sub(origin);
-            maxT = 1.0;
-            Vec2f voxelPosition = origin.sub(grid.bbox.min).mul(grid.grid_inv());
-            voxel = Vec2i.clamp(new Vec2i(voxelPosition), new Vec2i(), grid.grid_dims().sub(1));
-        }
-
-        Vec2f endPoint() {
-            return origin.add(direction);
-        }
-
-        Vec2f point() {
-            return origin.add(direction.mul((float) Math.min(t, maxT)));
-        }
-
-        void step() {
-            if (done) {
-                message = hit ? "Traversal already stopped at a primitive hit"
-                        : "Traversal already left the grid";
-                return;
-            }
-
-            Vec2i dimensions = grid.grid_dims();
-            traversalIteration++;
-            testedRefs.clear();
-            int cellId = GridAbstracts.lookup_entry(grid.entries, grid.shift, grid.dims, voxel);
-            currentCell = cellId;
-            selectedCell = cellId;
-            Cell cell = expandStage.isSelected() ? expansion.getCell(cellId) : ownership[cellId];
-            BBox bounds = grid.cellbound(cell);
-            double tx = boundaryT(bounds, 0);
-            double ty = boundaryT(bounds, 1);
-            double exitT = Math.min(tx, ty);
-            lastExitT = exitT;
-
-            testPrimitives(cell);
-            totalWork += 1 + testedRefs.size();
-            if (bestHitT <= exitT) {
-                t = bestHitT;
-                hit = true;
-                done = true;
-                message = "Iteration " + traversalIteration + ": HIT T" + bestHitRef
-                        + " at t=" + format(bestHitT) + " before exit t=" + format(exitT);
-                return;
-            }
-
-            Vec2f exitPoint = origin.add(direction.mul((float) exitT));
-            exits.add(exitPoint);
-            Vec2f exitVoxelPosition = exitPoint.sub(grid.bbox.min).mul(grid.grid_inv());
-            Vec2i exitVoxel = new Vec2i(exitVoxelPosition);
-            Vec2i cellPoint = new Vec2i(
-                    direction.x >= 0 ? cell.max.x : cell.min.x,
-                    direction.y >= 0 ? cell.max.y : cell.min.y);
-            Vec2i nextVoxel = new Vec2i(
-                    nearlyEqual(exitT, tx) ? cellPoint.x + (direction.x >= 0 ? 0 : -1) : exitVoxel.x,
-                    nearlyEqual(exitT, ty) ? cellPoint.y + (direction.y >= 0 ? 0 : -1) : exitVoxel.y);
-            voxel = new Vec2i(
-                    direction.x >= 0 ? Math.max(nextVoxel.x, voxel.x) : Math.min(nextVoxel.x, voxel.x),
-                    direction.y >= 0 ? Math.max(nextVoxel.y, voxel.y) : Math.min(nextVoxel.y, voxel.y));
-            t = exitT;
-
-            if (t >= maxT || voxel.x < 0 || voxel.y < 0
-                    || voxel.x >= dimensions.x || voxel.y >= dimensions.y) {
-                done = true;
-                message = "Iteration " + traversalIteration + ": exited grid from cell " + cellId;
-            } else {
-                message = "Iteration " + traversalIteration + ": cell " + cellId
-                        + " tested " + testedRefs + ", exit t=" + format(exitT)
-                        + ", next voxel=" + voxel;
-            }
-        }
-
-        private double boundaryT(BBox bounds, int axis) {
-            double d = direction.get(axis);
-            double boundary = d >= 0 ? bounds.max.get(axis) : bounds.min.get(axis);
-            return (boundary - origin.get(axis)) / d;
-        }
-
-        private void testPrimitives(Cell cell) {
-            for (int i = cell.begin; i < cell.end; i++) {
-                int primitiveId = grid.ref_ids.get(i);
-                testedRefs.add(primitiveId);
-                Tri tri = triangles[primitiveId];
-                Vec2f[] vertices = {tri.p0(), tri.p1(), tri.p2()};
-                for (int edge = 0; edge < 3; edge++) {
-                    double candidate = raySegmentT(vertices[edge], vertices[(edge + 1) % 3]);
-                    if (candidate >= 0 && candidate < bestHitT) {
-                        bestHitT = candidate;
-                        bestHitRef = primitiveId;
-                    }
-                }
-            }
-        }
-
-        private double raySegmentT(Vec2f a, Vec2f b) {
-            Vec2f edge = b.sub(a);
-            Vec2f delta = a.sub(origin);
-            double denominator = cross(direction, edge);
-            if (Math.abs(denominator) < 1e-9) return Double.POSITIVE_INFINITY;
-            double rayT = cross(delta, edge) / denominator;
-            double segmentT = cross(delta, direction) / denominator;
-            return segmentT >= 0 && segmentT <= 1 ? rayT : Double.POSITIVE_INFINITY;
-        }
-
-        private double cross(Vec2f a, Vec2f b) {
-            return a.x * b.y - a.y * b.x;
-        }
-
-        String details() {
-            String hitText = bestHitRef < 0 ? "none"
-                    : "T" + bestHitRef + "@" + format(bestHitT);
-            return "iteration=" + traversalIteration + " voxel=" + voxel
-                    + " cell=" + currentCell + " tested=" + testedRefs
-                    + " nearestHit=" + hitText
-                    + " exit=" + (Double.isNaN(lastExitT) ? "-" : format(lastExitT))
-                    + " work=" + totalWork;
-        }
-
-        private boolean nearlyEqual(double a, double b) {
-            return Math.abs(a - b) <= 1e-7 * Math.max(1.0, Math.max(Math.abs(a), Math.abs(b)));
-        }
-
-        private String format(double value) {
-            return String.format("%.4f", value);
-        }
     }
 
     private double sxWorld(double x) {
