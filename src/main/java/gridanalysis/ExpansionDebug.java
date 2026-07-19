@@ -24,8 +24,10 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -43,12 +45,14 @@ public final class ExpansionDebug extends Application {
     private static final double PLOT_HEIGHT = 576;
 
     private final Canvas canvas = new Canvas(900, 690);
-    private final Label status = new Label();
+    private final TextArea status = new TextArea();
     private final CheckBox partial = new CheckBox("Aggressive partial expansion");
     private final CheckBox buildStage = new CheckBox("Build");
     private final CheckBox mergeStage = new CheckBox("Merge");
     private final CheckBox flattenStage = new CheckBox("Flatten");
     private final CheckBox expandStage = new CheckBox("Expand");
+    private final CheckBox cellLabels = new CheckBox("Cell labels");
+    private final CheckBox rayLabels = new CheckBox("Ray annotations");
     private final TextField topDensity = new TextField("0.12");
     private final TextField secondDensity = new TextField("2.4");
     private final TextField alpha = new TextField("0.995");
@@ -71,8 +75,20 @@ public final class ExpansionDebug extends Application {
     @Override
     public void start(Stage stage) {
         partial.setSelected(true);
+        cellLabels.setSelected(true);
+        rayLabels.setSelected(true);
+        cellLabels.setOnAction(event -> draw());
+        rayLabels.setOnAction(event -> draw());
+        status.setEditable(false);
+        status.setFocusTraversable(false);
         status.setWrapText(true);
-        status.setPrefWidth(520);
+        status.setPrefRowCount(2);
+        status.setMinHeight(54);
+        status.setPrefHeight(54);
+        status.setMaxHeight(54);
+        status.setStyle("-fx-control-inner-background: #ffffff; -fx-background-color: #e2e8f0;"
+                + " -fx-border-color: #cbd5e1; -fx-border-radius: 5; -fx-background-radius: 5;"
+                + " -fx-font-family: 'Consolas'; -fx-font-size: 12px;");
         for (TextField field : new TextField[] {topDensity, secondDensity, alpha, expansionIterations, sceneScale}) {
             field.setPrefColumnCount(5);
             field.setOnAction(event -> reset());
@@ -137,21 +153,25 @@ public final class ExpansionDebug extends Application {
             rayWasDragged = false;
         });
 
-        HBox stages = new HBox(12, new Label("Construction:"), buildStage,
-                mergeStage, flattenStage, expandStage, partial);
-        HBox parameters = new HBox(8,
+        FlowPane stages = new FlowPane(12, 6, new Label("Construction:"), buildStage,
+                mergeStage, flattenStage, expandStage, partial,
+                new Label("Display:"), cellLabels, rayLabels);
+        FlowPane parameters = new FlowPane(8, 6,
                 new Label("top_density"), topDensity,
                 new Label("snd_density"), secondDensity,
                 new Label("alpha"), alpha,
                 new Label("exp_iters"), expansionIterations,
-                new Label("scene_scale"), sceneScale,
-                new Label("Press Enter or Reset construction to apply"));
-        HBox controls = new HBox(10, reset, resetRay, traversalStep, status);
-        VBox toolbar = new VBox(8, stages, parameters, controls);
-        toolbar.setPadding(new Insets(10));
+                new Label("scene_scale"), sceneScale);
+        Label applyHint = new Label("Press Enter in a value or reset construction to apply");
+        applyHint.setStyle("-fx-text-fill: #64748b; -fx-font-size: 11px;");
+        HBox controls = new HBox(10, reset, resetRay, traversalStep);
+        VBox toolbar = new VBox(7, stages, parameters, applyHint, controls, status);
+        toolbar.setPadding(new Insets(10, 14, 9, 14));
+        toolbar.setStyle("-fx-background-color: #f8fafc; -fx-border-color: transparent transparent #e2e8f0 transparent;");
         BorderPane root = new BorderPane(canvas);
         root.setTop(toolbar);
-        root.setStyle("-fx-background-color: #f8fafc;");
+        BorderPane.setMargin(canvas, new Insets(6, 0, 0, 0));
+        root.setStyle("-fx-background-color: #f1f5f9;");
 
         reset();
         stage.setTitle("Hagrid Expansion Laboratory");
@@ -247,8 +267,16 @@ public final class ExpansionDebug extends Application {
             g.setLineWidth(id == selectedCell ? 3 : 1.5);
             g.setLineDashes();
             g.strokeRect(r.x, r.y, r.w, r.h);
-            g.setFill(Color.web("#334155"));
-            g.fillText("cell " + id + " " + references(id), r.x + 5, r.y + 15);
+            if (cellLabels.isSelected() && (id == selectedCell || (r.w >= 54 && r.h >= 22))) {
+                g.save();
+                g.beginPath();
+                g.rect(r.x + 1, r.y + 1, Math.max(0, r.w - 2), Math.max(0, r.h - 2));
+                g.closePath();
+                g.clip();
+                g.setFill(Color.web("#334155"));
+                g.fillText("cell " + id + " " + references(id), r.x + 5, r.y + 15);
+                g.restore();
+            }
         }
     }
 
@@ -280,8 +308,10 @@ public final class ExpansionDebug extends Application {
             g.setLineWidth(traversal.testedRefs.contains(i) ? 5 : 2);
             g.fillPolygon(xs, ys, 3);
             g.strokePolygon(xs, ys, 3);
-            g.setFill(colors[i]);
-            g.fillText("T" + i, xs[0] + 4, ys[0] - 4);
+            if (rayLabels.isSelected()) {
+                g.setFill(colors[i]);
+                g.fillText("T" + i, xs[0] + 4, ys[0] - 4);
+            }
         }
     }
 
@@ -310,8 +340,10 @@ public final class ExpansionDebug extends Application {
         g.fillOval(sxWorld(current.x) - 7, syWorld(current.y) - 7, 14, 14);
         g.setFill(Color.web("#dc2626"));
         g.fillRect(sxWorld(end.x) - 7, syWorld(end.y) - 7, 14, 14);
-        g.setFill(Color.web("#dc2626"));
-        g.fillText("sample ray", ORIGIN_X + 8, ORIGIN_Y + PLOT_HEIGHT * 0.62);
+        if (rayLabels.isSelected()) {
+            g.setFill(Color.web("#dc2626"));
+            g.fillText("sample ray", ORIGIN_X + 8, ORIGIN_Y + PLOT_HEIGHT * 0.62);
+        }
     }
 
     private void drawLegend(GraphicsContext g) {

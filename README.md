@@ -9,6 +9,8 @@ The 2D model preserves the structure of Hagrid while translating octrees to
 quadtrees, eight children to four, XYZ coordinates to XY, and box faces to box
 edges.
 
+![Hagrid expansion and traversal laboratory](Screenshot.png?raw=true "Hagrid expansion and traversal laboratory")
+
 ## Construction pipeline
 
 The implementation follows the original pipeline:
@@ -76,12 +78,8 @@ harness can also be run directly after packaging:
 java -ea -cp "target\classes;target\test-classes" gridanalysis.algorithm.ExpandTest
 ```
 
-## Screenshots
+## Interactive laboratory
 
-Adaptive multi-level build:
-
-![Adaptive multi-level grid](screenshot1.png?raw=true "Adaptive multi-level grid")
-
-Merged irregular grid:
-
-![Merged irregular grid](screenshot2.jpg?raw=true "Merged irregular grid")
+The screenshot above shows the merged and flattened ownership grid, scene
+primitives, draggable sample ray, selected traversal bounds, construction-stage
+controls, and live traversal diagnostics in the dedicated JavaFX laboratory.
