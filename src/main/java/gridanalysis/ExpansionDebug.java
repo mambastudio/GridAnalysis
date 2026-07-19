@@ -2,6 +2,7 @@ package gridanalysis;
 
 import gridanalysis.algorithm.Expand;
 import gridanalysis.algorithm.Build;
+import gridanalysis.algorithm.Compress;
 import gridanalysis.algorithm.Flatten;
 import gridanalysis.algorithm.GridAbstracts;
 import gridanalysis.algorithm.Hagrid;
@@ -52,6 +53,7 @@ public final class ExpansionDebug extends Application {
     private final CheckBox mergeStage = new CheckBox("Merge");
     private final CheckBox flattenStage = new CheckBox("Flatten");
     private final CheckBox expandStage = new CheckBox("Expand");
+    private final CheckBox compressStage = new CheckBox("Compress");
     private final CheckBox cellLabels = new CheckBox("Cell labels");
     private final CheckBox rayLabels = new CheckBox("Ray annotations");
     private final TextField topDensity = new TextField("0.12");
@@ -98,6 +100,7 @@ public final class ExpansionDebug extends Application {
         mergeStage.setSelected(true);
         flattenStage.setSelected(true);
         expandStage.setSelected(false);
+        compressStage.setSelected(false);
         Button reset = new Button("Reset construction");
         Button resetRay = new Button("Reset ray");
         Button traversalStep = new Button("Traversal step");
@@ -108,12 +111,23 @@ public final class ExpansionDebug extends Application {
             if (!mergeStage.isSelected()) {
                 flattenStage.setSelected(false);
                 expandStage.setSelected(false);
+                compressStage.setSelected(false);
             }
             reset();
         });
         flattenStage.setOnAction(event -> {
             if (flattenStage.isSelected()) mergeStage.setSelected(true);
-            else expandStage.setSelected(false);
+            else {
+                expandStage.setSelected(false);
+                compressStage.setSelected(false);
+            }
+            reset();
+        });
+        compressStage.setOnAction(event -> {
+            if (compressStage.isSelected()) {
+                mergeStage.setSelected(true);
+                flattenStage.setSelected(true);
+            }
             reset();
         });
         expandStage.setOnAction(event -> {
@@ -154,7 +168,7 @@ public final class ExpansionDebug extends Application {
         });
 
         FlowPane stages = new FlowPane(12, 6, new Label("Construction:"), buildStage,
-                mergeStage, flattenStage, expandStage, partial,
+                mergeStage, flattenStage, expandStage, compressStage, partial,
                 new Label("Display:"), cellLabels, rayLabels);
         FlowPane parameters = new FlowPane(8, 6,
                 new Label("top_density"), topDensity,
@@ -421,6 +435,13 @@ public final class ExpansionDebug extends Application {
                 exitBounds[i] = expansion.getCell(i).copy();
             }
         }
+        if (compressStage.isSelected()) {
+            Compress.Result compressed = Compress.compress(exitBounds, grid.ref_ids, grid.grid_dims());
+            if (compressed != null) {
+                return new Traversal(grid, triangles, compressed.cells(),
+                        compressed.references(), origin, end);
+            }
+        }
         return new Traversal(grid, triangles, exitBounds, origin, end);
     }
 
@@ -433,6 +454,11 @@ public final class ExpansionDebug extends Application {
     }
 
     private String stageName() {
+        if (compressStage.isSelected()) {
+            return expandStage.isSelected()
+                    ? "Build + Merge + Flatten + Expand + Compress"
+                    : "Build + Merge + Flatten + Compress";
+        }
         if (expandStage.isSelected()) return "Build + Merge + Flatten + Expand";
         if (flattenStage.isSelected()) return "Build + Merge + Flatten";
         if (mergeStage.isSelected()) return "Build + Merge";

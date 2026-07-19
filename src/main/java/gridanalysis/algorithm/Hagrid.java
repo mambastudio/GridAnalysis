@@ -19,6 +19,9 @@ public class Hagrid{
     public float snd_density = 12.2f;
     public float alpha = 0.995f;
     public int exp_iters = 3;
+
+    /** Enables the optional post-expansion SmallCell compression pass. */
+    public boolean compression = false;
     
     /** Enables the aggressive GitHub expansion path that may cross part of a neighbor. */
     public boolean partial_expansion = true;

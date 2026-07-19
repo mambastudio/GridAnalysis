@@ -28,6 +28,7 @@ public class HagridConstruction implements GridConstruction{
         merge_grid(hagrid);
         flatten_grid(hagrid);
         expand_grid(hagrid, tris);
+        if (hagrid.compression) compress_grid(hagrid);
         
         return hagrid.getIrregularGrid();
     }

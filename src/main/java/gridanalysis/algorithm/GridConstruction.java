@@ -39,9 +39,7 @@ public interface GridConstruction {
     void expand_grid(Hagrid hagrid, Tri[] tris);
 
     /// Tries to compress the grid by using sentinels in the reference array and using 16-bit cell dimensions. Returns true on success, otherwise false.
-    //public boolean compress_grid(Grid grid);
-    default boolean compress_grid(Hagrid hagrid)
-    {
-        return false;
+    default boolean compress_grid(Hagrid hagrid) {
+        return Compress.compress(hagrid.getIrregularGrid());
     }
 }

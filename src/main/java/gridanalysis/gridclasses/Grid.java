@@ -17,9 +17,8 @@ import gridanalysis.utilities.list.ObjectList;
 public class Grid {
     public Entry[] entries;                ///< Voxel map, stored as a contiguous array
     public IntegerList   ref_ids;             ///< Array of primitive references
-    public ObjectList<Cell>  cells;                  ///< Cells of the structure (nullptr if compressed)
-
-    //SmallCell* small_cells;       ///< Compressed cells (nullptr if not compressed)
+    public ObjectList<Cell> cells;                 ///< Cells of the structure (null if compressed)
+    public SmallCell[] small_cells;                ///< Compressed cells (null if not compressed)
 
     public BBox bbox;                      ///< Bounding box of the scene
     public Vec2i dims;                     ///< Top-level dimensions
@@ -38,4 +37,7 @@ public class Grid {
     public BBox cellbound(Cell cell) {return new BBox(
                                                         bbox.min.add(cell_size().mul(new Vec2f(cell.min))), 
                                                         bbox.min.add(cell_size().mul(new Vec2f(cell.max))));}
+    public BBox cellbound(SmallCell cell) {return new BBox(
+                                                        bbox.min.add(cell_size().mul(new Vec2f(cell.min().toVec2i()))),
+                                                        bbox.min.add(cell_size().mul(new Vec2f(cell.max().toVec2i()))));}
 }

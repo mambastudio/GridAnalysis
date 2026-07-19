@@ -5,7 +5,9 @@ import gridanalysis.coordinates.Vec2i;
 import gridanalysis.gridclasses.BBox;
 import gridanalysis.gridclasses.Cell;
 import gridanalysis.gridclasses.Grid;
+import gridanalysis.gridclasses.SmallCell;
 import gridanalysis.gridclasses.Tri;
+import gridanalysis.utilities.list.IntegerList;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -19,12 +21,15 @@ import java.util.Set;
  * locate the voxel, look up its cell, intersect that cell's primitives, find
  * the farthest cell planes along the ray, and advance to the exit voxel. A
  * caller selects normal or expanded traversal by supplying the corresponding
- * immutable array of cell exit bounds.</p>
+ * immutable array of cell exit bounds. Full {@link Cell} and compressed
+ * {@link SmallCell} representations are both supported.</p>
  */
 public final class Traversal {
     private final Grid grid;
     private final Tri[] primitives;
     private final Cell[] cells;
+    private final SmallCell[] smallCells;
+    private final IntegerList references;
     private final Vec2f origin;
     private final Vec2f direction;
     private final double maxT;
@@ -44,9 +49,21 @@ public final class Traversal {
     private String message = "Ray ready";
 
     public Traversal(Grid grid, Tri[] primitives, Cell[] cells, Vec2f origin, Vec2f end) {
+        this(grid, primitives, cells, null, grid.ref_ids, origin, end);
+    }
+
+    public Traversal(Grid grid, Tri[] primitives, SmallCell[] cells,
+            IntegerList references, Vec2f origin, Vec2f end) {
+        this(grid, primitives, null, cells, references, origin, end);
+    }
+
+    private Traversal(Grid grid, Tri[] primitives, Cell[] cells, SmallCell[] smallCells,
+            IntegerList references, Vec2f origin, Vec2f end) {
         this.grid = grid;
         this.primitives = primitives;
         this.cells = cells;
+        this.smallCells = smallCells;
+        this.references = references;
         this.origin = origin;
         this.direction = end.sub(origin);
         this.maxT = 1.0;
@@ -68,14 +85,27 @@ public final class Traversal {
         testedRefs.clear();
         int cellId = GridAbstracts.lookup_entry(grid.entries, grid.shift, grid.dims, voxel);
         currentCell = cellId;
-        Cell cell = cells[cellId];
-        BBox bounds = grid.cellbound(cell);
+        Vec2i cellMin;
+        Vec2i cellMax;
+        BBox bounds;
+        if (smallCells == null) {
+            Cell cell = cells[cellId];
+            cellMin = cell.min;
+            cellMax = cell.max;
+            bounds = grid.cellbound(cell);
+            testPrimitives(cell.begin, cell.end);
+        } else {
+            SmallCell cell = smallCells[cellId];
+            cellMin = cell.min().toVec2i();
+            cellMax = cell.max().toVec2i();
+            bounds = grid.cellbound(cell);
+            testSentinelPrimitives(cell.begin());
+        }
         double tx = boundaryT(bounds, 0);
         double ty = boundaryT(bounds, 1);
         double exitT = Math.min(tx, ty);
         lastExitT = exitT;
 
-        testPrimitives(cell);
         totalWork += 1 + testedRefs.size();
         if (bestHitT <= exitT) {
             t = bestHitT;
@@ -91,8 +121,8 @@ public final class Traversal {
         Vec2f exitVoxelPosition = exitPoint.sub(grid.bbox.min).mul(grid.grid_inv());
         Vec2i exitVoxel = new Vec2i(exitVoxelPosition);
         Vec2i cellPoint = new Vec2i(
-                direction.x >= 0 ? cell.max.x : cell.min.x,
-                direction.y >= 0 ? cell.max.y : cell.min.y);
+                direction.x >= 0 ? cellMax.x : cellMin.x,
+                direction.y >= 0 ? cellMax.y : cellMin.y);
         Vec2i nextVoxel = new Vec2i(
                 nearlyEqual(exitT, tx) ? cellPoint.x + (direction.x >= 0 ? 0 : -1) : exitVoxel.x,
                 nearlyEqual(exitT, ty) ? cellPoint.y + (direction.y >= 0 ? 0 : -1) : exitVoxel.y);
@@ -118,9 +148,20 @@ public final class Traversal {
         return (boundary - origin.get(axis)) / d;
     }
 
-    private void testPrimitives(Cell cell) {
-        for (int i = cell.begin; i < cell.end; i++) {
-            int primitiveId = grid.ref_ids.get(i);
+    private void testPrimitives(int begin, int end) {
+        for (int i = begin; i < end; i++) {
+            testPrimitive(references.get(i));
+        }
+    }
+
+    private void testSentinelPrimitives(int begin) {
+        if (begin < 0) return;
+        for (int i = begin; references.get(i) >= 0; i++) {
+            testPrimitive(references.get(i));
+        }
+    }
+
+    private void testPrimitive(int primitiveId) {
             testedRefs.add(primitiveId);
             Tri tri = primitives[primitiveId];
             Vec2f[] vertices = {tri.p0(), tri.p1(), tri.p2()};
@@ -130,7 +171,6 @@ public final class Traversal {
                     bestHitT = candidate;
                     bestHitRef = primitiveId;
                 }
-            }
         }
     }
 

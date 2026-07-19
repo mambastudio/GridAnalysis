@@ -20,10 +20,13 @@ The implementation follows the original pipeline:
 3. **Flatten** converts the hierarchy into traversal-ready cell ownership.
 4. **Expand** enlarges cell exit bounds so a ray can safely skip neighboring
    cells whose primitive references have already been considered.
+5. **Compress** optionally stores cell bounds as unsigned 16-bit coordinates
+   and replaces reference end offsets with `-1` sentinels, matching Hagrid's
+   compact `SmallCell` traversal representation.
 
 Build and Merge are the established foundation of this port. Flatten, basic
-expansion, aggressive partial expansion, and an interactive traversal debugger
-are available for analysis.
+expansion, aggressive partial expansion, `SmallCell` compression, and an
+interactive traversal debugger are available for analysis.
 
 Expansion does not change voxel ownership. It creates a second set of bounds
 used only to decide how far traversal may advance. These expanded bounds may
