@@ -19,7 +19,7 @@ import static gridanalysis.irreg.Voxel_Map.entry_begin;
 import static gridanalysis.irreg.Voxel_Map.entry_log_dim;
 import static gridanalysis.irreg.Voxel_Map.make_entry;
 import gridanalysis.utilities.list.ObjectList;
-import static java.lang.Math.cbrt;
+import static java.lang.Math.sqrt;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -48,10 +48,10 @@ public class Grid2 {
         return count + (c1 - j) + (c0 - i);
     }
     
-    /// Computes the dimensions of a grid using the formula : R{x, y, z} = e{x, y, z} * (N * d / V)^(1/3).
+    /// Computes 2D grid dimensions using R{x,y} = e{x,y} * sqrt(N*d/A).
     public static void compute_grid_dims(Float2 e, int N, float d, int[] dims) {
-        float V = e.x * e.y;
-        float r = (float) (cbrt(d * N / V));
+        float area = e.x * e.y;
+        float r = (float) sqrt(d * N / area);
         dims[0] = Math.max(1, (int)(e.x * r));
         dims[1] = Math.max(1, (int)(e.y * r));
         

@@ -39,10 +39,10 @@ import javafx.stage.Stage;
  * inspect it, then advance expansion one axis at a time.
  */
 public final class ExpansionDebug extends Application {
-    private static final double ORIGIN_X = 70;
-    private static final double ORIGIN_Y = 55;
     private static final double PLOT_WIDTH = 576;
     private static final double PLOT_HEIGHT = 576;
+    private static final double ORIGIN_X = (900 - PLOT_WIDTH) / 2;
+    private static final double ORIGIN_Y = 55;
 
     private final Canvas canvas = new Canvas(900, 690);
     private final TextArea status = new TextArea();
@@ -57,7 +57,6 @@ public final class ExpansionDebug extends Application {
     private final TextField secondDensity = new TextField("2.4");
     private final TextField alpha = new TextField("0.995");
     private final TextField expansionIterations = new TextField("3");
-    private final TextField sceneScale = new TextField("600");
 
     private Grid grid;
     private Tri[] triangles;
@@ -89,7 +88,7 @@ public final class ExpansionDebug extends Application {
         status.setStyle("-fx-control-inner-background: #ffffff; -fx-background-color: #e2e8f0;"
                 + " -fx-border-color: #cbd5e1; -fx-border-radius: 5; -fx-background-radius: 5;"
                 + " -fx-font-family: 'Consolas'; -fx-font-size: 12px;");
-        for (TextField field : new TextField[] {topDensity, secondDensity, alpha, expansionIterations, sceneScale}) {
+        for (TextField field : new TextField[] {topDensity, secondDensity, alpha, expansionIterations}) {
             field.setPrefColumnCount(5);
             field.setOnAction(event -> reset());
         }
@@ -160,8 +159,7 @@ public final class ExpansionDebug extends Application {
                 new Label("top_density"), topDensity,
                 new Label("snd_density"), secondDensity,
                 new Label("alpha"), alpha,
-                new Label("exp_iters"), expansionIterations,
-                new Label("scene_scale"), sceneScale);
+                new Label("exp_iters"), expansionIterations);
         Label applyHint = new Label("Press Enter in a value or reset construction to apply");
         applyHint.setStyle("-fx-text-fill: #64748b; -fx-font-size: 11px;");
         HBox controls = new HBox(10, reset, resetRay, traversalStep);
@@ -347,7 +345,7 @@ public final class ExpansionDebug extends Application {
     }
 
     private void drawLegend(GraphicsContext g) {
-        double y = ORIGIN_Y + PLOT_HEIGHT + 28;
+        double y = 18;
         g.setFill(Color.web("#334155"));
         g.fillText("Solid gray/blue: immutable voxel ownership", ORIGIN_X, y);
         g.setFill(Color.web("#ea580c"));
@@ -381,7 +379,9 @@ public final class ExpansionDebug extends Application {
     }
 
     private Grid createGrid() {
-        float scale = readFloat(sceneScale, 600.0f, 0.001f);
+        // World scale is deliberately fixed: the 2D density heuristic is
+        // invariant under uniform scaling, so it is not a construction input.
+        float scale = 1.0f;
         triangles = new Tri[] {
             triangle(scale, 0.14f, 0.20f, 0.33f, 0.28f, 0.20f, 0.52f),
             triangle(scale, 0.29f, 0.44f, 0.74f, 0.26f, 0.62f, 0.89f),

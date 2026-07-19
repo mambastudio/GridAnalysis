@@ -41,10 +41,10 @@ observed:
 
 | Construction mode | Traversal steps |
 | --- | ---: |
-| Build + Merge + Flatten | 37 |
-| Build + Merge + Flatten + Expand + aggressive partial expansion | 7 |
+| Build + Merge + Flatten | 52 |
+| Build + Merge + Flatten + Expand + aggressive partial expansion | 10 |
 
-That is a reduction of 30 cell transitions, or approximately **81% fewer
+That is a reduction of 42 cell transitions, or approximately **81% fewer
 traversal steps**, for this particular ray and scene configuration. The expanded
 exit bounds let traversal cross several compatible ownership cells at once
 instead of stopping at every original cell boundary.
@@ -81,14 +81,22 @@ the current voxel/cell, tested primitives, nearest hit, exit distance, and work.
 
 ## Density model
 
-The visual 2D implementation deliberately retains Hagrid's cube-root density
-scaling. Although square-root scaling would be dimensionally natural in a pure
-2D algorithm, the cube root keeps the parameters comparable with the original
-3D implementation and with the values used by the GPU port.
+The Java implementation uses the dimensionally correct 2D analogue of Hagrid's
+grid-resolution heuristic:
 
-Density is relative to the scene bounds. Changing the overall bounds, primitive
-scale, or resolution therefore changes the apparent refinement even when the
-numeric density values remain the same.
+```text
+Rx = dx * sqrt(lambda * N / A)
+Ry = dy * sqrt(lambda * N / A)
+```
+
+Here `A` is the scene or cell area, `N` is its primitive count, and `lambda` is
+the selected density. Uniformly scaling all scene coordinates therefore leaves
+the grid topology unchanged. Aspect ratio, primitive count, primitive
+distribution, and the density parameters still influence subdivision.
+
+The future 3D GPU implementation should use the paper's original cube-root
+volume formula. Its scene dimensions scale linearly while volume scales
+cubically, so it has the same uniform-scale invariance in three dimensions.
 
 ## Tests
 

@@ -18,9 +18,9 @@ import gridanalysis.jfx.MEngine;
 import gridanalysis.jfx.shape.MCellInfo;
 import gridanalysis.utilities.list.IntegerList;
 import gridanalysis.utilities.list.ObjectList;
-import static java.lang.Math.cbrt;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.lang.Math.sqrt;
 
 /**
  *
@@ -52,8 +52,11 @@ public class Build extends GridAbstracts{
     /// Computes grid dimensions based on the formula by Cleary et al.
     public Vec2i compute_grid_dims(BBox bb, int num_prims, float density) {
         Vec2f extents = bb.extents();
-        float volume = extents.x * extents.y;
-        float ratio = (float) cbrt(density * num_prims / volume);
+        float area = extents.x * extents.y;
+        // This is the dimensionally correct 2D analogue of Hagrid's 3D
+        // cube-root volume heuristic. Uniformly scaling a scene therefore
+        // leaves its grid dimensions unchanged.
+        float ratio = (float) sqrt(density * num_prims / area);
         return Vec2i.max(new Vec2i(1), new Vec2i(
                 extents.x * ratio,
                 extents.y * ratio));        
