@@ -33,6 +33,28 @@ optimization is successful when it returns the same nearest primitive and hit
 distance as unexpanded traversal while reducing traversal steps or primitive
 tests.
 
+## Observed traversal results
+
+The interactive 2D scenario already demonstrates the purpose of the expansion
+passes clearly. For the same ray placed along a primitive edge, the laboratory
+observed:
+
+| Construction mode | Traversal steps |
+| --- | ---: |
+| Build + Merge + Flatten | 37 |
+| Build + Merge + Flatten + Expand + aggressive partial expansion | 7 |
+
+That is a reduction of 30 cell transitions, or approximately **81% fewer
+traversal steps**, for this particular ray and scene configuration. The expanded
+exit bounds let traversal cross several compatible ownership cells at once
+instead of stopping at every original cell boundary.
+
+This is an illustrative result rather than a general performance benchmark.
+Different rays, density parameters, primitive layouts, and scene bounds produce
+different reductions. The important correctness check is that optimized and
+unoptimized traversal report the same nearest primitive and hit distance; step
+count and primitive-test work can then be compared safely.
+
 ## Build and run
 
 The project uses Maven with JDK 25 and JavaFX 26 Early Access.
