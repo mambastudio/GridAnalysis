@@ -11,6 +11,11 @@ edges.
 
 ![Hagrid expansion and traversal laboratory](Screenshot.png?raw=true "Hagrid expansion and traversal laboratory")
 
+This repository focuses on algorithmic correctness, inspection, and traversal
+experimentation. It does not prescribe an optimized Java memory representation;
+applications are expected to choose layouts appropriate to their own CPU, GPU,
+interop, and allocation requirements.
+
 ## Construction pipeline
 
 The implementation follows the original pipeline:
@@ -62,9 +67,20 @@ SmallCell.begin:        [0, -1, 3]
 
 `Traversal` supports both representations. Compression should therefore return
 the same nearest hit, traversal path, and step count; its benefit is the smaller
-cell representation and sequential sentinel-based reference access. The
+logical cell representation and sequential sentinel-based reference access. The
 `Hagrid.compression` construction option is disabled by default, while the
 laboratory exposes a **Compress** checkbox for direct comparison.
+
+> **Memory-layout scope:** This project does not treat the Java in-memory
+> representation as a finished optimization. Java records and ordinary arrays
+> are used to express and validate Hagrid's data shapes and algorithms; a
+> `SmallCell` record is not guaranteed to occupy the same packed bytes as the
+> CUDA structure because JVM object headers, references, alignment, and runtime
+> decisions still apply. Users targeting production CPU or GPU performance
+> should provide an appropriate packed representation, such as primitive
+> structure-of-arrays, direct buffers, foreign-memory layouts, TypedMemory, or
+> native OpenCL/CUDA buffers. Choosing and benchmarking that representation is
+> intentionally left to each integration.
 
 ## Observed traversal results
 
