@@ -14,7 +14,7 @@ edges.
 | ![Merged irregular Hagrid cells](Screenshot%201.png?raw=true "Merged irregular Hagrid cells") | ![Expanded Hagrid ray traversal](Screenshot%202.png?raw=true "Expanded Hagrid ray traversal") |
 
 This repository focuses on algorithmic correctness, inspection, and traversal
-experimentation. It does not prescribe an optimized Java memory representation;
+experimentation. It does not prescribe an optimised Java memory representation;
 applications are expected to choose layouts appropriate to their own CPU, GPU,
 interop, and allocation requirements.
 
@@ -23,9 +23,9 @@ interop, and allocation requirements.
 The implementation follows the original pipeline:
 
 1. **Build** creates the initial adaptive grid from primitive density.
-2. **Merge** combines compatible neighboring cells.
+2. **Merge** combines compatible neighbouring cells.
 3. **Flatten** converts the hierarchy into traversal-ready cell ownership.
-4. **Expand** enlarges cell exit bounds so a ray can safely skip neighboring
+4. **Expand** enlarges cell exit bounds so a ray can safely skip neighbouring
    cells whose primitive references have already been considered.
 5. **Compress** optionally stores cell bounds as unsigned 16-bit coordinates
    and replaces reference end offsets with `-1` sentinels, matching Hagrid's
@@ -39,14 +39,14 @@ Expansion does not change voxel ownership. It creates a second set of bounds
 used only to decide how far traversal may advance. These expanded bounds may
 overlap: correctness depends on the expanded cell containing only regions whose
 primitive-reference set is a subset of the selected cell's references. The
-optimization is successful when it returns the same nearest primitive and hit
+optimisation is successful when it returns the same nearest primitive and hit
 distance as unexpanded traversal while reducing traversal steps or primitive
 tests.
 
 ### Compressed traversal representation
 
-Compression is a storage and memory-access optimization applied after the cell
-bounds are finalized. It does not alter voxel ownership, expanded exit bounds,
+Compression is a storage and memory-access optimisation applied after the cell
+bounds are finalised. It does not alter voxel ownership, expanded exit bounds,
 or the expected hit result. The Java representation mirrors Hagrid's CUDA
 `SmallCell` shape:
 
@@ -74,7 +74,7 @@ logical cell representation and sequential sentinel-based reference access. The
 laboratory exposes a **Compress** checkbox for direct comparison.
 
 > **Memory-layout scope:** This project does not treat the Java in-memory
-> representation as a finished optimization. Java records and ordinary arrays
+> representation as a finished optimisation. Java records and ordinary arrays
 > are used to express and validate Hagrid's data shapes and algorithms; a
 > `SmallCell` record is not guaranteed to occupy the same packed bytes as the
 > CUDA structure because JVM object headers, references, alignment, and runtime
@@ -103,8 +103,8 @@ instead of stopping at every original cell boundary.
 
 This is an illustrative result rather than a general performance benchmark.
 Different rays, density parameters, primitive layouts, and scene bounds produce
-different reductions. The important correctness check is that optimized and
-unoptimized traversal report the same nearest primitive and hit distance; step
+different reductions. The important correctness check is that optimised and
+unoptimised traversal report the same nearest primitive and hit distance; step
 count and primitive-test work can then be compared safely.
 
 ## Build and run
@@ -133,7 +133,7 @@ outer grid boundary and drag its red arrowhead to change direction. Each travers
 step reports the current voxel/cell, tested primitives, nearest hit, exit
 distance, and work.
 The reusable `gridanalysis.algorithm.Traversal` class contains the actual 2D
-cell-walking algorithm; the JavaFX laboratory only controls and visualizes it.
+cell-walking algorithm; the JavaFX laboratory only controls and visualises it.
 
 ## Density model
 
