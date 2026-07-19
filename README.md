@@ -9,7 +9,9 @@ The 2D model preserves the structure of Hagrid while translating octrees to
 quadtrees, eight children to four, XYZ coordinates to XY, and box faces to box
 edges.
 
-![Hagrid expansion and traversal laboratory](Screenshot.png?raw=true "Hagrid expansion and traversal laboratory")
+| Merged irregular grid | Expanded ray traversal |
+|:---:|:---:|
+| ![Merged irregular Hagrid cells](Screenshot%201.png?raw=true "Merged irregular Hagrid cells") | ![Expanded Hagrid ray traversal](Screenshot%202.png?raw=true "Expanded Hagrid ray traversal") |
 
 This repository focuses on algorithmic correctness, inspection, and traversal
 experimentation. It does not prescribe an optimized Java memory representation;
@@ -78,8 +80,9 @@ laboratory exposes a **Compress** checkbox for direct comparison.
 > CUDA structure because JVM object headers, references, alignment, and runtime
 > decisions still apply. Users targeting production CPU or GPU performance
 > should provide an appropriate packed representation, such as primitive
-> structure-of-arrays, direct buffers, foreign-memory layouts, TypedMemory, or
-> native OpenCL/CUDA buffers. Choosing and benchmarking that representation is
+> structure-of-arrays, direct buffers, foreign-memory layouts,
+> [TypedMemory](https://github.com/mamba-studio/TypedMemory), or native
+> OpenCL/CUDA buffers. Choosing and benchmarking that representation is
 > intentionally left to each integration.
 
 ## Observed traversal results
@@ -126,7 +129,7 @@ The laboratory can enable Merge, Flatten, Expand, aggressive partial expansion,
 and Compress independently where their pipeline dependencies permit. It can
 also edit Hagrid density and expansion parameters, inspect cells and reference
 sets, and step a ray through the resulting grid. Drag the ray origin around the
-outer grid boundary and drag its target to change direction. Each traversal
+outer grid boundary and drag its red arrowhead to change direction. Each traversal
 step reports the current voxel/cell, tested primitives, nearest hit, exit
 distance, and work.
 The reusable `gridanalysis.algorithm.Traversal` class contains the actual 2D
@@ -168,6 +171,7 @@ sentinel placement, and rejection of dimensions that exceed 16 bits.
 
 ## Interactive laboratory
 
-The screenshot above shows the merged and flattened ownership grid, scene
-primitives, draggable sample ray, selected traversal bounds, construction-stage
-controls, and live traversal diagnostics in the dedicated JavaFX laboratory.
+The screenshots above show the merged irregular grid and an expanded traversal
+through it. The laboratory displays ownership cells, scene primitives, a
+draggable sample ray, selected traversal bounds, construction-stage controls,
+and live traversal diagnostics.

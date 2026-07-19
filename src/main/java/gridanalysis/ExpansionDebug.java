@@ -352,8 +352,7 @@ public final class ExpansionDebug extends Application {
         g.strokeOval(sxWorld(start.x) - 8, syWorld(start.y) - 8, 16, 16);
         g.setFill(traversal.hit() ? Color.web("#16a34a") : Color.web("#dc2626"));
         g.fillOval(sxWorld(current.x) - 7, syWorld(current.y) - 7, 14, 14);
-        g.setFill(Color.web("#dc2626"));
-        g.fillRect(sxWorld(end.x) - 7, syWorld(end.y) - 7, 14, 14);
+        drawRayArrowHead(g, start, end);
         if (rayLabels.isSelected()) {
             g.setFill(Color.web("#dc2626"));
             g.fillText("sample ray", ORIGIN_X + 8, ORIGIN_Y + PLOT_HEIGHT * 0.62);
@@ -367,7 +366,29 @@ public final class ExpansionDebug extends Application {
         g.setFill(Color.web("#ea580c"));
         g.fillText("Dashed orange/blue: expanded traversal exit bounds", ORIGIN_X + 260, y);
         g.setFill(Color.web("#64748b"));
-        g.fillText("Drag the blue circle around the grid boundary; drag the red square to aim.", ORIGIN_X, y + 22);
+        g.fillText("Drag the blue circle around the grid boundary; drag the red arrowhead to aim.", ORIGIN_X, y + 22);
+    }
+
+    private void drawRayArrowHead(GraphicsContext g, Vec2f start, Vec2f end) {
+        double tipX = sxWorld(end.x);
+        double tipY = syWorld(end.y);
+        double dx = tipX - sxWorld(start.x);
+        double dy = tipY - syWorld(start.y);
+        double length = Math.hypot(dx, dy);
+        if (length < 1e-9) return;
+
+        double ux = dx / length;
+        double uy = dy / length;
+        double baseX = tipX - ux * 18;
+        double baseY = tipY - uy * 18;
+        double perpendicularX = -uy * 8;
+        double perpendicularY = ux * 8;
+
+        g.setFill(Color.web("#dc2626"));
+        g.fillPolygon(
+                new double[] {tipX, baseX + perpendicularX, baseX - perpendicularX},
+                new double[] {tipY, baseY + perpendicularY, baseY - perpendicularY},
+                3);
     }
 
     private String references(int cellId) {
