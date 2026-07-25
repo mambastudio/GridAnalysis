@@ -22,7 +22,7 @@ import static java.util.stream.Collectors.partitioningBy;
  * @author user
  * @param <T>
  */
-public class ObjectList<T> extends ObjectListAbstract<T, ObjectList<T>> {
+public class ObjectList<T> extends ObjectListAbstract<T> {
     public ObjectList()
     {
         this.array = new Object[10];       
@@ -312,7 +312,7 @@ public class ObjectList<T> extends ObjectListAbstract<T, ObjectList<T>> {
 
     
     @Override
-    public void swap(ObjectListAbstract<T, ObjectList<T>> list)
+    public void swap(ObjectList<T> list)
     {
         
         T[] temp = toArray();

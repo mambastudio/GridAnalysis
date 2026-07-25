@@ -116,14 +116,38 @@ mvn clean package
 mvn javafx:run
 ```
 
-The normal executable entry point is `gridanalysis.Launcher`; the JavaFX
-application class is `gridanalysis.GridAnalysis`.
+The executable entry point is `gridanalysis.ExpansionDebugLauncher`; the
+JavaFX application class is `gridanalysis.ExpansionDebug`.
 
 To open the dedicated low-resolution expansion and traversal laboratory:
 
 ```shell
 mvn javafx:run@expansion-debug
 ```
+
+### Windows installer for the expansion debugger
+
+The repository includes a `jpackage` build script that bundles a Java runtime,
+the application, JavaFX, Start Menu integration, a desktop shortcut, and the
+project icon into an MSI installer. Building the installer requires JDK 25,
+Maven, and the WiX Toolset:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\package-expansion-debug.ps1
+```
+
+The installer is written to `target\installer`. The script uses
+`gridanalysis.ExpansionDebugLauncher` as its entry point, so the installed
+application opens the expansion and traversal laboratory directly. To produce
+an EXE installer or an unpacked application image instead:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\package-expansion-debug.ps1 -Type exe
+powershell -ExecutionPolicy Bypass -File .\package-expansion-debug.ps1 -Type app-image
+```
+
+Reusable PNG source, transparent PNG, and multi-resolution ICO assets are kept
+under `src\main\resources\icons`.
 
 The laboratory can enable Merge, Flatten, Expand, aggressive partial expansion,
 and Compress independently where their pipeline dependencies permit. It can

@@ -6,7 +6,6 @@
 package test;
 
 import gridanalysis.utilities.list.IntegerList;
-import gridanalysis.irreg.Common;
 import gridanalysis.utilities.list.ObjectList;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -84,7 +83,7 @@ public class Test {
     {
         ArrayList<Integer> list = new ArrayList(Arrays.asList(new Integer[]{1, 3, 4, 2, 5, 3, 3}));
         System.out.println(list);
-        Common.resize(list, 3, ()->0);
+        list.subList(3, list.size()).clear();
         System.out.println(list);
         
         System.out.println(19&~7);

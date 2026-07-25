@@ -8,7 +8,7 @@ import gridanalysis.jfx.MEngine;
 /** Regression checks for the dimensionally correct 2D density heuristic. */
 public final class BuildDensityTest {
     public static void main(String[] args) {
-        Build build = new Build(new MEngine(), new Hagrid());
+        Build build = new Build(new MEngine(), new HagridBuildContext());
         Vec2i unit = build.compute_grid_dims(
                 new BBox(new Vec2f(0, 0), new Vec2f(1, 0.5f)), 600, 2.4f);
         Vec2i scaled = build.compute_grid_dims(

@@ -22,21 +22,21 @@ public final class Expand extends GridAbstracts {
     private static final int AXES = 2;
 
     private final MEngine engine;
-    private final Hagrid hagrid;
+    private final HagridBuildContext hagrid;
 
-    public Expand(MEngine engine, Hagrid hagrid) {
+    public Expand(MEngine engine, HagridBuildContext hagrid) {
         this.engine = engine;
         this.hagrid = hagrid;
     }
 
     public void expand_grid(Tri[] triangles, int iterations) {
-        expand(hagrid.getIrregularGrid(), triangles, iterations, hagrid.partial_expansion);
+        expand(hagrid.grid(), triangles, iterations, hagrid.config().partialExpansion());
         engine.setMCellInfo(MCellInfo.getCells(
                 engine,
-                hagrid.getIrregularGrid(),
-                hagrid.getIrregularGrid().bbox,
-                hagrid.getIrregularGrid().dims,
-                hagrid.getIrregularGrid().shift));
+                hagrid.grid(),
+                hagrid.grid().bbox,
+                hagrid.grid().dims,
+                hagrid.grid().shift));
     }
 
     /** Package-visible entry point used by focused algorithm tests. */

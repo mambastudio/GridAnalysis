@@ -37,7 +37,6 @@ public class MEngine implements EngineAbstract{
     Grid grid;
     
     MouseActivity mouseActivity;
-    //Hagrid hagrid = new Hagrid();
     
     @Override
     public void draw()

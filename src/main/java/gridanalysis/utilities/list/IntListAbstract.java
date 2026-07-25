@@ -14,9 +14,8 @@ import java.util.function.IntFunction;
 /**
  *
  * @author user
- * @param <BaseIntList>
  */
-public abstract class IntListAbstract<BaseIntList extends BaseIntegerList> implements BaseIntegerList<BaseIntList>  {
+abstract class IntListAbstract {
     
     protected static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
     
@@ -24,8 +23,37 @@ public abstract class IntListAbstract<BaseIntList extends BaseIntegerList> imple
     protected int size;  
     protected int modCount = 0;
         
-    @Override
-    public final void set(BaseIntList list){set(0, list);}        
+    public abstract void set(int index, IntegerList list);
+    public final void set(IntegerList list){set(0, list);}
+    public abstract int get(int index);
+    public abstract void set(int index, int value);
+    public abstract void set(int index, int[] values);
+    public abstract void add(int value);
+    public abstract void add(int index, int value);
+    public abstract void add(int index, int[] values);
+    public abstract void increment(int index);
+    public abstract void decrement(int index);
+    public abstract int size();
+    public abstract void remove(int index);
+    public abstract void remove(int fromIndex, int toIndex);
+    public abstract IntegerList getSubList(int fromIndex, int toIndex);
+    public abstract IntegerList getSubListFrom(int fromIndex);
+    public abstract int[] trim();
+    public abstract int[] trimCopy();
+    public abstract int[] trimCopy(int fromIndex, int toIndex);
+    public abstract void resize(int size);
+    public abstract void resize(int size, int value);
+    public abstract void swapElement(int firstIndex, int secondIndex);
+    public abstract void swap(IntegerList list);
+    public abstract int rootOffset();
+
+    public boolean isSubList() {
+        return false;
+    }
+
+    public abstract IntegerList copyTo(IntegerList list);
+    public abstract IntegerList copyTo(int count, IntegerList list);
+
     public final int end(){return size();}  
     public final int back(){return get(size()-1);}     
     public final void clear(){remove(0, size());}
@@ -45,18 +73,18 @@ public abstract class IntListAbstract<BaseIntList extends BaseIntegerList> imple
     public void sort(BiPredicate<Integer, Integer> op){sort(0, size(), op);}
     protected void sort(int fromIndex, int toIndex, BiPredicate<Integer, Integer> op){sort_pairs(fromIndex, toIndex, null, op);}
     
-    public void sort_pairs(BaseIntList values){sort_pairs(0, size(), values, (a, b) -> a > b);}
-    protected abstract void sort_pairs(int fromIndex, int toIndex, BaseIntList values, BiPredicate<Integer, Integer> op);
+    public void sort_pairs(IntegerList values){sort_pairs(0, size(), values, (a, b) -> a > b);}
+    protected abstract void sort_pairs(int fromIndex, int toIndex, IntegerList values, BiPredicate<Integer, Integer> op);
     
-    public int partition_stable(BaseIntList output, BaseIntList flags){return partition_stable(0, size(), output, flags);}    
-    public int partition_stable(int n, BaseIntList output, BaseIntList flags){return partition_stable(0, n, output, flags);}    
-    protected abstract int partition_stable(int fromIndex, int toIndex, BaseIntList output, BaseIntList flags); //output, flags sizes should be equal or larger than (toIndex - fromIndex)
+    public int partition_stable(IntegerList output, IntegerList flags){return partition_stable(0, size(), output, flags);}
+    public int partition_stable(int n, IntegerList output, IntegerList flags){return partition_stable(0, n, output, flags);}
+    protected abstract int partition_stable(int fromIndex, int toIndex, IntegerList output, IntegerList flags);
         
-    public BaseIntList transform(IntFunction<Integer> function){return transform(0, size(), function);}
-    public abstract BaseIntList transform(int fromIndex, int toIndex, IntFunction<Integer> function);
+    public IntegerList transform(IntFunction<Integer> function){return transform(0, size(), function);}
+    public abstract IntegerList transform(int fromIndex, int toIndex, IntFunction<Integer> function);
     
-    public void transform(BaseIntList output, IntFunction<Integer> function){transform(0, size(), output, function);}
-    public abstract void transform(int fromIndex, int toIndex, BaseIntList output, IntFunction<Integer> function);
+    public void transform(IntegerList output, IntFunction<Integer> function){transform(0, size(), output, function);}
+    public abstract void transform(int fromIndex, int toIndex, IntegerList output, IntFunction<Integer> function);
             
     public void fill(int value){fill(0, size(), value);}
     public abstract void fill(int fromIndex, int toIndex, int value);    
@@ -154,7 +182,7 @@ public abstract class IntListAbstract<BaseIntList extends BaseIntegerList> imple
     }
     
     
-    protected final void compatibleCheck(BaseIntList list)
+    protected final void compatibleCheck(IntegerList list)
     {
         if(list.size() != size())
             throw new UnsupportedOperationException("list not compatible, the size of list is " +size+ " and size of other is " +list.size());

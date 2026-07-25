@@ -19,27 +19,27 @@ public interface GridConstruction {
     /// In each cell, an octree depth is computed from these independent resolutions
     /// and the primitive references are split until every cell has reached its maximum depth.
     /// The voxel map follows the octree structure.
-    /// @param hagrid
+    /// @param context construction state for this build
     /// @param tris
     //public void build_grid(Tri[] tris, int num_tris, Grid grid, float top_density, float snd_density);
-    public void build_grid(Hagrid hagrid, Tri[] tris);
+    void build_grid(HagridBuildContext context, Tri[] tris);
 
     /// Performs the neighbor merging optimization (merging cells according to the SAH).
     /// public void merge_grid(Grid grid, float alpha);
-    public void merge_grid(Hagrid hagrid);
+    void merge_grid(HagridBuildContext context);
 
     /// Flattens the voxel map to speed up queries.
     /// Once this optimization is performed, the voxel map no longer follows an octree structure.
     /// Each inner node of the voxel map now may have up to 1 << (3 * (1 << Entry::LOG_DIM_BITS - 1)) children.
     /// public void flatten_grid(Grid grid);
-    public void flatten_grid(Hagrid hagrid);
+    void flatten_grid(HagridBuildContext context);
 
     /// Performs the cell expansion optimization (expands cells over neighbors that share the same set of primitives).
     /// public void expand_grid(Grid grid, Tri[] tris, int iters);
-    void expand_grid(Hagrid hagrid, Tri[] tris);
+    void expand_grid(HagridBuildContext context, Tri[] tris);
 
     /// Tries to compress the grid by using sentinels in the reference array and using 16-bit cell dimensions. Returns true on success, otherwise false.
-    default boolean compress_grid(Hagrid hagrid) {
-        return Compress.compress(hagrid.getIrregularGrid());
+    default boolean compress_grid(HagridBuildContext context) {
+        return Compress.compress(context.grid());
     }
 }

@@ -18,9 +18,8 @@ import java.util.function.Supplier;
  *
  * @author jmburu
  * @param <T>
- * @param <O>
  */
-public abstract class ObjectListAbstract<T, O extends ObjectListAbstract<T, O>> implements Iterable<T>{
+abstract class ObjectListAbstract<T> implements Iterable<T>{
     protected static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
     
     protected Object[] array;
@@ -34,8 +33,8 @@ public abstract class ObjectListAbstract<T, O extends ObjectListAbstract<T, O>> 
     public abstract void set(int index, T value);
     public abstract void set(int index, T[] value);
     public abstract T[] trim();
-    public abstract<S extends O> S getSubList(int fromIndex, int toIndex);
-    public <S extends O> S getSublistFrom(int fromIndex){return getSubList(fromIndex, size());}
+    public abstract ObjectList<T> getSubList(int fromIndex, int toIndex);
+    public ObjectList<T> getSublistFrom(int fromIndex){return getSubList(fromIndex, size());}
     public abstract void remove(int index);     
     public abstract void remove(int fromIndex, int toIndex);
     public abstract void removeIf(Predicate<T> predicate);
@@ -58,11 +57,11 @@ public abstract class ObjectListAbstract<T, O extends ObjectListAbstract<T, O>> 
         return size < 1;
     }
     
-    public abstract void swap(ObjectListAbstract<T, O> list);
+    public abstract void swap(ObjectList<T> list);
     public abstract int find(int first, int end, T value);    
     
-    public void copyTo(O list){copyTo(0, size(), list);}
-    public void copyTo(int fromIndex, int toIndex, O list)
+    public void copyTo(ObjectList<T> list){copyTo(0, size(), list);}
+    public void copyTo(int fromIndex, int toIndex, ObjectList<T> list)
     {
         rangeCheckBound(fromIndex, toIndex, size()); 
         compatibleCheck(fromIndex, toIndex, list);
@@ -138,13 +137,13 @@ public abstract class ObjectListAbstract<T, O extends ObjectListAbstract<T, O>> 
             MAX_ARRAY_SIZE;
     }
     
-    protected void compatibleCheck(O list)
+    protected void compatibleCheck(ObjectList<T> list)
     {
         if(list.size() != size())
             throw new UnsupportedOperationException("list not compatible");
     }
     
-    protected void compatibleCheck(int fromIndex, int toIndex, O list)
+    protected void compatibleCheck(int fromIndex, int toIndex, ObjectList<T> list)
     {
         if(list.size() != toIndex - fromIndex)
             throw new UnsupportedOperationException("list not compatible");

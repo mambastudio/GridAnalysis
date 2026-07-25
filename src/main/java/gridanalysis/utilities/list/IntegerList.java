@@ -24,7 +24,7 @@ import java.util.stream.IntStream;
  *  - Primitive iterator - https://javadevcentral.com/primitiveiterator-in-java
  * 
  */
-public class IntegerList extends IntListAbstract<IntegerList> {
+public class IntegerList extends IntListAbstract {
     
     public IntegerList()
     {
@@ -47,6 +47,23 @@ public class IntegerList extends IntListAbstract<IntegerList> {
         this.array = new int[size];    
         fill(0, array.length, value);
         this.size = array.length;
+    }
+
+    @Override
+    public IntegerList copyTo(IntegerList target) {
+        if (size() > 0) {
+            target.set(this);
+        }
+        return target;
+    }
+
+    @Override
+    public IntegerList copyTo(int count, IntegerList target) {
+        rangeCheckBound(0, count, size());
+        if (count > 0) {
+            target.set(0, trimCopy(0, count));
+        }
+        return target;
     }
 
     @Override

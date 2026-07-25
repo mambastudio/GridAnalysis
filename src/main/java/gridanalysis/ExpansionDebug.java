@@ -5,18 +5,16 @@ import gridanalysis.algorithm.Build;
 import gridanalysis.algorithm.Compress;
 import gridanalysis.algorithm.Flatten;
 import gridanalysis.algorithm.GridAbstracts;
-import gridanalysis.algorithm.Hagrid;
+import gridanalysis.algorithm.HagridBuildContext;
+import gridanalysis.algorithm.HagridConfig;
 import gridanalysis.algorithm.Merge;
 import gridanalysis.algorithm.Traversal;
 import gridanalysis.coordinates.Vec2f;
 import gridanalysis.coordinates.Vec2i;
 import gridanalysis.gridclasses.BBox;
 import gridanalysis.gridclasses.Cell;
-import gridanalysis.gridclasses.Entry;
 import gridanalysis.gridclasses.Grid;
 import gridanalysis.gridclasses.Tri;
-import gridanalysis.utilities.list.IntegerList;
-import gridanalysis.utilities.list.ObjectList;
 import gridanalysis.jfx.MEngine;
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -34,6 +32,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Small deterministic laboratory for inspecting Hagrid cell expansion.
@@ -56,23 +55,27 @@ public final class ExpansionDebug extends Application {
     private final CheckBox compressStage = new CheckBox("Compress");
     private final CheckBox cellLabels = new CheckBox("Cell labels");
     private final CheckBox rayLabels = new CheckBox("Ray annotations");
-    private final TextField topDensity = new TextField("0.12");
-    private final TextField secondDensity = new TextField("2.4");
-    private final TextField alpha = new TextField("0.995");
-    private final TextField expansionIterations = new TextField("3");
+    private final TextField topDensity = new TextField(
+            Float.toString(HagridConfig.DEFAULT_TOP_DENSITY));
+    private final TextField secondDensity = new TextField(
+            Float.toString(HagridConfig.DEFAULT_SECOND_DENSITY));
+    private final TextField alpha = new TextField(
+            Float.toString(HagridConfig.DEFAULT_MERGE_ALPHA));
+    private final TextField expansionIterations = new TextField(
+            Integer.toString(HagridConfig.DEFAULT_EXPANSION_ITERATIONS));
 
     private Grid grid;
     private Tri[] triangles;
     private Cell[] ownership;
     private Expand.Session expansion;
-    private int selectedCell = 1;
-    private int iteration;
+    private int selectedCell = -1;
     private String lastStep = "Ownership map";
     private Traversal traversal;
     private Vec2f rayOriginFraction = new Vec2f(0.0f, 0.38f);
     private Vec2f rayEndFraction = new Vec2f(1.0f, 0.63f);
     private int draggedRayHandle;
     private boolean rayWasDragged;
+    private boolean randomScene;
 
     @Override
     public void start(Stage stage) {
@@ -102,10 +105,22 @@ public final class ExpansionDebug extends Application {
         expandStage.setSelected(false);
         compressStage.setSelected(false);
         Button reset = new Button("Reset construction");
+        Button randomizeScene = new Button("Random scene");
+        Button defaultScene = new Button("Default scene");
         Button resetRay = new Button("Reset ray");
         Button traversalStep = new Button("Traversal step");
 
         reset.setOnAction(event -> reset());
+        randomizeScene.setOnAction(event -> {
+            randomScene = true;
+            triangles = createRandomTriangles();
+            reset();
+        });
+        defaultScene.setOnAction(event -> {
+            randomScene = false;
+            triangles = createDefaultTriangles();
+            reset();
+        });
         partial.setOnAction(event -> reset());
         mergeStage.setOnAction(event -> {
             if (!mergeStage.isSelected()) {
@@ -177,7 +192,7 @@ public final class ExpansionDebug extends Application {
                 new Label("exp_iters"), expansionIterations);
         Label applyHint = new Label("Press Enter in a value or reset construction to apply");
         applyHint.setStyle("-fx-text-fill: #64748b; -fx-font-size: 11px;");
-        HBox controls = new HBox(10, reset, resetRay, traversalStep);
+        HBox controls = new HBox(10, reset, randomizeScene, defaultScene, resetRay, traversalStep);
         VBox toolbar = new VBox(7, stages, parameters, applyHint, controls, status);
         toolbar.setPadding(new Insets(10, 14, 9, 14));
         toolbar.setStyle("-fx-background-color: #f8fafc; -fx-border-color: transparent transparent #e2e8f0 transparent;");
@@ -186,9 +201,11 @@ public final class ExpansionDebug extends Application {
         BorderPane.setMargin(canvas, new Insets(6, 0, 0, 0));
         root.setStyle("-fx-background-color: #f1f5f9;");
 
+        triangles = createDefaultTriangles();
         reset();
         stage.setTitle("Hagrid Expansion Laboratory");
-        stage.setScene(new Scene(root));
+        stage.setScene(new Scene(root, 1200, 880));
+        stage.setMaximized(true);
         stage.show();
     }
 
@@ -196,15 +213,14 @@ public final class ExpansionDebug extends Application {
         grid = createGrid();
         ownership = copyCells(grid);
         expansion = new Expand.Session(grid, triangles, partial.isSelected());
-        iteration = 0;
         if (expandStage.isSelected()) {
-            for (int i = 0; i < readInt(expansionIterations, 3, 0); i++) {
+            for (int i = 0; i < readInt(expansionIterations,
+                    HagridConfig.DEFAULT_EXPANSION_ITERATIONS, 0); i++) {
                 expansion.stepAxis(0);
                 expansion.stepAxis(1);
             }
-            iteration = 3;
         }
-        selectedCell = Math.min(1, grid.num_cells - 1);
+        selectedCell = -1;
         traversal = createTraversal();
         lastStep = stageName();
         draw();
@@ -231,8 +247,9 @@ public final class ExpansionDebug extends Application {
         if (x < 0 || y < 0 || x >= dimensions.x || y >= dimensions.y) {
             return;
         }
-        selectedCell = GridAbstracts.lookup_entry(
+        int clickedCell = GridAbstracts.lookup_entry(
                 grid.entries, grid.shift, grid.dims, new Vec2i(x, y));
+        selectedCell = clickedCell == selectedCell ? -1 : clickedCell;
         draw();
     }
 
@@ -248,10 +265,14 @@ public final class ExpansionDebug extends Application {
         drawSampleRay(g);
         drawLegend(g);
 
-        Cell selected = expansion.getCell(selectedCell);
-        status.setText(lastStep + " | " + traversal.details() + " | selected " + selectedCell
-                + " refs=" + references(selectedCell)
-                + " exit=" + selected.min + " -> " + selected.max);
+        String selectionDetails = " | no cell selected";
+        if (selectedCell >= 0) {
+            Cell selected = expansion.getCell(selectedCell);
+            selectionDetails = " | selected " + selectedCell
+                    + " refs=" + references(selectedCell)
+                    + " exit=" + selected.min + " -> " + selected.max;
+        }
+        status.setText(lastStep + " | " + traversal.details() + selectionDetails);
     }
 
     private void drawBaseGrid(GraphicsContext g) {
@@ -353,10 +374,6 @@ public final class ExpansionDebug extends Application {
         g.setFill(traversal.hit() ? Color.web("#16a34a") : Color.web("#dc2626"));
         g.fillOval(sxWorld(current.x) - 7, syWorld(current.y) - 7, 14, 14);
         drawRayArrowHead(g, start, end);
-        if (rayLabels.isSelected()) {
-            g.setFill(Color.web("#dc2626"));
-            g.fillText("sample ray", ORIGIN_X + 8, ORIGIN_Y + PLOT_HEIGHT * 0.62);
-        }
     }
 
     private void drawLegend(GraphicsContext g) {
@@ -418,27 +435,125 @@ public final class ExpansionDebug extends Application {
     private Grid createGrid() {
         // World scale is deliberately fixed: the 2D density heuristic is
         // invariant under uniform scaling, so it is not a construction input.
+        HagridConfig config = new HagridConfig(
+                readFloat(topDensity, HagridConfig.DEFAULT_TOP_DENSITY, 0.0001f),
+                readFloat(secondDensity, HagridConfig.DEFAULT_SECOND_DENSITY, 0.0001f),
+                readFloat(alpha, HagridConfig.DEFAULT_MERGE_ALPHA, 0.0f),
+                readInt(expansionIterations, HagridConfig.DEFAULT_EXPANSION_ITERATIONS, 0),
+                partial.isSelected(),
+                compressStage.isSelected());
+        HagridBuildContext context = new HagridBuildContext(config);
+        MEngine constructionSink = new MEngine();
+        new Build(constructionSink, context).build_grid(triangles, triangles.length);
+        if (mergeStage.isSelected()) {
+            new Merge(constructionSink, context).merge_grid();
+        }
+        if (flattenStage.isSelected()) {
+            new Flatten(constructionSink, context).flatten_grid();
+        }
+        return context.grid();
+    }
+
+    private static Tri[] createDefaultTriangles() {
         float scale = 1.0f;
-        triangles = new Tri[] {
+        return new Tri[] {
             triangle(scale, 0.14f, 0.20f, 0.33f, 0.28f, 0.20f, 0.52f),
             triangle(scale, 0.29f, 0.44f, 0.74f, 0.26f, 0.62f, 0.89f),
             triangle(scale, 0.90f, 0.15f, 0.99f, 0.46f, 0.93f, 0.76f)
         };
+    }
 
-        Hagrid hagrid = new Hagrid();
-        hagrid.top_density = readFloat(topDensity, 0.12f, 0.0001f);
-        hagrid.snd_density = readFloat(secondDensity, 2.4f, 0.0001f);
-        hagrid.alpha = readFloat(alpha, 0.995f, 0.0f);
-        hagrid.exp_iters = readInt(expansionIterations, 3, 0);
-        MEngine constructionSink = new MEngine();
-        new Build(constructionSink, hagrid).build_grid(triangles, triangles.length);
-        if (mergeStage.isSelected()) {
-            new Merge(constructionSink, hagrid).merge_grid();
+    private static Tri[] createRandomTriangles() {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        Tri[] result = new Tri[random.nextInt(2, 4)];
+        for (int i = 0; i < result.length; i++) {
+            Tri candidate = null;
+            for (int attempt = 0; attempt < 2_000 && candidate == null; attempt++) {
+                Tri generated = randomTriangle(random);
+                boolean collision = false;
+                for (int other = 0; other < i; other++) {
+                    if (trianglesIntersect(generated, result[other])) {
+                        collision = true;
+                        break;
+                    }
+                }
+                if (!collision) candidate = generated;
+            }
+            // This is only a last-resort guard against an exceptionally unlucky
+            // random sequence. The fallback triangles occupy disjoint lanes.
+            result[i] = candidate != null ? candidate : fallbackTriangle(i, result.length);
         }
-        if (flattenStage.isSelected()) {
-            new Flatten(constructionSink, hagrid).flatten_grid();
+        return result;
+    }
+
+    private static Tri randomTriangle(ThreadLocalRandom random) {
+        while (true) {
+            float centerX = (float) random.nextDouble(0.14, 0.86);
+            float centerY = (float) random.nextDouble(0.14, 0.86);
+            float radius = (float) random.nextDouble(0.08, 0.18);
+            double rotation = random.nextDouble(0.0, Math.PI * 2.0);
+            Vec2f[] points = new Vec2f[3];
+            for (int vertex = 0; vertex < points.length; vertex++) {
+                double angle = rotation + vertex * Math.PI * 2.0 / 3.0
+                        + random.nextDouble(-0.35, 0.35);
+                float distance = radius * (float) random.nextDouble(0.70, 1.15);
+                points[vertex] = new Vec2f(
+                        centerX + distance * (float) Math.cos(angle),
+                        centerY + distance * (float) Math.sin(angle));
+            }
+            if (Math.abs(orientation(points[0], points[1], points[2])) >= 0.01f) {
+                return new Tri(points[0], points[1], points[2]);
+            }
         }
-        return hagrid.getIrregularGrid();
+    }
+
+    private static Tri fallbackTriangle(int index, int count) {
+        float centerX = (index + 0.5f) / count;
+        return new Tri(
+                new Vec2f(centerX - 0.10f, 0.30f),
+                new Vec2f(centerX + 0.10f, 0.30f),
+                new Vec2f(centerX, 0.65f));
+    }
+
+    private static boolean trianglesIntersect(Tri first, Tri second) {
+        Vec2f[] a = {first.p0(), first.p1(), first.p2()};
+        Vec2f[] b = {second.p0(), second.p1(), second.p2()};
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (segmentsIntersect(a[i], a[(i + 1) % 3], b[j], b[(j + 1) % 3])) {
+                    return true;
+                }
+            }
+        }
+        return pointInTriangle(a[0], b[0], b[1], b[2])
+                || pointInTriangle(b[0], a[0], a[1], a[2]);
+    }
+
+    private static boolean segmentsIntersect(Vec2f a, Vec2f b, Vec2f c, Vec2f d) {
+        float abC = orientation(a, b, c);
+        float abD = orientation(a, b, d);
+        float cdA = orientation(c, d, a);
+        float cdB = orientation(c, d, b);
+        return oppositeOrTouching(abC, abD) && oppositeOrTouching(cdA, cdB);
+    }
+
+    private static boolean oppositeOrTouching(float first, float second) {
+        float epsilon = 1.0e-6f;
+        return (first <= epsilon && second >= -epsilon)
+                || (second <= epsilon && first >= -epsilon);
+    }
+
+    private static boolean pointInTriangle(Vec2f point, Vec2f a, Vec2f b, Vec2f c) {
+        float first = orientation(a, b, point);
+        float second = orientation(b, c, point);
+        float third = orientation(c, a, point);
+        boolean hasNegative = first < 0.0f || second < 0.0f || third < 0.0f;
+        boolean hasPositive = first > 0.0f || second > 0.0f || third > 0.0f;
+        return !(hasNegative && hasPositive);
+    }
+
+    private static float orientation(Vec2f a, Vec2f b, Vec2f c) {
+        return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
     }
 
     private Traversal createTraversal() {
@@ -475,15 +590,16 @@ public final class ExpansionDebug extends Application {
     }
 
     private String stageName() {
+        String scene = randomScene ? "Random scene: " : "Default scene: ";
         if (compressStage.isSelected()) {
-            return expandStage.isSelected()
+            return scene + (expandStage.isSelected()
                     ? "Build + Merge + Flatten + Expand + Compress"
-                    : "Build + Merge + Flatten + Compress";
+                    : "Build + Merge + Flatten + Compress");
         }
-        if (expandStage.isSelected()) return "Build + Merge + Flatten + Expand";
-        if (flattenStage.isSelected()) return "Build + Merge + Flatten";
-        if (mergeStage.isSelected()) return "Build + Merge";
-        return "Build";
+        if (expandStage.isSelected()) return scene + "Build + Merge + Flatten + Expand";
+        if (flattenStage.isSelected()) return scene + "Build + Merge + Flatten";
+        if (mergeStage.isSelected()) return scene + "Build + Merge";
+        return scene + "Build";
     }
 
     private static float readFloat(TextField field, float fallback, float minimum) {

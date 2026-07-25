@@ -12,8 +12,6 @@ import gridanalysis.gridclasses.BBox;
 import gridanalysis.gridclasses.Cell;
 import gridanalysis.gridclasses.Entry;
 import gridanalysis.gridclasses.Grid;
-import gridanalysis.irreg.BBox2;
-import gridanalysis.irreg.Cell2;
 import gridanalysis.jfx.MEngine;
 import gridanalysis.utilities.Utility;
 import gridanalysis.utilities.list.IntegerList;
@@ -47,15 +45,6 @@ public class MCellInfo {
         this.h = bbox.extents().y;
     }
     
-    public MCellInfo(GraphicsContext context, BBox2 bbox)
-    {
-        this.ctx = context;
-        this.x = bbox.min.x;
-        this.y = bbox.min.y;
-        this.w = bbox.extents().x;
-        this.h = bbox.extents().y;        
-    }
-    
     public void draw()
     {
         ctx.save();
@@ -86,12 +75,6 @@ public class MCellInfo {
             cells.add(new MCellInfo(engine.getGraphicsContext(), cellBound));            
         }
         return cells;
-    }
-    
-    public static ArrayList<MCellInfo> getCells2(MEngine engine, Cell2[] cellArray, BBox grid_bound,  Vec2i dims, int shift)
-    {
-        return null;
-        
     }
     
     public static ArrayList<MCellInfo> getCells(MEngine engine, IntegerList cell_ids, IntegerList array_ids, BBox grid_bound,  Vec2i dims)

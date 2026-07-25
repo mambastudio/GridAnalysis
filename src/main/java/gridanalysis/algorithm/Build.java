@@ -28,9 +28,9 @@ import static java.lang.Math.sqrt;
  */
 public class Build extends GridAbstracts{
     MEngine engine;    
-    Hagrid hagrid;
+    HagridBuildContext hagrid;
    
-    public Build(MEngine engine, Hagrid hagrid)
+    public Build(MEngine engine, HagridBuildContext hagrid)
     {
         this.engine = engine;
         this.hagrid = hagrid;
@@ -301,8 +301,8 @@ public class Build extends GridAbstracts{
                 BBox ref_bb = bboxes.get(id);
                 range  = compute_range(hagrid.grid_dims, hagrid.grid_bbox, ref_bb);
                              
-                int x = range.lx;
-                int y = range.ly;               
+                int x = range.lx();
+                int y = range.ly();
                 int cur = start;
                 while (cur < end) 
                 {                    
@@ -310,8 +310,8 @@ public class Build extends GridAbstracts{
                     new_cell_ids.set(cur, x + hagrid.grid_dims.x * y);
                     cur++; 
                     x++;
-                    if (x > range.hx) { x = range.lx; y++; }
-                    if (y > range.hy) { y = range.ly;} 
+                    if (x > range.hx()) { x = range.lx(); y++; }
+                    if (y > range.hy()) { y = range.ly(); }
                 }                
             }            
         }        
@@ -819,7 +819,7 @@ public class Build extends GridAbstracts{
         BBox grid_bb = bboxes.reduce(0, num_prims, new BBox(),  (a, b) ->a.copy().extend(b));
         
        
-        Vec2i dims = compute_grid_dims(grid_bb, num_prims, hagrid.top_density);
+        Vec2i dims = compute_grid_dims(grid_bb, num_prims, hagrid.config().topDensity());
         // Round to the next multiple of 2 on each dimension (in order to align the memory)
         dims.x = (dims.x % 2) != 0 ? dims.x + 1 : dims.x;
         dims.y = (dims.y % 2) != 0 ? dims.y + 1 : dims.y;
@@ -839,7 +839,7 @@ public class Build extends GridAbstracts{
         ObjectList<Level> levels = new ObjectList();
         
         // Build top level
-        first_build_iter(hagrid.snd_density, prims, num_prims, bboxes, grid_bb, dims, log_dims, gridd_shift, levels);
+        first_build_iter(hagrid.config().secondDensity(), prims, num_prims, bboxes, grid_bb, dims, log_dims, gridd_shift, levels);
                 
         int iter = 1; //build iterations
         while(this.build_iter(prims, num_prims, dims, log_dims, levels, iter))          
@@ -847,12 +847,11 @@ public class Build extends GridAbstracts{
           
         System.out.println("iteration " +iter);
         
-        concat_levels(levels, hagrid.getIrregularGrid());
+        concat_levels(levels, hagrid.grid());
                    
-        hagrid.getIrregularGrid().bbox = grid_bb;
-        hagrid.getIrregularGrid().dims = dims;
+        hagrid.grid().bbox = grid_bb;
+        hagrid.grid().dims = dims;
         
-        //engine.setMCellInfo(MCellInfo.getCells(engine, hagrid.getIrregularGrid(), hagrid.getIrregularGrid().bbox, hagrid.getIrregularGrid().dims, hagrid.getIrregularGrid().shift));
         
     }
 

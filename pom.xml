@@ -29,7 +29,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>gridanalysis.Launcher</mainClass>
+                            <mainClass>gridanalysis.ExpansionDebugLauncher</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -39,16 +39,8 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>gridanalysis.Launcher</mainClass>
+                    <mainClass>gridanalysis.ExpansionDebugLauncher</mainClass>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>expansion-debug</id>
-                        <configuration>
-                            <mainClass>gridanalysis.ExpansionDebugLauncher</mainClass>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

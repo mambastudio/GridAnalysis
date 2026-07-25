@@ -24,9 +24,9 @@ import static java.lang.Math.max;
 public class Merge extends GridAbstracts{
 
     private final MEngine engine;
-    public final Hagrid hagrid;
-        
-    public Merge(MEngine engine, Hagrid hagrid)
+    public final HagridBuildContext hagrid;
+
+    public Merge(MEngine engine, HagridBuildContext hagrid)
     {
         this.engine = engine;
         this.hagrid = hagrid;
@@ -359,10 +359,10 @@ public class Merge extends GridAbstracts{
     {        
         MergeBuffers bufs = new MergeBuffers();
                 
-        ObjectList<Cell> new_cells = new ObjectList(new Cell[hagrid.getIrregularGrid().num_cells]);        
-        IntegerList new_refs  = new IntegerList(new int[hagrid.getIrregularGrid().num_refs]);
+        ObjectList<Cell> new_cells = new ObjectList(new Cell[hagrid.grid().num_cells]);
+        IntegerList new_refs  = new IntegerList(new int[hagrid.grid().num_refs]);
         
-        int buf_size = hagrid.getIrregularGrid().num_cells + 1;
+        int buf_size = hagrid.grid().num_cells + 1;
         buf_size = (buf_size % 4) != 0 ? buf_size + 4 - buf_size % 4 : buf_size;
         
         bufs.merge_counts = new IntegerList(new int[buf_size]);
@@ -374,27 +374,26 @@ public class Merge extends GridAbstracts{
         bufs.prevs        = bufs.cell_scan;
         bufs.nexts        = bufs.ref_scan;
         
-        Vec2f extents = hagrid.getIrregularGrid().bbox.extents();
-        Vec2i dims = hagrid.getIrregularGrid().dims.leftShift(hagrid.getIrregularGrid().shift);
+        Vec2f extents = hagrid.grid().bbox.extents();
+        Vec2i dims = hagrid.grid().dims.leftShift(hagrid.grid().shift);
         Vec2f cell_size0 = extents.div(new Vec2f(dims));
         
         hagrid.grid_dims = dims;
         hagrid.cell_size = cell_size0;
-        hagrid.grid_shift = hagrid.getIrregularGrid().shift;
+        hagrid.grid_shift = hagrid.grid().shift;
                 
         
-        if (hagrid.alpha > 0) {
+        if (hagrid.config().mergeAlpha() > 0) {
             int prev_num_cells, iter = 0;
             do {
-                prev_num_cells = hagrid.getIrregularGrid().num_cells;
+                prev_num_cells = hagrid.grid().num_cells;
                 int mask = iter > 3 ? 0 : (1 << (iter + 1)) - 1;                
-                merge_iteration(0, hagrid.getIrregularGrid(), new_cells, new_refs, mask, bufs);
-                merge_iteration(1, hagrid.getIrregularGrid(), new_cells, new_refs, mask, bufs);       
+                merge_iteration(0, hagrid.grid(), new_cells, new_refs, mask, bufs);
+                merge_iteration(1, hagrid.grid(), new_cells, new_refs, mask, bufs);
                 iter++;              
-            } while (hagrid.getIrregularGrid().num_cells < hagrid.alpha * prev_num_cells);            
+            } while (hagrid.grid().num_cells < hagrid.config().mergeAlpha() * prev_num_cells);
         }
        
        
-        //engine.setMCellInfo(MCellInfo.getCells(engine, hagrid.getIrregularGrid(), hagrid.getIrregularGrid().bbox, hagrid.getIrregularGrid().dims, hagrid.getIrregularGrid().shift));
     }
 }

@@ -8,6 +8,7 @@ package gridanalysis.algorithm;
 import gridanalysis.gridclasses.Grid;
 import gridanalysis.gridclasses.Tri;
 import gridanalysis.jfx.MEngine;
+import java.util.Objects;
 
 /**
  *
@@ -15,46 +16,54 @@ import gridanalysis.jfx.MEngine;
  */
 public class HagridConstruction implements GridConstruction{
     private final MEngine engine;
+    private final HagridConfig config;
+
     public HagridConstruction(MEngine engine)
     {
+        this(engine, HagridConfig.defaults());
+    }
+
+    public HagridConstruction(MEngine engine, HagridConfig config)
+    {
         this.engine = engine;
+        this.config = Objects.requireNonNull(config, "config");
     }
     
     public Grid initialiseGrid(Tri[] tris)
     {
-        Hagrid hagrid = new Hagrid();
+        HagridBuildContext context = new HagridBuildContext(config);
         
-        build_grid(hagrid, tris);
-        merge_grid(hagrid);
-        flatten_grid(hagrid);
-        expand_grid(hagrid, tris);
-        if (hagrid.compression) compress_grid(hagrid);
+        build_grid(context, tris);
+        merge_grid(context);
+        flatten_grid(context);
+        expand_grid(context, tris);
+        if (config.compression()) compress_grid(context);
         
-        return hagrid.getIrregularGrid();
+        return context.grid();
     }
 
     @Override
-    public void build_grid(Hagrid hagrid, Tri[] tris) {
-        Build build = new Build(engine, hagrid);
+    public void build_grid(HagridBuildContext context, Tri[] tris) {
+        Build build = new Build(engine, context);
         build.build_grid(tris, tris.length);
     }
 
     @Override
-    public void merge_grid(Hagrid hagrid) {
-        Merge build = new Merge(engine, hagrid);
+    public void merge_grid(HagridBuildContext context) {
+        Merge build = new Merge(engine, context);
         build.merge_grid();
     }
 
     @Override
-    public void flatten_grid(Hagrid hagrid) {
-        Flatten flatten = new Flatten(engine, hagrid);
+    public void flatten_grid(HagridBuildContext context) {
+        Flatten flatten = new Flatten(engine, context);
         flatten.flatten_grid();
     }
 
     @Override
-    public void expand_grid(Hagrid hagrid, Tri[] tris) {
-        Expand expand = new Expand(engine, hagrid);
-        expand.expand_grid(tris, hagrid.exp_iters);
+    public void expand_grid(HagridBuildContext context, Tri[] tris) {
+        Expand expand = new Expand(engine, context);
+        expand.expand_grid(tris, context.config().expansionIterations());
     }
     
 }
